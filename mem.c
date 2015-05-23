@@ -17,10 +17,13 @@ void * alloc(size_t size){
   if(_allocator == NULL) return malloc(size);
   return _allocator->alloc(size);
 }
+
 void * alloc0(size_t size){
   void * ptr = alloc(size);
   memset(ptr,0, size);
+  return ptr;
 }
+
 void dealloc(void * ptr){
   if(_allocator == NULL){
     free(ptr);

@@ -103,6 +103,7 @@ bool mem_test(){
   int * data2;
   with_allocator(ta,lambda(void,(){data = alloc(1024 * sizeof(int));}));
   with_allocator(ta,lambda(void,(){data2 = alloc(1024 * sizeof(int));}));
+  with_allocator(ta,lambda(void,(){data = ralloc(data, 1024 * sizeof(int));}));
   for(int i = 0; i < 1024;i++){
     data[i] = i;
   }
