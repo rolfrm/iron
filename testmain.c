@@ -97,8 +97,8 @@ bool test_utils(){
 }
 
 bool mem_test(){
-  allocator * ta = trace_allocator_make();
-  
+
+  allocator * ta = trace_allocator_make();  
   int * data;
   int * data2;
   with_allocator(ta,lambda(void,(){data = alloc(1024 * sizeof(int));}));
@@ -112,6 +112,11 @@ bool mem_test(){
   with_allocator(ta,lambda(void,(){dealloc(data);}));
   with_allocator(ta,lambda(void,(){dealloc(data2);}));
   TEST_ASSERT(trace_allocator_allocated_pointers(ta) == 0);  
+
+  char * r = fmtstr("1%s2","hello");
+  TEST_ASSERT(strcmp(r,"1hello2") == 0);
+  dealloc(r);
+
   return TEST_SUCCESS;
 }
 

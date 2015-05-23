@@ -21,3 +21,5 @@ allocator * trace_allocator_make();
 size_t trace_allocator_used_mem();
 size_t trace_allocator_allocated_pointers();
 void trace_allocator_release(allocator * trace_allocator);
+
+char * fmtstr(char * fmt, ...);

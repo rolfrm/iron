@@ -91,7 +91,9 @@ void block_dealloc(void * ptr){
 
 void * block_ralloc(void * ptr, size_t s){
   ERROR("NOT SUPPORTED IN BLOCK ALLOCATOR");
-  //void * nptr = block_alloc(s);
+  UNUSED(ptr);
+  UNUSED(s);
+  return ptr;
 }
 
 allocator * block_allocator_make(){
@@ -143,4 +145,26 @@ void trace_allocator_release(allocator * aloc){
 
 size_t trace_allocator_allocated_pointers(allocator * trace_allocator){
   return (size_t) trace_allocator->user_data;
+}
+
+#include <stdarg.h>
+#include <stdio.h>
+#include "fileio.h"
+char * fmtstr(char * fmt, ...){
+  log("SIZE: ??\n");
+  //  va_list args;
+  //  va_start (args, msg);
+  //  vprintf (msg, args);
+  //  va_end (args);
+  va_list args;
+  va_start (args, fmt);
+  size_t size = vsnprintf (NULL, 0, fmt, args) + 1;
+  va_end (args);
+
+  char * out = alloc(size);
+
+  va_start (args, fmt);  
+  vsprintf (out, fmt, args);
+  va_end (args);
+  return out;
 }
