@@ -12,3 +12,4 @@
 #include "log.h"
 #include "array.h"
 #include "test.h"
+#include "fileio.h"
