@@ -1,3 +1,6 @@
+// For slow but easy compilation
+// Include with causion as it might reduce compile times.
+
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
@@ -13,3 +16,4 @@
 #include "array.h"
 #include "test.h"
 #include "fileio.h"
+#include "mem.h"

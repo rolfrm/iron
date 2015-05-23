@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "utils.h"
 #include "log.h"
+#include <string.h>
 __thread allocator * _allocator = NULL;
 
 void with_allocator(allocator * alc, void (* cb)()){
@@ -16,10 +17,13 @@ void * alloc(size_t size){
   if(_allocator == NULL) return malloc(size);
   return _allocator->alloc(size);
 }
-
+void * alloc0(size_t size){
+  void * ptr = alloc(size);
+  memset(ptr,0, size);
+}
 void dealloc(void * ptr){
   if(_allocator == NULL){
-    dealloc(ptr);
+    free(ptr);
   }else{
     _allocator->dealloc(ptr);
   }
@@ -104,4 +108,36 @@ void block_allocator_release(allocator * block_allocator){
     free(balc);
     balc = next;
   }
+}
+
+void * trace_alloc(size_t size){
+  _allocator->user_data++;
+  return malloc(size);
+}
+
+void trace_dealloc(void * ptr){
+  _allocator->user_data--;
+  free(ptr);
+}
+
+void * trace_ralloc(void * ptr, size_t s){
+  return realloc(ptr,s);
+}
+
+
+allocator * trace_allocator_make(){
+  allocator * alc = alloc(sizeof(allocator));
+  alc->alloc = trace_alloc;
+  alc->dealloc = trace_dealloc;
+  alc->ralloc = trace_ralloc;
+  alc->user_data = 0;
+  return alc;
+}
+
+void trace_allocator_release(allocator * aloc){
+  dealloc(aloc);
+}
+
+size_t trace_allocator_allocated_pointers(allocator * trace_allocator){
+  return (size_t) trace_allocator->user_data;
 }

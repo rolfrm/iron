@@ -96,6 +96,25 @@ bool test_utils(){
   return true;
 }
 
+bool mem_test(){
+  allocator * ta = trace_allocator_make();
+  
+  int * data;
+  int * data2;
+  with_allocator(ta,lambda(void,(){data = alloc(1024 * sizeof(int));}));
+  with_allocator(ta,lambda(void,(){data2 = alloc(1024 * sizeof(int));}));
+  for(int i = 0; i < 1024;i++){
+    data[i] = i;
+  }
+  TEST_ASSERT(data[512] == 512);
+  TEST_ASSERT(trace_allocator_allocated_pointers(ta) == 2);
+  with_allocator(ta,lambda(void,(){dealloc(data);}));
+  with_allocator(ta,lambda(void,(){dealloc(data2);}));
+  TEST_ASSERT(trace_allocator_allocated_pointers(ta) == 0);  
+  return TEST_SUCCESS;
+}
+
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -111,6 +130,7 @@ void _error(const char * file, int line, const char * msg, ...){
 }
 
 int main(){
+  TEST(mem_test);
   TEST(test_math_utils);
   TEST(test_local_expressions);
   TEST(test_utils);
