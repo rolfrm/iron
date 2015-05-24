@@ -39,6 +39,12 @@ void * ralloc(void * ptr, size_t newsize){
   return _allocator->ralloc(ptr,newsize);
 }
 
+void * clone(void * src, size_t s){
+  void * out = alloc(s);
+  memcpy(out, src, s);
+  return out;
+}
+
 struct _block_chunk;
 typedef struct _block_chunk block_chunk;
 
