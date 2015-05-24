@@ -1,8 +1,10 @@
-
+#include <stdint.h>
+#include "types.h"
 #include <stdlib.h>
 #include "mem.h"
 #include "utils.h"
 #include "log.h"
+#include "math.h"
 #include <string.h>
 __thread allocator * _allocator = NULL;
 
@@ -43,6 +45,12 @@ void * clone(void * src, size_t s){
   void * out = alloc(s);
   memcpy(out, src, s);
   return out;
+
+}
+
+// fun experiment, but it turns out that this is already what it does. so slow...
+void * ralloc2(void * ptr, size_t newsize){
+  return ralloc(ptr,  2 << hibit(newsize));
 }
 
 struct _block_chunk;

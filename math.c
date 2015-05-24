@@ -11,5 +11,5 @@ int feq(float a, float b, float prec){
 
 u8 hibit(u64 x ){
   if(x == 0) return 0;
-  return 64 - __builtin_clzll(x);
+  return 64 - __builtin_clzll(x) - 1;
 }
