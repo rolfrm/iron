@@ -97,7 +97,6 @@ bool test_utils(){
 }
 
 bool mem_test(){
-
   allocator * ta = trace_allocator_make();  
   int * data;
   int * data2;
@@ -116,10 +115,72 @@ bool mem_test(){
   char * r = fmtstr("1%s2","hello");
   TEST_ASSERT(strcmp(r,"1hello2") == 0);
   dealloc(r);
-
   return TEST_SUCCESS;
 }
 
+bool test_reallocation(){
+  static __thread bool is_ongoing = false;
+  bool start_new = !is_ongoing;
+  is_ongoing = true;
+  void * ptr = NULL;
+  void * heap_dis = alloc(100);
+  for(int z = 0 ; z < 2; z++){
+    for(int i = 0 ; i < 23; i += 3){
+      ptr = ralloc(ptr, 1 << i);
+      void * last = ptr;
+      for(int j = 0; j < 5; j++){
+	ptr = ralloc(ptr, 1 << i);
+	dealloc(heap_dis);
+	heap_dis = alloc(100);
+	TEST_ASSERT(ptr == last);
+	ptr = last;
+	if(start_new)
+	  test_reallocation();
+      }
+    }
+  }
+  dealloc(ptr);
+  dealloc(heap_dis);
+  if(start_new)
+    is_ongoing = false;
+  return TEST_SUCCESS;
+}
+
+void test_hibit(){
+  for(int i = 0; i < 100; i++){
+    logd("%i %i %i\n",i,1 << hibit(i), (2 << hibit(i)));
+  }
+}
+
+void bench_list_add(size_t icnt){
+  void * ptr = NULL;
+  size_t cnt = 0;
+  size_t item_size = sizeof(int);
+  for(int i = 0; i < icnt; i++){
+    list_add(&ptr,&cnt,&i,item_size);
+  }
+  dealloc(ptr);
+}
+
+void bench_list_addm(size_t icnt){
+  void * ptr = NULL;
+  size_t cnt = 0;
+  size_t item_size = sizeof(int);
+  for(int i = 0; i < icnt; i++){
+    list_addm(&ptr,&cnt,&i,item_size);
+  }
+  dealloc(ptr);
+}
+
+void test_list(){
+  size_t cnt = 10000000;
+  u64 fast = measure_elapsed(lambda( void, (){bench_list_add(cnt);}));
+  u64 slow = measure_elapsed(lambda( void, (){bench_list_addm(cnt);}));
+
+  logd("Fast: %i\n", fast);
+  logd("Slow: %i\n", slow);
+
+}
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -136,6 +197,10 @@ void _error(const char * file, int line, const char * msg, ...){
 }
 
 int main(){
+  test_hibit();
+  test_list();
+  return 0;
+  TEST(test_reallocation);
   TEST(mem_test);
   TEST(test_math_utils);
   TEST(test_local_expressions);

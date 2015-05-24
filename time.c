@@ -7,3 +7,10 @@ u64 timestamp(){
   gettimeofday(&tv,NULL);
   return tv.tv_sec * 1e6 + tv.tv_usec;
 }
+
+u64 measure_elapsed(void (*fcn)()){
+  u64 t1 = timestamp();
+  fcn();
+  u64 t2 = timestamp();
+  return t2 - t1;
+}

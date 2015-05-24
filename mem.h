@@ -13,6 +13,9 @@ void * alloc(size_t);
 void dealloc(void * ptr);
 void * ralloc(void * ptr, size_t size);
 void * alloc0(size_t);
+// reallocs nearest power of 2 size. Making int practical for vectors.
+void * ralloc2(void * ptr, size_t size);
+
 
 allocator * block_allocator_make();
 void block_allocator_release(allocator * block_allocator);

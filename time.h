@@ -6,3 +6,5 @@ u64 timestamp();
 // sleeps for a number of microseconds
 // dont use for polling, use semaphores/mutexes instead if possible.
 void usleep(int microseconds);
+
+u64 measure_elapsed(void (*fcn)());

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "array.h"
+#include "mem.h"
 
 i64 sum64(i64 * data, u64 len){
   i64 a = 0;
@@ -94,7 +95,15 @@ void apply_arraydi(double * data, int cnt, void (* fcn) (double,int)){
 void list_add(void ** dst, size_t * cnt, void * src, size_t item_size){
   size_t next_size = ++(*cnt);
   void * ptr = *dst;
-  ptr =  realloc(ptr, next_size * item_size);
+  ptr =  ralloc2(ptr, next_size * item_size);
+  *dst = ptr;
+  memcpy(ptr + (next_size - 1) * item_size, src, item_size);
+}
+
+void list_addm(void ** dst, size_t * cnt, void * src, size_t item_size){
+  size_t next_size = ++(*cnt);
+  void * ptr = *dst;
+  ptr =  ralloc(ptr, next_size * item_size);
   *dst = ptr;
   memcpy(ptr + (next_size - 1) * item_size, src, item_size);
 }

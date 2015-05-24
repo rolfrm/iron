@@ -1,8 +1,10 @@
-
+#include <stdint.h>
+#include "types.h"
 #include <stdlib.h>
 #include "mem.h"
 #include "utils.h"
 #include "log.h"
+#include "math.h"
 #include <string.h>
 __thread allocator * _allocator = NULL;
 
@@ -37,6 +39,10 @@ void * ralloc(void * ptr, size_t newsize){
     return realloc(ptr, newsize); 
   }
   return _allocator->ralloc(ptr,newsize);
+}
+
+void * ralloc2(void * ptr, size_t newsize){
+  return ralloc(ptr,  2 << hibit(newsize));
 }
 
 struct _block_chunk;
