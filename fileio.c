@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include "log.h"
 static __thread FILE * outfile = NULL;
 
 void with_format_out(void * file, void (* fcn)()){
@@ -18,4 +19,12 @@ void format(char * fmt, ...){
 
 void * get_format_out(){
   return outfile;
+}
+
+void dump_buffer_to_file(void * buffer, size_t size, char * filepath){
+  FILE * f = fopen(filepath, "w");
+  if(f == NULL)
+    ERROR("Unable to open file '%s'",filepath);
+  fwrite(buffer,size,1,f);
+  fclose(f);
 }
