@@ -21,8 +21,16 @@ void * get_format_out(){
   return outfile;
 }
 
-void dump_buffer_to_file(void * buffer, size_t size, char * filepath){
+void write_buffer_to_file(void * buffer, size_t size, char * filepath){
   FILE * f = fopen(filepath, "w");
+  if(f == NULL)
+    ERROR("Unable to open file '%s'",filepath);
+  fwrite(buffer,size,1,f);
+  fclose(f);
+}
+
+void append_buffer_to_file(void * buffer, size_t size, char * filepath){
+  FILE * f = fopen(filepath, "a");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
   fwrite(buffer,size,1,f);
