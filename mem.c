@@ -165,7 +165,6 @@ size_t trace_allocator_allocated_pointers(allocator * trace_allocator){
 #include <stdio.h>
 #include "fileio.h"
 char * fmtstr(char * fmt, ...){
-  log("SIZE: ??\n");
   //  va_list args;
   //  va_start (args, msg);
   //  vprintf (msg, args);
