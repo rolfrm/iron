@@ -22,4 +22,4 @@ void log_print(char * fmt, ...);
 // needs to be implemented in user code
 void _error(const char * file, int line, const char * message, ...);
 #define ERROR(msg,...) _error(__FILE__,__LINE__,msg, ##__VA_ARGS__) 
-#define ASSERT(expr) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}else{log("success\n");}
+#define ASSERT(expr) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}

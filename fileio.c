@@ -4,6 +4,20 @@
 #include "mem.h"
 static __thread FILE * outfile = NULL;
 
+size_t stksize = 0;
+FILE * ofile[10];
+
+void push_format_out(void * file){
+  ofile[stksize++] = file;
+  outfile = file;
+}
+
+void pop_format_out(){
+  stksize--;
+  if(stksize > 0)   outfile = ofile[stksize-1];
+  else outfile = NULL;
+}
+
 void with_format_out(void * file, void (* fcn)()){
   FILE * old = outfile;
   outfile = file;
