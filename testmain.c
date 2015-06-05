@@ -1,7 +1,7 @@
 // Test Section
 //#include <unistd.h>
 #include "full.h"
-
+#include "stdio.h"
 bool test_util_hash_table(){
   hash_table * ht = ht_create(128,sizeof(u64),sizeof(u64));
   u64 cnt = 200;
@@ -187,7 +187,6 @@ void _error(const char * file, int line, const char * msg, ...){
 int main(){
   TEST(test_hibit);
   TEST(test_list);
-  return 0;
   TEST(test_reallocation);
   TEST(mem_test);
   TEST(test_math_utils);
