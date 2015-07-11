@@ -15,15 +15,18 @@ void with_allocator(allocator * alc, void (* cb)()){
   _allocator = old_alloc;
 }
 
-void * alloc(size_t size){
+void * _alloc(size_t size){
   if(_allocator == NULL) return malloc(size);
   return _allocator->alloc(size);
 }
 
 void * alloc0(size_t size){
-  void * ptr = alloc(size);
+  void * ptr = _alloc(size);
   memset(ptr,0, size);
   return ptr;
+}
+void * alloc(size_t size){
+  return _alloc(size);
 }
 
 void dealloc(void * ptr){

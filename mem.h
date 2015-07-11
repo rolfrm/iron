@@ -29,4 +29,4 @@ void trace_allocator_release(allocator * trace_allocator);
 
 char * fmtstr(char * fmt, ...);
 
-#define new(type) alloc(sizeof(type))
+#define new(type) alloc0(sizeof(type))
