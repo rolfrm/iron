@@ -15,7 +15,7 @@ void log_print(char * fmt, ...);
 
 #define log(...) {log_print(ANSI_COLOR_YELLOW __VA_ARGS__); log_print(ANSI_COLOR_RESET);}
 #define logd(...) { if(LOG_DEBUG){log_print(ANSI_COLOR_GRAY); log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}}
-#define loge(...) {log_print(ANSI_COLOR_RED __VA_ARGS__); log_print(ANSI_COLOR_RESET);}
+#define loge(...) {log_print(ANSI_COLOR_RED);log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}
 #define ERROR_TRACE logd( "error: at '" __FILE__  "' line %i: \n",  __LINE__);
 
 // used for error handling
