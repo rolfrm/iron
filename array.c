@@ -99,3 +99,11 @@ void list_add(void ** dst, size_t * cnt, void * src, size_t item_size){
   *dst = ptr;
   memcpy(ptr + (next_size - 1) * item_size, src, item_size);
 }
+
+#include <ctype.h>
+bool all_whitespace(char * str){
+  while(*str != 0)
+    if(isspace(*str) == false)
+      return false;
+  return true;
+}

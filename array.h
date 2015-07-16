@@ -23,3 +23,6 @@ i64 sum64(i64 * values, u64 count);
 // requires dst to be allocated with malloc or NULL.
 // consider calling it stupid_list_add
 void list_add(void ** dst, size_t * cnt, void * src, size_t item_size);
+
+// Returns true if all chars in str are whitespace.
+bool all_whitespace(char * str);
