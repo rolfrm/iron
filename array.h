@@ -24,5 +24,7 @@ i64 sum64(i64 * values, u64 count);
 // consider calling it stupid_list_add
 void list_add(void ** dst, size_t * cnt, void * src, size_t item_size);
 
+void list_clean(void ** lst);
+
 // Returns true if all chars in str are whitespace.
 bool all_whitespace(char * str);

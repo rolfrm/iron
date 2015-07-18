@@ -100,6 +100,11 @@ void list_add(void ** dst, size_t * cnt, void * src, size_t item_size){
   memcpy(ptr + (next_size - 1) * item_size, src, item_size);
 }
 
+void list_clean(void ** lst){
+  dealloc(*lst);
+  *lst = NULL;
+}
+
 #include <ctype.h>
 bool all_whitespace(char * str){
   while(*str != 0)
