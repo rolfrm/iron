@@ -17,3 +17,4 @@
 #include "test.h"
 #include "fileio.h"
 #include "mem.h"
+#include "coroutines.h"
