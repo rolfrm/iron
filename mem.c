@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include "mem.h"
 #include "utils.h"
-#include "log.h"
 #include "math.h"
 #include <string.h>
+#include "log.h"
 __thread allocator * _allocator = NULL;
 
 void with_allocator(allocator * alc, void (* cb)()){
@@ -69,25 +69,25 @@ struct _block_chunk{
 
 void * block_alloc(size_t size){
   block_chunk * balc = _allocator->user_data;
-
   if(balc == NULL){
-block_chunk * newchunk = calloc(1, sizeof(block_chunk));
+    block_chunk * newchunk = malloc(sizeof(block_chunk));
     size_t start_size = size == 0 ? 128 : size * 8;
     newchunk->block_start = malloc(start_size);
     newchunk->block_front = newchunk->block_start;
     newchunk->size = start_size;
     newchunk->size_left = start_size;
+    newchunk->last = NULL;
     balc = newchunk;
     _allocator->user_data = balc;
   }
 
   if(balc->size_left < size){
-block_chunk * newchunk = calloc(1, sizeof(block_chunk));
-    size_t start_size = balc->last->size * 2;
+    block_chunk * newchunk = malloc(sizeof(block_chunk));
+    size_t start_size = balc->size * 2;
     while(start_size < size) start_size *= 2;
     
     newchunk->block_start = malloc(start_size);
-    newchunk->block_front = balc->block_start;
+    newchunk->block_front = newchunk->block_start;
     newchunk->size = start_size;
     newchunk->size_left = start_size;
     newchunk->last = balc;
@@ -133,7 +133,9 @@ void block_allocator_release(allocator * block_allocator){
 }
 
 void * trace_alloc(size_t size){
-  _allocator->user_data++;
+  u64 current_size = (u64) _allocator->user_data;
+  current_size += 1;
+  _allocator->user_data = (void *) current_size;
   return malloc(size);
 }
 
@@ -143,6 +145,7 @@ void trace_dealloc(void * ptr){
 }
 
 void * trace_ralloc(void * ptr, size_t s){
+  if(ptr == NULL) return trace_alloc(s);
   return realloc(ptr,s);
 }
 
@@ -184,3 +187,6 @@ char * fmtstr(char * fmt, ...){
   va_end (args);
   return out;
 }
+
+
+

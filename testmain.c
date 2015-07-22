@@ -170,6 +170,34 @@ bool test_list(){
   return TEST_SUCCESS;
 }
 
+
+bool do_allocator_test(){
+  size_t tstcnt = 20;
+  i64 * ptrs[tstcnt]; 
+  for(size_t i = 0; i < tstcnt; i++){
+    ptrs[i] = alloc(tstcnt * sizeof(i64));
+    i64 * ptr = ptrs[i];
+    for(size_t k = 0; k < tstcnt ; k++)
+      ptr[k] = i * tstcnt + k;
+  }
+  for(size_t i = 0; i < tstcnt*tstcnt; i++)
+    ASSERT(ptrs[i / tstcnt][i % tstcnt] == (i64)i);
+  return TEST_SUCCESS;
+}
+
+bool block_allocator_test(){
+  bool ok = TEST_SUCCESS;
+  for(int j = 0; j < 10; j++){
+    allocator * balloc = block_allocator_make();
+    with_allocator(balloc,lambda(void, (){
+	  ok &= do_allocator_test();
+	}));
+    block_allocator_release(balloc);
+  }
+  
+  return ok;
+}
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -186,7 +214,7 @@ void _error(const char * file, int line, const char * msg, ...){
 
 int main(){
 
-  return 0;
+
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
@@ -195,5 +223,6 @@ int main(){
   TEST(test_local_expressions);
   TEST(test_utils);
   TEST(test_util_hash_table);
+  TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 }
