@@ -54,6 +54,8 @@ void append_buffer_to_file(void * buffer, size_t size, char * filepath){
 
 char * read_file_to_string(char * filepath){
   FILE * f = fopen(filepath, "r");
+  if(f == NULL)
+    return NULL;
   fseek(f,0,SEEK_END);
   size_t size = ftell(f);
   char * buffer = alloc(size+1);

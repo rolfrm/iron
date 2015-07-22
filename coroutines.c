@@ -13,7 +13,6 @@
 #include "types.h"
 #include "coroutines.h"
 
-
 struct _costack{
   pthread_attr_t attr;
   void * stack;
@@ -92,7 +91,7 @@ void costack_resume( costack * stk){
   longjmp(stk->buf,stk_to_idx(stk) + 1);
 }
 
-void costack_delete( costack * stk)
+void costack_delete( costack * stk) 
 {
   stacks[stk_to_idx(stk)] = NULL;
   free(stk->stack);
@@ -121,6 +120,7 @@ void set_current_stack(costack * stk){
 }
 
 void yield(){
+
   costack * stk = *ccstack();
   yeild_states[stk_to_idx(stk) - 1] = CC_PRE_YEILD;
   costack_save(stk);
