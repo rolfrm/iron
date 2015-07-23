@@ -100,6 +100,10 @@ void list_add(void ** dst, size_t * cnt, void * src, size_t item_size){
   memcpy(ptr + (next_size - 1) * item_size, src, item_size);
 }
 
+//void list_insert(void ** dst, size_t * cnt, void * src, size_t idx, size_t item_size){
+  
+//}
+
 void list_remove(void ** lst, size_t * cnt, size_t idx, size_t item_size){
   size_t offset = idx * item_size;
   size_t rest_bytes = (*cnt - idx - 1) * item_size;

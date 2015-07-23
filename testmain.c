@@ -160,12 +160,34 @@ void bench_list_add(size_t icnt){
   for(size_t i = 0; i < icnt; i++){
     list_add(&ptr,&cnt,&i,item_size);
   }
+
+  list_remove(&ptr,&cnt,2,item_size);
+  list_remove(&ptr,&cnt,1,item_size);
   list_remove(&ptr,&cnt,0,item_size);
-  list_remove(&ptr,&cnt,0,item_size);
-  list_remove(&ptr,&cnt,0,item_size);
+  size_t s1 = cnt;
+  list_remove(&ptr,&cnt,2,item_size);
+  list_remove(&ptr,&cnt,2,item_size);
+  list_remove(&ptr,&cnt,2,item_size);
+  list_remove(&ptr,&cnt,2,item_size);
+  size_t s2 = cnt;
+  logd("s2 %i, s1 %i\n", s2, s1);
+  ASSERT(s2 == (s1 - 4));
   int * items = (int *) ptr;
   ASSERT(items[0] == 3);
+  logd("cnt: %i\n", cnt);
+  list_remove(&ptr,&cnt,4,item_size);
+  list_remove(&ptr,&cnt,6,item_size);
+  list_remove(&ptr,&cnt,16,item_size);
+  logd("cnt: %i\n", cnt);
+  items = (int *) ptr;
+  for(size_t j = 0; j < cnt; j++)
+    logd("i: %p %p\n", items[j], cnt);
   dealloc(ptr);
+}
+
+bool bench_list_add_test(){
+  bench_list_add(100);
+  return TEST_SUCCESS;
 }
 
 bool test_list(){
@@ -187,6 +209,13 @@ bool do_allocator_test(){
   }
   for(size_t i = 0; i < tstcnt*tstcnt; i++)
     ASSERT(ptrs[i / tstcnt][i % tstcnt] == (i64)i);
+  for(size_t i = 0; i < tstcnt; i++){
+    ptrs[i] = ralloc(ptrs[i],tstcnt * sizeof(i64));
+  }
+  for(size_t i = 0; i < tstcnt; i++){
+    dealloc(ptrs[i]);
+    ptrs[i] = NULL;
+  }
   return TEST_SUCCESS;
 }
 
@@ -228,6 +257,7 @@ int main(){
   TEST(test_local_expressions);
   TEST(test_utils);
   TEST(test_util_hash_table);
+  TEST(bench_list_add_test);
   TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 }

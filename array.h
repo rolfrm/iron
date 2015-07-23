@@ -23,6 +23,7 @@ i64 sum64(i64 * values, u64 count);
 // requires dst to be allocated with malloc or NULL.
 // consider calling it stupid_list_add
 void list_add(void ** dst, size_t * cnt, void * src, size_t item_size);
+void list_insert(void ** dst, size_t * cnt, void * src, size_t idx, size_t item_size);
 void list_remove(void ** dst, size_t *cnt, size_t idx, size_t item_size);
 void list_clean(void ** lst);
 

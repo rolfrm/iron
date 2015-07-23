@@ -80,11 +80,13 @@ struct _block_chunk{
 void * block_take_free(size_t s, block_chunk * bc){
   while(bc != NULL){
     for(size_t i = 0; i < bc->free_cnt; i++)
-      if(bc->free_ptrs_size[i] < s){
+      if(bc->free_ptrs_size[i] <= s){
 	void * freeptr = bc->free_ptrs[i];
-	list_remove((void **) &bc->free_ptrs, &bc->free_cnt, i, sizeof(void *));
-	bc->free_cnt++;
-	list_remove((void **) &bc->free_ptrs_size, &bc->free_cnt, i, sizeof(size_t));
+	with_allocator(NULL, lambda(void, (){
+	      list_remove((void **) &bc->free_ptrs, &bc->free_cnt, i, sizeof(void *));
+	      bc->free_cnt++;
+	      list_remove((void **) &bc->free_ptrs_size, &bc->free_cnt, i, sizeof(size_t));
+	    }));
 	return freeptr;
 
       }
@@ -137,17 +139,82 @@ void * block_alloc(size_t size){
 
 void block_dealloc(void * ptr){
   block_chunk * balc = _allocator->user_data;
-  while(balc != NULL){
-    
+  while(balc != NULL && balc->block_start > ptr)
     balc = balc->last;
+  if(balc == NULL) {
+    ERROR("No pointer");
+    return;
   }
-  
+
+  size_t size = 0;
+  for(size_t i = 0; i < balc->cnt; i++){
+    if(balc->ptrs[i] == ptr){
+      size = balc->ptrs_size[i];
+      break;
+    }
+  }
+  with_allocator(NULL, lambda(void, (){
+	list_add((void **) &balc->free_ptrs, &balc->free_cnt, &ptr, sizeof(void *));
+	balc->free_cnt--;
+	list_add((void **) &balc->free_ptrs_size, &balc->free_cnt, &size, sizeof(size_t));
+      }));
 }
 
 void * block_ralloc(void * ptr, size_t s){
-  ERROR("NOT SUPPORTED IN BLOCK ALLOCATOR");
-  UNUSED(ptr);
-  UNUSED(s);
+  block_chunk * front = _allocator->user_data;
+  block_chunk * balc = front;
+  if(balc == NULL || ptr == NULL){
+    ASSERT(ptr == NULL);
+    return block_alloc(s);
+  }
+  while(balc != NULL && balc->block_start > ptr)
+    balc = balc->last;
+  
+  ASSERT(balc != NULL);
+  for(size_t i = 0; i < balc->cnt; i++){
+    logd("%p == %p  | %p\n", ptr, balc->ptrs[i], balc->block_start);
+    if(balc->ptrs[i] == ptr){
+      size_t sn = balc->ptrs_size[i];
+      if(sn >= s){
+	return ptr;
+      }else{
+	if(i < balc->cnt - 1){
+	  void * nextptr = balc->ptrs[i];
+	  for(size_t j = 0; j < balc->free_cnt; j++){
+	    if(balc->free_ptrs[j] == nextptr){
+	      //absorb this ptr
+	      with_allocator(NULL, lambda(void, (){
+		    balc->ptrs_size[i] += balc->free_ptrs_size[j];
+		    list_remove((void **) &balc->free_ptrs_size, &balc->free_cnt, j, sizeof(size_t));
+		    balc->free_cnt++;
+		    list_remove((void **) &balc->free_ptrs, &balc->free_cnt, j, sizeof(void *));
+		    list_remove((void **) &balc->ptrs_size, &balc->cnt, j, sizeof(size_t));
+		    balc->cnt++;
+		    list_remove((void **) &balc->ptrs, &balc->cnt, j, sizeof(void *));
+		  }));
+	      if(balc->ptrs_size[i] <= s){
+		return balc->ptrs[i];
+	      }else{
+		// sigh..
+		return block_ralloc(ptr, s);
+	      }
+	    }
+	  }
+	}
+	else if(balc->size_left + sn <= s){
+	  balc->ptrs_size[i] = s;
+	  return ptr;
+	}
+      }
+      void * nptr = block_alloc(s);
+      memcpy(nptr, ptr, sn);
+      block_dealloc(ptr);
+      return nptr;
+    }
+  }
+  logd("balc-cnt: %i %p\n", balc->cnt, ptr);
+  ERROR("Should never happen!");
+  ASSERT(false);
   return ptr;
 }
 
