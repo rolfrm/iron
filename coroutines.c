@@ -229,6 +229,7 @@ ccdispatch * ccstart(){
 }
 
 void ccstep(ccdispatch * dis){
+  if(dis->stks_count == 0) return;
   sem_wait(&dis->running_sem);
   sem_post(&dis->sem);
 }

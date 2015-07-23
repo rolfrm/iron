@@ -160,6 +160,11 @@ void bench_list_add(size_t icnt){
   for(size_t i = 0; i < icnt; i++){
     list_add(&ptr,&cnt,&i,item_size);
   }
+  list_remove(&ptr,&cnt,0,item_size);
+  list_remove(&ptr,&cnt,0,item_size);
+  list_remove(&ptr,&cnt,0,item_size);
+  int * items = (int *) ptr;
+  ASSERT(items[0] == 3);
   dealloc(ptr);
 }
 

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "stdbool.h"
 #include "types.h"
 #include <stdlib.h>
 #include "mem.h"
@@ -6,6 +7,8 @@
 #include "math.h"
 #include <string.h>
 #include "log.h"
+#include "types.h"
+#include "array.h"
 __thread allocator * _allocator = NULL;
 
 void with_allocator(allocator * alc, void (* cb)()){
@@ -65,24 +68,50 @@ struct _block_chunk{
   void * block_front;
   void * block_start;
   block_chunk * last;
+  void ** ptrs;
+  size_t * ptrs_size;
+  size_t cnt; 
+  void ** free_ptrs;
+  size_t * free_ptrs_size;
+  size_t free_cnt;
+  
 };
+
+void * block_take_free(size_t s, block_chunk * bc){
+  while(bc != NULL){
+    for(size_t i = 0; i < bc->free_cnt; i++)
+      if(bc->free_ptrs_size[i] < s){
+	void * freeptr = bc->free_ptrs[i];
+	list_remove((void **) &bc->free_ptrs, &bc->free_cnt, i, sizeof(void *));
+	bc->free_cnt++;
+	list_remove((void **) &bc->free_ptrs_size, &bc->free_cnt, i, sizeof(size_t));
+	return freeptr;
+
+      }
+    bc = bc->last;
+  }
+  return NULL;
+}
 
 void * block_alloc(size_t size){
   block_chunk * balc = _allocator->user_data;
+  void * freeptr = block_take_free(size, balc);
+  if(freeptr != NULL)
+    return freeptr;
   if(balc == NULL){
-    block_chunk * newchunk = malloc(sizeof(block_chunk));
+    block_chunk * newchunk = calloc(1, sizeof(block_chunk));
     size_t start_size = size == 0 ? 128 : size * 8;
     newchunk->block_start = malloc(start_size);
     newchunk->block_front = newchunk->block_start;
     newchunk->size = start_size;
     newchunk->size_left = start_size;
-    newchunk->last = NULL;
     balc = newchunk;
     _allocator->user_data = balc;
   }
 
+
   if(balc->size_left < size){
-    block_chunk * newchunk = malloc(sizeof(block_chunk));
+    block_chunk * newchunk = calloc(1, sizeof(block_chunk));
     size_t start_size = balc->size * 2;
     while(start_size < size) start_size *= 2;
     
@@ -98,12 +127,21 @@ void * block_alloc(size_t size){
   void * ret = balc->block_front;
   balc->size_left -= size;
   balc->block_front += size;
+  with_allocator(NULL, lambda(void, (){
+	list_add((void **) &balc->ptrs, &balc->cnt,&ret, sizeof(void *));
+	balc->cnt--;
+	list_add((void **) &balc->ptrs_size, &balc->cnt,&size, sizeof(size_t));
+      }));
   return ret;
 }
 
 void block_dealloc(void * ptr){
-  // does nothing.
-  UNUSED(ptr);
+  block_chunk * balc = _allocator->user_data;
+  while(balc != NULL){
+    
+    balc = balc->last;
+  }
+  
 }
 
 void * block_ralloc(void * ptr, size_t s){
@@ -126,6 +164,8 @@ void block_allocator_release(allocator * block_allocator){
   block_chunk * balc = block_allocator->user_data;
   while(balc != NULL){
     block_chunk * next = balc->last;
+    if(balc->ptrs != NULL)
+      list_clean((void **) &balc->ptrs);
     free(balc->block_start);
     free(balc);
     balc = next;
