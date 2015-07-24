@@ -113,9 +113,10 @@ void list_remove(void ** lst, size_t * cnt, size_t idx, size_t item_size){
 }
 
 
-void list_clean(void ** lst){
+void list_clean(void ** lst, size_t * cnt){
   dealloc(*lst);
   *lst = NULL;
+  *cnt = 0;
 }
 
 #include <ctype.h>

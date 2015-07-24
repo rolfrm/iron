@@ -232,7 +232,7 @@ void block_allocator_release(allocator * block_allocator){
   while(balc != NULL){
     block_chunk * next = balc->last;
     if(balc->ptrs != NULL)
-      list_clean((void **) &balc->ptrs);
+      list_clean((void **) &balc->ptrs, &balc->cnt);
     free(balc->block_start);
     free(balc);
     balc = next;
