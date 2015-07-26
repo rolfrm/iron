@@ -13,7 +13,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 typedef uint64_t u64;
-typedef unsigned __int128 u128;
+//typedef unsigned __int128 u128;
 
 typedef char * str;
 

@@ -5,7 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-
+#include <stdarg.h>
 #include "linmath.h"
 #include "types.h"
 #include "math.h"

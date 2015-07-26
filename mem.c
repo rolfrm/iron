@@ -1,11 +1,15 @@
 #include <stdint.h>
-#include "stdbool.h"
-#include "types.h"
+#include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "fileio.h"
+#include "types.h"
 #include "mem.h"
 #include "utils.h"
 #include "math.h"
-#include <string.h>
 #include "log.h"
 #include "types.h"
 #include "array.h"
@@ -274,26 +278,23 @@ size_t trace_allocator_allocated_pointers(allocator * trace_allocator){
   return (size_t) trace_allocator->user_data;
 }
 
-#include <stdarg.h>
-#include <stdio.h>
-#include "fileio.h"
-char * fmtstr(char * fmt, ...){
-  //  va_list args;
-  //  va_start (args, msg);
-  //  vprintf (msg, args);
-  //  va_end (args);
-  va_list args;
-  va_start (args, fmt);
-  size_t size = vsnprintf (NULL, 0, fmt, args) + 1;
-  va_end (args);
 
+
+char * vfmtstr(char * fmt, va_list args){
+  va_list args2;
+  va_copy(args2, args);
+  size_t size = vsnprintf (NULL, 0, fmt, args2) + 1;
+  va_end(args2);
   char * out = alloc(size);
-
-  va_start (args, fmt);  
   vsprintf (out, fmt, args);
-  va_end (args);
+  va_end(args);
   return out;
 }
 
+char * fmtstr(char * fmt, ...){
+  va_list args;
+  va_start (args, fmt);
+  return vfmtstr(fmt, args);
+}
 
 
