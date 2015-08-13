@@ -122,13 +122,18 @@ void set_current_stack(costack * stk){
 void yield(){
 
   costack * stk = *ccstack();
-  yeild_states[stk_to_idx(stk) - 1] = CC_PRE_YEILD;
+  int idx = stk_to_idx(stk) - 1;
+  if(idx < 0 || idx >= 100) return;
+  yeild_states[idx] = CC_PRE_YEILD;
   costack_save(stk);
-  if(yeild_states[stk_to_idx(stk) - 1] == CC_PRE_YEILD ){
-    yeild_states[stk_to_idx(stk) - 1] = CC_YEILDED; 
+  
+  idx = stk_to_idx(stk) - 1;
+  if(idx < 0 || idx >= 100) return;
+  if(yeild_states[idx] == CC_PRE_YEILD ){
+    yeild_states[idx] = CC_YEILDED; 
     costack_resume(*(mstack()));
   }else{
-    yeild_states[stk_to_idx(stk) - 1] = CC_RESUMED; 
+    yeild_states[idx] = CC_RESUMED; 
   }
 }
 

@@ -60,6 +60,7 @@ char * read_file_to_string(char * filepath){
   size_t size = ftell(f);
   char * buffer = alloc0(size+1);
   fseek(f, 0, SEEK_SET);
-  fread(buffer,size,1,f);
+  size_t l = fread(buffer,size,1,f);
+  ASSERT(l == 1);
   return buffer;
 }
