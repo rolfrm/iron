@@ -5,4 +5,5 @@ void push_format_out(void * file);
 void pop_format_out();
 void write_buffer_to_file(void * buffer,size_t s, char * filepath);
 void append_buffer_to_file(void * buffer, size_t s, char * filepath);
+char * read_stream_to_string(void * file);
 char * read_file_to_string(char * filepath);

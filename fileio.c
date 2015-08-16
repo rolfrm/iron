@@ -52,9 +52,8 @@ void append_buffer_to_file(void * buffer, size_t size, char * filepath){
   fclose(f);
 }
 
-char * read_file_to_string(char * filepath){
-  FILE * f = fopen(filepath, "r");
-  if(f == NULL)
+char * read_stream_to_string(FILE * f){
+if(f == NULL)
     return NULL;
   fseek(f,0,SEEK_END);
   size_t size = ftell(f);
@@ -63,4 +62,11 @@ char * read_file_to_string(char * filepath){
   size_t l = fread(buffer,size,1,f);
   ASSERT(l == 1);
   return buffer;
+}
+
+char * read_file_to_string(char * filepath){
+  FILE * f = fopen(filepath, "r");
+  char * data = read_stream_to_string(f);
+  fclose(f);
+  return data;
 }
