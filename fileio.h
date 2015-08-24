@@ -7,3 +7,5 @@ void write_buffer_to_file(void * buffer,size_t s, char * filepath);
 void append_buffer_to_file(void * buffer, size_t s, char * filepath);
 char * read_stream_to_string(void * file);
 char * read_file_to_string(char * filepath);
+int enter_dir_of(char * path);
+int get_filename(char * buffer, char * filepath);

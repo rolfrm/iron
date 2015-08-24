@@ -66,7 +66,48 @@ if(f == NULL)
 
 char * read_file_to_string(char * filepath){
   FILE * f = fopen(filepath, "r");
+  if(f == NULL) return NULL;
   char * data = read_stream_to_string(f);
   fclose(f);
   return data;
+}
+
+int chdir(char * path);
+
+int last_slash(char * path){
+  int last_slash_idx = -1;
+  {
+    char * it = path;
+    while(*it != 0){
+      if(*it == '/')
+	last_slash_idx = it - path;
+      it++;
+    }
+  }
+  return last_slash_idx;
+}
+
+int enter_dir_of(char * path){ 
+  int last_slash_idx = last_slash( path );
+  if(last_slash_idx == -1)
+    return -1;
+  char dirbuf[100];
+  sprintf(dirbuf, "%.*s", last_slash_idx, path);
+  chdir(dirbuf);
+  return 0;
+}
+
+int get_filename(char * buffer, char * path){
+  int last_slash_idx = last_slash( path );
+  if(last_slash_idx == -1)
+    last_slash_idx = 0;
+  else last_slash_idx += 1;
+  path += last_slash_idx;
+  while(*path != 0){
+    *buffer = *path;
+    buffer++;
+    path++;
+  }
+  *buffer = 0;
+  return 0;
 }
