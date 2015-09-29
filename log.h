@@ -11,7 +11,7 @@
 #define array_element_size(array) sizeof(array[0])
 #define array_count(array) (sizeof(array)/array_element_size(array))
 
-void log_print(char * fmt, ...);
+void log_print(const char * fmt, ...);
 
 #define log(...) {log_print(ANSI_COLOR_YELLOW __VA_ARGS__); log_print(ANSI_COLOR_RESET);}
 #define logd(...) { if(LOG_DEBUG){log_print(ANSI_COLOR_GRAY); log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}}
