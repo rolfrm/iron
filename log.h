@@ -22,5 +22,11 @@ void log_print(const char * fmt, ...);
 // needs to be implemented in user code
 void _error(const char * file, int line, const char * message, ...);
 #define ERROR(msg,...) _error(__FILE__,__LINE__,msg, ##__VA_ARGS__) 
+#ifdef DEBUG
 #define ASSERT(expr) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}
 #define UNREACHABLE() {ERROR("Should not be reachable");}
+#else
+#define ASSERT(expr) if(0) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}
+#define UNREACHABLE();
+#endif
+
