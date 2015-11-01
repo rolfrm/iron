@@ -12,8 +12,10 @@
 #include "types.h"
 #include "math.h"
 
+#define prefix __attribute__((const)) __attribute__((always_inline)) inline
+
 #define _LINMATH_H_OP(n,name, op)				\
-  vec##n vec##n##_##name (vec##n a, vec##n const b){		\
+  prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
     for(int i=0; i<n; ++i) a.data[i] = a.data[i] op b.data[i];	\
     return a;							\
   }
@@ -24,7 +26,7 @@
   _LINMATH_H_OP(n,sub,-)						\
   _LINMATH_H_OP(n,mul,*)						\
   _LINMATH_H_OP(n,div,/)						\
-  vec##n vec##n##_scale(vec##n v, float s)				\
+  prefix vec##n vec##n##_scale(vec##n v, float s)				\
   {									\
     for(int i=0; i<n; ++i)						\
       v.data[i] *= s;							\
@@ -60,15 +62,15 @@ _LINMATH_H_DEFINE_VEC(2)
 _LINMATH_H_DEFINE_VEC(3)
 _LINMATH_H_DEFINE_VEC(4)
 
-vec2 vec2mk(float x, float y){
+inline vec2 vec2mk(float x, float y){
   return (vec2){.data = {x,y}};
 }
 
-vec3 vec3mk(float x, float y, float z){
+inline vec3 vec3mk(float x, float y, float z){
   return (vec3){.data = {x,y,z}};
 }
 
-vec4 vec4mk(float x, float y, float z, float w){
+inline vec4 vec4mk(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
 
