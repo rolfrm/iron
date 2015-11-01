@@ -2,6 +2,8 @@
 i32 jump_consistent_hash(u64 key, i32 num_buckets);
 i32 jump_consistent_hash_raw(void * data, size_t length, i32 num_buckets);
 i32 jump_consistent_hash_str(char * str, i32 num_buckets);
+i64 iron_hash(void * data, u64 len);
+void iron_hash_init();
 // Hash table //
 typedef struct _hash_table hash_table;
 // Creats a new hash table. hf must return a 0 <= number < buckets for arbitrary key_data.
