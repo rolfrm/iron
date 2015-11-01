@@ -21,3 +21,10 @@ void ht_insert(hash_table * ht, void * key, void * elem);
 
 // Removes an element in the table.
 void ht_remove(hash_table * ht, void * key);
+
+typedef struct _dod_hash_table dod_hash_table;
+dod_hash_table * dod_ht_create(size_t n_cells, size_t key_size, size_t elem_size);
+void dod_ht_insert(dod_hash_table * hashtable, void * keys, void * values, size_t cnt);
+void dod_ht_remove(dod_hash_table * hashtable, void * keys, size_t cnt);
+void dod_ht_lookup(dod_hash_table * hashtable, void * keys, void * out_values, int cnt);
+void dod_ht_clear(dod_hash_table * hashtable);

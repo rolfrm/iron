@@ -53,14 +53,15 @@ void append_buffer_to_file(void * buffer, size_t size, char * filepath){
 }
 
 char * read_stream_to_string(FILE * f){
-if(f == NULL)
+  if(f == NULL)
     return NULL;
   fseek(f,0,SEEK_END);
   size_t size = ftell(f);
   char * buffer = alloc0(size+1);
   fseek(f, 0, SEEK_SET);
-  size_t l = fread(buffer,size,1,f);
-  ASSERT(l == 1);
+  size_t l =fread(buffer,size,1,f);
+  (void)(l);
+  //UNUSED(l);//ASSERT(l > 0));
   return buffer;
 }
 

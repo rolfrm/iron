@@ -152,3 +152,51 @@ void ht_remove(hash_table * ht, void * key){
     }
   }
 }
+
+/*typedef struct {
+  u64 * keys;
+  u64 * values;
+  u64 cnt;
+}dod_hash_cell;
+
+struct _dod_hash_table{
+  dod_hash_cell * cells;
+  size_t n_cells;
+  size_t elem_size;
+  size_t key_size;
+};
+const size_t hash_size = sizeof(i32);
+i32 calc_hash(void * item, size_t item_size){
+  UNUSED(item);
+  UNUSED(item_size);
+  return 0;
+}
+static void calc_hashes(void * items_to_hash, void * out_buffer, size_t cnt, size_t key_size){
+  for(int i = 0; i < cnt; i++){
+    void * item_ptr = items_to_hash + key_size * i;
+    i32 * out_ptr = out_buffer + i * hash_size;
+    *out_ptr = calc_hash(item_ptr, key_size);
+  }
+}
+
+dod_hash_table * dod_ht_create(size_t n_cells, size_t key_size, size_t elem_size){
+  dod_hash_table t;
+  t.cells = alloc0(n_cells * sizeof(dod_hash_cell));
+  t.n_cells = n_cells;
+  t.elem_size = elem_size;
+  t.key_size = key_size;
+  return clone(&t, sizeof(dod_hash_table));
+}
+
+void dod_ht_insert(dod_hash_table * t, void * k, void * v, size_t cnt){
+  __thread__ static void * key_buffer = NULL;
+  __thread__ static size_t key_buffer_length = 0;
+  if(key_buffer_length < cnt){
+    key_buffer = realloc(key_buffer, cnt * t->key_size);
+    key_buffer_length = cnt;
+  }
+  calc_hashes(k, key_buffer, cnt, t->key_size);
+  // now i need to sort 'k' 'v' and key_buffer by key_buffer;
+  
+}
+*/
