@@ -51,7 +51,7 @@ void * ralloc(void * ptr, size_t newsize){
   return _allocator->ralloc(ptr,newsize);
 }
 
-void * clone(void * src, size_t s){
+void * iron_clone(void * src, size_t s){
   void * out = alloc(s);
   memcpy(out, src, s);
   return out;
