@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <stdint.h>
+#include <unistd.h>
 #include "types.h"
 
 u64 timestamp(){
@@ -17,5 +18,5 @@ u64 measure_elapsed(void (*fcn)()){
 }
 
 void iron_usleep(int microseconds){
-  usleep(microsleep);
+  usleep(microseconds);
 }

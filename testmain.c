@@ -82,7 +82,7 @@ bool test_utils(){
   //tim.tv_nsec = (wait - 1000) * 1000;
 
   //  nanosleep(tim);
-  usleep(wait-1000); //why is this needed?
+  iron_usleep(wait-1000); //why is this needed?
   u64 stop = timestamp();
   ok &= ABS(stop - start - wait) < 2000; //wont be exactly precise
 
