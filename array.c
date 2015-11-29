@@ -93,7 +93,7 @@ void apply_arraydi(double * data, int cnt, void (* fcn) (double,int)){
 }
 
 
-void list_add(void ** dst, size_t * cnt, void * src, size_t item_size){
+void list_add(void ** dst, size_t * cnt, const void * src, size_t item_size){
   size_t next_size = ++(*cnt);
   void * ptr = *dst;
   ptr =  ralloc(ptr, next_size * item_size);

@@ -11,7 +11,6 @@
 #include "utils.h"
 #include "math.h"
 #include "log.h"
-#include "types.h"
 #include "array.h"
 __thread allocator * _allocator = NULL;
 
@@ -51,7 +50,7 @@ void * ralloc(void * ptr, size_t newsize){
   return _allocator->ralloc(ptr,newsize);
 }
 
-void * iron_clone(void * src, size_t s){
+void * iron_clone(const void * src, size_t s){
   void * out = alloc(s);
   memcpy(out, src, s);
   return out;
