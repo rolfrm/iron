@@ -14,7 +14,7 @@ void dealloc(void * ptr);
 void * ralloc(void * ptr, size_t size);
 void * alloc0(size_t);
 
-// slower than expected. reallocs nearest power of 2 size. Making int practical for vectors.
+// slower than expected. reallocs nearest power of 2 size. Making it impractical for vectors.
 //void * ralloc2(void * ptr, size_t size);
 
 void * iron_clone(const void * src, size_t s);
@@ -28,8 +28,4 @@ size_t trace_allocator_allocated_pointers(allocator * trace_allocator);
 void trace_allocator_release(allocator * trace_allocator);
 
 char * fmtstr(char * fmt, ...);
-char * vfmtstr(char * fmt, va_list args);
 #define new(type) alloc0(sizeof(type))
-
-//test
-
