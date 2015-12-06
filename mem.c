@@ -277,9 +277,7 @@ size_t trace_allocator_allocated_pointers(allocator * trace_allocator){
   return (size_t) trace_allocator->user_data;
 }
 
-
-
-char * vfmtstr(char * fmt, va_list args){
+char * vfmtstr(const char * fmt, va_list args){
   va_list args2;
   va_copy(args2, args);
   size_t size = vsnprintf (NULL, 0, fmt, args2) + 1;
@@ -290,7 +288,7 @@ char * vfmtstr(char * fmt, va_list args){
   return out;
 }
 
-char * fmtstr(char * fmt, ...){
+char * fmtstr(const char * fmt, ...){
   va_list args;
   va_start (args, fmt);
   return vfmtstr(fmt, args);

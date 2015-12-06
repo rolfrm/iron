@@ -25,7 +25,7 @@ void with_format_out(void * file, void (* fcn)()){
   outfile = old;
 }
 
-void format(char * fmt, ...){
+void format(const char * fmt, ...){
   va_list args;
   va_start (args, fmt);
   vfprintf(outfile == NULL ? stdout : outfile, fmt, args);
@@ -36,7 +36,7 @@ void * get_format_out(){
   return outfile;
 }
 
-void write_buffer_to_file(void * buffer, size_t size, char * filepath){
+void write_buffer_to_file(const void * buffer, size_t size, const char * filepath){
   FILE * f = fopen(filepath, "w");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
@@ -44,7 +44,7 @@ void write_buffer_to_file(void * buffer, size_t size, char * filepath){
   fclose(f);
 }
 
-void append_buffer_to_file(void * buffer, size_t size, char * filepath){
+void append_buffer_to_file(const void * buffer, size_t size, const char * filepath){
   FILE * f = fopen(filepath, "a");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
@@ -52,33 +52,45 @@ void append_buffer_to_file(void * buffer, size_t size, char * filepath){
   fclose(f);
 }
 
-char * read_stream_to_string(FILE * f){
+void * read_stream_to_buffer(FILE * f, size_t * size){
   if(f == NULL)
     return NULL;
   fseek(f,0,SEEK_END);
-  size_t size = ftell(f);
-  char * buffer = alloc0(size+1);
+  *size = ftell(f);
+  char * buffer = alloc0(*size);
   fseek(f, 0, SEEK_SET);
-  size_t l =fread(buffer,size,1,f);
+  size_t l =fread(buffer,*size,1,f);
   (void)(l);
   //UNUSED(l);//ASSERT(l > 0));
   return buffer;
 }
 
-char * read_file_to_string(char * filepath){
+char * read_stream_to_string(FILE * f){
+  size_t s;
+  return read_stream_to_buffer(f, &s);
+}
+
+void * read_file_to_buffer(const char * filepath, size_t * size){
   FILE * f = fopen(filepath, "r");
   if(f == NULL) return NULL;
-  char * data = read_stream_to_string(f);
+  char * data = read_stream_to_buffer(f, size);
   fclose(f);
   return data;
 }
 
-int chdir(char * path);
+char * read_file_to_string(const char * filepath){
+  size_t size;
+  return read_file_to_buffer(filepath, &size);
+}
 
-int last_slash(char * path){
+
+
+int chdir(const char * path);
+
+int last_slash(const char * path){
   int last_slash_idx = -1;
   {
-    char * it = path;
+    char * it = (char *) path;
     while(*it != 0){
       if(*it == '/')
 	last_slash_idx = it - path;
@@ -88,7 +100,7 @@ int last_slash(char * path){
   return last_slash_idx;
 }
 
-int enter_dir_of(char * path){ 
+int enter_dir_of(const char * path){ 
   int last_slash_idx = last_slash( path );
   if(last_slash_idx == -1)
     return -1;
@@ -98,7 +110,7 @@ int enter_dir_of(char * path){
   return 0;
 }
 
-int get_filename(char * buffer, char * path){
+int get_filename(char * buffer, const char * path){
   int last_slash_idx = last_slash( path );
   if(last_slash_idx == -1)
     last_slash_idx = 0;

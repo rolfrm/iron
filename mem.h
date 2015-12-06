@@ -27,5 +27,5 @@ size_t trace_allocator_used_mem();
 size_t trace_allocator_allocated_pointers(allocator * trace_allocator);
 void trace_allocator_release(allocator * trace_allocator);
 
-char * fmtstr(char * fmt, ...);
+char * fmtstr(const char * fmt, ...);
 #define new(type) alloc0(sizeof(type))
