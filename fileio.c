@@ -41,6 +41,8 @@ void write_buffer_to_file(const void * buffer, size_t size, const char * filepat
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
   fwrite(buffer,size,1,f);
+  fflush(f);
+  fsync(f);
   fclose(f);
 }
 

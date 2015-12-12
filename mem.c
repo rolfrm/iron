@@ -31,7 +31,7 @@ void with_allocator(allocator * alc, void (* cb)()){
 
 void * _alloc(size_t size){
   if(_allocator == NULL) return malloc(size);
-  return _allocator->alloc(size);
+  return _allocator->alloc(_allocator, size);
 }
 
 void * alloc0(size_t size){
@@ -47,7 +47,7 @@ void dealloc(void * ptr){
   if(_allocator == NULL){
     free(ptr);
   }else{
-    _allocator->dealloc(ptr);
+    _allocator->dealloc(_allocator, ptr);
   }
 }
 
@@ -55,19 +55,13 @@ void * ralloc(void * ptr, size_t newsize){
   if(_allocator == NULL){
     return realloc(ptr, newsize); 
   }
-  return _allocator->ralloc(ptr,newsize);
+  return _allocator->ralloc(_allocator, ptr,newsize);
 }
 
 void * iron_clone(const void * src, size_t s){
   void * out = alloc(s);
   memcpy(out, src, s);
   return out;
-
-}
-
-// fun experiment, but it turns out that this is already what it does. so slow...
-void * ralloc2(void * ptr, size_t newsize){
-  return ralloc(ptr,  2 << hibit(newsize));
 }
 
 struct _block_chunk;
@@ -106,8 +100,8 @@ void * block_take_free(size_t s, block_chunk * bc){
   return NULL;
 }
 
-void * block_alloc(size_t size){
-  block_chunk * balc = _allocator->user_data;
+void * block_alloc(allocator * self, size_t size){
+  block_chunk * balc = self->user_data;
   void * freeptr = block_take_free(size, balc);
   if(freeptr != NULL)
     return freeptr;
@@ -119,7 +113,7 @@ void * block_alloc(size_t size){
     newchunk->size = start_size;
     newchunk->size_left = start_size;
     balc = newchunk;
-    _allocator->user_data = balc;
+    self->user_data = balc;
   }
 
 
@@ -134,7 +128,7 @@ void * block_alloc(size_t size){
     newchunk->size_left = start_size;
     newchunk->last = balc;
     balc = newchunk;
-    _allocator->user_data = balc;
+    self->user_data = balc;
   }
 
   void * ret = balc->block_front;
@@ -148,8 +142,8 @@ void * block_alloc(size_t size){
   return ret;
 }
 
-void block_dealloc(void * ptr){
-  block_chunk * balc = _allocator->user_data;
+void block_dealloc(allocator * self, void * ptr){
+  block_chunk * balc = self->user_data;
   while(balc != NULL && balc->block_start > ptr)
     balc = balc->last;
   if(balc == NULL) {
@@ -171,12 +165,12 @@ void block_dealloc(void * ptr){
       }));
 }
 
-void * block_ralloc(void * ptr, size_t s){
-  block_chunk * front = _allocator->user_data;
+void * block_ralloc(allocator * self, void * ptr, size_t s){
+  block_chunk * front = self->user_data;
   block_chunk * balc = front;
   if(balc == NULL || ptr == NULL){
     ASSERT(ptr == NULL);
-    return block_alloc(s);
+    return block_alloc(self, s);
   }
   while(balc != NULL && balc->block_start > ptr)
     balc = balc->last;
@@ -207,7 +201,7 @@ void * block_ralloc(void * ptr, size_t s){
 		return balc->ptrs[i];
 	      }else{
 		// sigh..
-		return block_ralloc(ptr, s);
+		return block_ralloc(self, ptr, s);
 	      }
 	    }
 	  }
@@ -217,9 +211,9 @@ void * block_ralloc(void * ptr, size_t s){
 	  return ptr;
 	}
       }
-      void * nptr = block_alloc(s);
+      void * nptr = block_alloc(self, s);
       memcpy(nptr, ptr, sn);
-      block_dealloc(ptr);
+      block_dealloc(self, ptr);
       return nptr;
     }
   }
@@ -250,19 +244,20 @@ void block_allocator_release(allocator * block_allocator){
   }
 }
 
-void * trace_alloc(size_t size){
-  u64 current_size = (u64) _allocator->user_data;
+void * trace_alloc(allocator * self, size_t size){
+  u64 current_size = (u64) self->user_data;
   current_size += 1;
-  _allocator->user_data = (void *) current_size;
+  self->user_data = (void *) current_size;
   return malloc(size);
 }
 
-void trace_dealloc(void * ptr){
-  _allocator->user_data--;
+void trace_dealloc(allocator * self,void * ptr){
+  self->user_data--;
   free(ptr);
 }
 
-void * trace_ralloc(void * ptr, size_t s){
+void * trace_ralloc(allocator * self, void * ptr, size_t s){
+  if(ptr == NULL) return trace_alloc(self, s);
   return realloc(ptr,s);
 }
 

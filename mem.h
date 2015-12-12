@@ -1,11 +1,13 @@
 // custom allocator functionality
 
-typedef struct{
-  void * (* alloc)(size_t size);
-  void (* dealloc) (void * ptr);
-  void *(* ralloc)(void * ptr, size_t size);
+typedef struct _allocator allocator;
+
+struct _allocator{
+  void * (* alloc)(allocator * self, size_t size);
+  void (* dealloc) (allocator * self, void * ptr);
+  void *(* ralloc)(allocator * self, void * ptr, size_t size);
   void * user_data;
-}allocator;
+};
 
 void with_allocator(allocator * alc, void (* cb)());
 allocator * iron_get_allocator();
@@ -15,9 +17,6 @@ void * alloc(size_t);
 void dealloc(void * ptr);
 void * ralloc(void * ptr, size_t size);
 void * alloc0(size_t);
-
-// slower than expected. reallocs nearest power of 2 size. Making it impractical for vectors.
-//void * ralloc2(void * ptr, size_t size);
 
 void * iron_clone(const void * src, size_t s);
 
