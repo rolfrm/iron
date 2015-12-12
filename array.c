@@ -110,7 +110,7 @@ void list_remove(void ** lst, size_t * cnt, size_t idx, size_t item_size){
   size_t rest_bytes = (*cnt - idx - 1) * item_size;
   memcpy(*lst + offset, *lst + offset + item_size, rest_bytes);
   *cnt -= 1;
-  *lst = realloc(*lst, *cnt * item_size);
+  *lst = ralloc(*lst, *cnt * item_size);
 }
 
 

@@ -8,6 +8,8 @@ typedef struct{
 }allocator;
 
 void with_allocator(allocator * alc, void (* cb)());
+allocator * iron_get_allocator();
+void iron_set_allocator(allocator * alc);
 
 void * alloc(size_t);
 void dealloc(void * ptr);

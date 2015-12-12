@@ -14,6 +14,14 @@
 #include "array.h"
 __thread allocator * _allocator = NULL;
 
+void iron_set_allocator(allocator * alc){
+  _allocator = alc;
+}
+
+allocator * iron_get_allocator(){
+  return _allocator;
+}
+
 void with_allocator(allocator * alc, void (* cb)()){
   allocator * old_alloc = _allocator;
   _allocator = alc;
@@ -255,7 +263,6 @@ void trace_dealloc(void * ptr){
 }
 
 void * trace_ralloc(void * ptr, size_t s){
-  if(ptr == NULL) return trace_alloc(s);
   return realloc(ptr,s);
 }
 

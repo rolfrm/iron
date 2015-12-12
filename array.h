@@ -20,13 +20,17 @@ i64 sum64(i64 * values, u64 count);
 // List //
 // adds an element to the array.
 // not very efficient, but easy.
-// requires dst to be allocated with malloc or NULL.
-// consider calling it stupid_list_add
+// requires dst to be allocated with alloc or NULL.
 void list_add(void ** dst, size_t * cnt, const void * src, size_t item_size);
 void list_insert(void ** dst, size_t * cnt, const void * src, size_t idx, size_t item_size);
 void list_remove(void ** dst, size_t *cnt, size_t idx, size_t item_size);
 void list_clean(void ** lst, size_t * cnt);
+
+// The functions below are even more simple. They add / removes items from lists, but does not change count.
+// Changing count is up to the user. This can be used for changing multiple arrays at the same time.
+// Adds an item to the end of the array
 #define list_push(array, cnt, item) array = ralloc(array,sizeof(array[0]) * ( cnt + 1)); array[cnt] = item;
+// removes a specified index from the array. It does not reallocate.
 #define list_remove2(array,cnt,index) memmove(&array[index],&array[index+1],(cnt - index - 1) * sizeof(array[0]));
 // Returns true if all chars in str are whitespace.
 bool all_whitespace(char * str);
