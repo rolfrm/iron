@@ -1,7 +1,12 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h> //fsync
 #include "log.h"
 #include "mem.h"
+#include "fileio.h"
 static __thread FILE * outfile = NULL;
 
 size_t stksize = 0;
@@ -36,14 +41,52 @@ void * get_format_out(){
   return outfile;
 }
 
+void write_buffer_to_file_(const void * buffer, size_t size, const char * filepath){
+  int fd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC |O_SYNC, 0660);
+  if(fd == 0)
+    ERROR("Unable to open file '%s'",filepath);
+  write(fd, buffer,size);
+  fsync(fd);
+  fdatasync(fd);
+
+  close(fd);
+}
+
 void write_buffer_to_file(const void * buffer, size_t size, const char * filepath){
-  FILE * f = fopen(filepath, "w");
+  FILE * f = fopen(filepath, "w+");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
   fwrite(buffer,size,1,f);
   fflush(f);
-  fsync(f);
   fclose(f);
+}
+
+void test_buffer_bug(){
+#define BUFFER_SIZE 1000
+  for(char i = 1; i < 100; i++){
+    logd("IT: %i\n", i);
+    char set = i;
+    {
+      char * buffer = alloc0(BUFFER_SIZE);
+      buffer[BUFFER_SIZE/2] = set;//memset(buffer, set, sizeof(buffer));
+      write_buffer_to_file(buffer, BUFFER_SIZE, "__TEST1__");
+      buffer[BUFFER_SIZE/2] = set + 1;
+      write_buffer_to_file(buffer, BUFFER_SIZE, "__TEST2__");
+      dealloc(buffer);
+    }
+    {
+      size_t s1,s2;
+      char * b1 = read_file_to_buffer("__TEST1__", &s1);
+      char * b2 = read_file_to_buffer("__TEST2__", &s2);
+      ASSERT(s1 == BUFFER_SIZE);
+      ASSERT(s2 == BUFFER_SIZE);
+      ASSERT(b1[BUFFER_SIZE/2] == set);
+      ASSERT(b2[BUFFER_SIZE/2] == set + 1);
+      dealloc(b1);dealloc(b2);
+    }
+  }
+  printf("OK!\n");
+  #undef BUFFER_SIZE
 }
 
 void append_buffer_to_file(const void * buffer, size_t size, const char * filepath){

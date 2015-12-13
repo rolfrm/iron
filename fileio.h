@@ -5,7 +5,7 @@ void push_format_out(void * file);
 void pop_format_out();
 void write_buffer_to_file(const void * buffer,size_t s, const char * filepath);
 void append_buffer_to_file(const void * buffer, size_t s, const char * filepath);
-char * read_stream_to_string(void * file);
+char * read_stream_to_string(FILE * file);
 char * read_file_to_string(const char * filepath);
 void * read_file_to_buffer(const char * filepath, size_t * out_size);
 void * read_file_to_buffer(const char * filepath, size_t * size);
