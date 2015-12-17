@@ -97,6 +97,14 @@ void append_buffer_to_file(const void * buffer, size_t size, const char * filepa
   fclose(f);
 }
 
+void write_string_to_file(const char * buffer, const char * filepath){
+  write_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
+}
+
+void append_string_to_file(const char * buffer, const char * filepath){
+  append_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
+}
+
 void * read_stream_to_buffer(FILE * f, size_t * size){
   if(f == NULL)
     return NULL;
@@ -127,7 +135,6 @@ char * read_file_to_string(const char * filepath){
   size_t size;
   return read_file_to_buffer(filepath, &size);
 }
-
 
 
 int chdir(const char * path);

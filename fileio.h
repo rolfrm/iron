@@ -3,6 +3,8 @@ void format(const char * fmt, ...);
 void with_format_out(void * file, void (* fcn)());
 void push_format_out(void * file);
 void pop_format_out();
+void write_string_to_file(const char * buffer, const char * filepath);
+void append_string_to_file(const char * buffer, const char * filepath);
 void write_buffer_to_file(const void * buffer,size_t s, const char * filepath);
 void append_buffer_to_file(const void * buffer, size_t s, const char * filepath);
 char * read_stream_to_string(FILE * file);
