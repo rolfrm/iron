@@ -32,3 +32,4 @@ void _error(const char * file, int line, const char * message, ...);
 #define UNREACHABLE();
 #endif
 
+void iron_log_stacktrace();
