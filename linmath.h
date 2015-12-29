@@ -1,12 +1,17 @@
 // Based on linmath.h
 // https://github.com/datenwolf/linmath.h
 
+typedef float v4sf __attribute__ ((vector_size (16)));
+typedef float v2sf __attribute__ ((vector_size (8)));
+typedef float v3sf __attribute__ ((vector_size (16)));
+
 typedef struct{
   union {
     struct{
       float x,y;
     };
     float data[2];
+    v2sf sse;
   };
 }vec2;
 
@@ -17,6 +22,7 @@ typedef struct{
     };
     float data[3];
     vec2 xy;
+    v3sf sse;
   };
 
 }vec3;
@@ -28,6 +34,7 @@ typedef struct{
     };
     float data[4];
     vec3 xyz;
+    v4sf sse;
   };
 }vec4;
 

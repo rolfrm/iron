@@ -14,10 +14,10 @@
 
 #define prefix __attribute__((const)) __attribute__((always_inline)) inline
 
-#define _LINMATH_H_OP(n,name, op)				\
+#define _LINMATH_H_OP(n,name, op)					\
   prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
-    for(int i=0; i<n; ++i) a.data[i] = a.data[i] op b.data[i];	\
-    return a;							\
+    a.sse = a.sse op b.sse;						\
+    return a;								\
   }
 
 
@@ -26,38 +26,55 @@
   _LINMATH_H_OP(n,sub,-)						\
   _LINMATH_H_OP(n,mul,*)						\
   _LINMATH_H_OP(n,div,/)						\
-  prefix vec##n vec##n##_scale(vec##n v, float s)				\
+  prefix vec##n vec##n##_scale(vec##n v, float s)			\
   {									\
-    for(int i=0; i<n; ++i)						\
-      v.data[i] *= s;							\
+    v.sse *= s;								\
     return v;								\
   }									\
-  float vec##n##_mul_inner(vec##n a, vec##n b)				\
+  prefix float vec##n##_mul_inner(vec##n a, vec##n b)				\
   {									\
     float p = 0.;							\
     for(int i=0; i<n; ++i)						\
       p += b.data[i]*a.data[i];						\
     return p;								\
   }									\
-  float vec##n##_sqlen(vec##n v)						\
+  prefix float vec##n##_sqlen(vec##n v)					\
   {									\
-    return vec##n##_mul_inner(v,v);				\
+    return vec##n##_mul_inner(v,v);					\
   }									\
-  float vec##n##_len(vec##n v)						\
-  {									\
-    return sqrtf(vec##n##_sqlen(v));					\
-  }									\
-  vec##n vec##n##_normalize(vec##n v)					\
-  {									\
-    float k = 1.0 / vec##n##_len(v);					\
-      return vec##n##_scale( v, k);					\
-  }									\
-  bool vec##n##_compare(vec##n v1, vec##n v2, float eps){		\
+  									\
+  prefix bool vec##n##_compare(vec##n v1, vec##n v2, float eps){		\
     bool ok = fabs(v1.data[0] -v2 .data[0]) < eps;			\
     for(int i = 1; i < n; i++) ok &= (fabs(v1.data[i] -v2 .data[i]) < eps); \
     return ok;								\
   }  									\
   
+#include <smmintrin.h>
+float vec2_len(vec2 v){
+  return sqrtf(vec2_sqlen(v));
+}
+float vec3_len(vec3 v){
+  return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v.sse, v.sse, 0x71)));
+}
+float vec4_len(vec4 v){
+  return sqrtf(vec4_sqlen(v));//return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v.sse, v.sse, 0x71)));
+}
+vec2 vec2_normalize(vec2 v)
+{									
+  float k = 1.0 / vec2_len(v);					
+  return vec2_scale( v, k);						
+}	
+vec3 vec3_normalize(vec3 v){
+  __m128 inverse_norm = _mm_rsqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x77));
+  v.sse = _mm_mul_ps(v.sse, inverse_norm);
+  return v;
+}	
+vec4 vec4_normalize(vec4 v)
+{									
+  float k = 1.0 / vec4_len(v);					
+  return vec4_scale( v, k);						
+}	
+
 _LINMATH_H_DEFINE_VEC(2)
 _LINMATH_H_DEFINE_VEC(3)
 _LINMATH_H_DEFINE_VEC(4)
