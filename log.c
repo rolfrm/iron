@@ -26,7 +26,7 @@ static void full_write(int fd, const char *buf, size_t len)
   }
 }
 
-void iron_log_backtrace(void)
+void iron_log_stacktrace(void)
 {
   static const char start[] = "BACKTRACE ------------\n";
   static const char end[] = "----------------------\n";
@@ -47,9 +47,4 @@ void iron_log_backtrace(void)
   }
   full_write(STDERR_FILENO, end, strlen(end));
   free(bt_syms);
-}
-
-
-void iron_log_stacktrace(){
-
 }

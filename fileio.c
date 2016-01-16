@@ -42,6 +42,7 @@ void * get_format_out(){
 }
 
 void write_buffer_to_file_(const void * buffer, size_t size, const char * filepath){
+  // Not used. opens a file for writing without buffering, a lot slower, but sometimes more secure.
   int fd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC |O_SYNC, 0660);
   if(fd == 0)
     ERROR("Unable to open file '%s'",filepath);
@@ -52,13 +53,14 @@ void write_buffer_to_file_(const void * buffer, size_t size, const char * filepa
   close(fd);
 }
 
-void write_buffer_to_file(const void * buffer, size_t size, const char * filepath){
+size_t write_buffer_to_file(const void * buffer, size_t size, const char * filepath){
   FILE * f = fopen(filepath, "w+");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
   fwrite(buffer,size,1,f);
-  fflush(f);
+  size_t position = ftell(f);
   fclose(f);
+  return position;
 }
 
 void test_buffer_bug(){
@@ -89,20 +91,23 @@ void test_buffer_bug(){
   #undef BUFFER_SIZE
 }
 
-void append_buffer_to_file(const void * buffer, size_t size, const char * filepath){
+size_t append_buffer_to_file(const void * buffer, size_t size, const char * filepath){
   FILE * f = fopen(filepath, "a");
   if(f == NULL)
     ERROR("Unable to open file '%s'",filepath);
+
   fwrite(buffer,size,1,f);
+  size_t position = ftell(f);
   fclose(f);
+  return position;
 }
 
-void write_string_to_file(const char * buffer, const char * filepath){
-  write_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
+size_t write_string_to_file(const char * buffer, const char * filepath){
+  return write_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
 }
 
-void append_string_to_file(const char * buffer, const char * filepath){
-  append_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
+size_t append_string_to_file(const char * buffer, const char * filepath){
+  return append_buffer_to_file(buffer, strlen(buffer) + 1, filepath);
 }
 
 void * read_stream_to_buffer(FILE * f, size_t * size){
