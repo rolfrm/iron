@@ -11,10 +11,16 @@ size_t append_string_to_file(const char * buffer, const char * filepath);
 size_t write_buffer_to_file(const void * buffer,size_t s, const char * filepath);
 // Appens a buffer to the file, erasing the content.
 size_t append_buffer_to_file(const void * buffer, size_t s, const char * filepath);
-char * read_stream_to_string(FILE * file);
+// file is a FILE *
+char * read_stream_to_string(void * file);
 char * read_file_to_string(const char * filepath);
 void * read_file_to_buffer(const char * filepath, size_t * out_size);
 void * read_file_to_buffer(const char * filepath, size_t * size);
 
 int enter_dir_of(const char * path);
 int get_filename(char * buffer, const char * filepath);
+
+extern int iron_default_permissions;
+
+// touch a file. (like linux touch command).
+void iron_touch(const char * path);

@@ -123,7 +123,7 @@ void * read_stream_to_buffer(FILE * f, size_t * size){
   return buffer;
 }
 
-char * read_stream_to_string(FILE * f){
+char * read_stream_to_string(void * f){
   size_t s;
   return read_stream_to_buffer(f, &s);
 }
@@ -180,4 +180,12 @@ int get_filename(char * buffer, const char * path){
   }
   *buffer = 0;
   return 0;
+}
+
+int iron_default_permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+
+  // 'touch' the file.
+void iron_touch(const char * file){
+  int fd = open (file, O_WRONLY | O_CREAT | O_NONBLOCK | O_NOCTTY, iron_default_permissions);
+  close(fd);
 }

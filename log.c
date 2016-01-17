@@ -13,17 +13,14 @@ void log_print(const char * fmt, ...){
   va_end (args);
 }
 
-static void full_write(int fd, const char *buf, size_t len)
-{
-  while (len > 0) {
-    ssize_t ret = write(fd, buf, len);
-    
-    if ((ret == -1) && (errno != EINTR))
-      break;
-    
-    buf += (size_t) ret;
-    len -= (size_t) ret;
+int str_index_of_last(const char * str, char symbol){
+  int idx = -1;
+  
+  for(int i = 0; str[i] != 0; i++){
+    if(str[i] == symbol)
+      idx = i;
   }
+  return idx;
 }
 
 void iron_log_stacktrace(void)
@@ -38,13 +35,19 @@ void iron_log_stacktrace(void)
   
   bt_size = backtrace(bt, 1024);
   bt_syms = backtrace_symbols(bt, bt_size);
-  full_write(STDERR_FILENO, start, strlen(start));
+  printf(start);
   for (i = 1; i < bt_size; i++) {
-    size_t len = strlen(bt_syms[i]);
-    full_write(STDERR_FILENO, bt_syms[i], len);
-    log_print("--");
-    full_write(STDERR_FILENO, "\n", 1);
+
+    //char syscom[256];
+    int itemidx = str_index_of_last(bt_syms[i], '(');
+    char filename[itemidx + 1];
+    strncpy(filename, bt_syms[i],itemidx);
+    filename[itemidx] = 0;
+
+    printf("#%d (%s) %s\n", i, filename, bt_syms[i]);
+    //sprintf(syscom,"addr2line -j text  -e %s %p", filename, bt[i]); //last parameter is the name of this app
+    //system(syscom);
   }
-  full_write(STDERR_FILENO, end, strlen(end));
+  printf(end);
   free(bt_syms);
 }
