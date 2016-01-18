@@ -296,4 +296,7 @@ char * fmtstr(const char * fmt, ...){
   return vfmtstr(fmt, args);
 }
 
+bool string_startswith(const char * target, const char * test){
+  return strncmp(target, test, strlen(test)) == 0;
+}
 

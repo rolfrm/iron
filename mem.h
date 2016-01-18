@@ -1,3 +1,4 @@
+// rquires stdbool
 // custom allocator functionality
 
 typedef struct _allocator allocator;
@@ -30,3 +31,5 @@ void trace_allocator_release(allocator * trace_allocator);
 
 char * fmtstr(const char * fmt, ...);
 #define new(type) alloc0(sizeof(type))
+
+bool string_startswith(const char * target, const char * test);

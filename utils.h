@@ -1,3 +1,4 @@
+
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)
 
@@ -29,4 +30,5 @@
     return_type __fn__ body_and_args \
     __fn__; \
   })
+
 
