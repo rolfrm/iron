@@ -127,3 +127,12 @@ bool all_whitespace(char * str){
       return false;
   return true;
 }
+
+void * array_find(void * array, size_t size, size_t elem_size, bool (* f)(void * item, void * userdata), void * userdata){
+  for(size_t i = 0; i < size; i++){
+    if(f(array, userdata))
+      return array;
+    array += elem_size;
+  }
+  return NULL;
+}

@@ -34,3 +34,6 @@ void list_clean(void ** lst, size_t * cnt);
 #define list_remove2(array,cnt,index) memmove(&array[index],&array[index+1],(cnt - index - 1) * sizeof(array[0]));
 // Returns true if all chars in str are whitespace.
 bool all_whitespace(char * str);
+
+void * array_find(void * array, size_t size, size_t elem_size, bool (* f)(void * item, void * userdata), void * userdata);
+#define find1(array,size,f,userdata) array_find((void *) array, size, sizeof(array[0]), (bool (*)(void *, void *))f, userdata)
