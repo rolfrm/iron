@@ -7,4 +7,6 @@ u64 timestamp();
 // dont use for polling, use semaphores/mutexes instead if possible.
 void iron_usleep(int microseconds);
 
+void iron_sleep(double seconds);
+
 u64 measure_elapsed(void (*fcn)());

@@ -20,3 +20,8 @@ u64 measure_elapsed(void (*fcn)()){
 void iron_usleep(int microseconds){
   usleep(microseconds);
 }
+
+void iron_sleep(double seconds){
+  int us = (int)(seconds * 1e6);
+  usleep(us);
+}

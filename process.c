@@ -43,3 +43,7 @@ iron_process_status iron_process_get_status(iron_process proc){
   int exit_status = WEXITSTATUS(status);
   return exit_status == 0 ? IRON_PROCESS_EXITED : IRON_PROCESS_FAULTED;
 }
+
+void iron_process_interupt(iron_process proc){
+  kill(proc.pid, SIGINT);
+}
