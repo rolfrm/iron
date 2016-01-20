@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdint.h>
+#include <fcntl.h>  
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 
@@ -11,8 +13,15 @@
 #include "process.h"
 
 int iron_process_run(const char * program, const char ** args, iron_process * out_process){
+  int pipefd[2];
+
+  pipe(pipefd);
+  out_process->stdin_pipe = pipefd[0];
+  out_process->stdout_pipe = pipefd[1];
   int pid = fork();
   if(pid == 0){
+    dup2(out_process->stdout_pipe, STDOUT_FILENO);
+    dup2(out_process->stdout_pipe, STDERR_FILENO);
     prctl(PR_SET_PDEATHSIG, SIGHUP);
     int exitstatus = execv(program, (char * const *) args);
     exit(exitstatus == -1 ? 253 : 252);
@@ -46,4 +55,13 @@ iron_process_status iron_process_get_status(iron_process proc){
 
 void iron_process_interupt(iron_process proc){
   kill(proc.pid, SIGINT);
+}
+
+void iron_process_clean(iron_process * proc){
+  kill(proc->pid, SIGSTOP);
+  close(proc->stdin_pipe);
+  close(proc->stdout_pipe);
+  proc->stdin_pipe = -1;
+  proc->stdout_pipe = -1;
+  proc->pid = -1;
 }
