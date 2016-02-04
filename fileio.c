@@ -139,7 +139,16 @@ void * read_file_to_buffer(const char * filepath, size_t * size){
 
 char * read_file_to_string(const char * filepath){
   size_t size;
-  return read_file_to_buffer(filepath, &size);
+  char * d = read_file_to_buffer(filepath, &size);
+
+  if(d[size - 1] != 0){
+    // make sure there is a 0 in the end.
+    char * str = alloc0(size + 1);
+    memcpy(str, d, size);
+    dealloc(d);
+    d = str;
+  }
+  return d;
 }
 
 
