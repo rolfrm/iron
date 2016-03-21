@@ -31,4 +31,10 @@
     __fn__; \
   })
 
-
+// swap two variables. Each should be same type
+#define SWAP(x,y)\
+   { unsigned char __swap_temp[sizeof(x) == sizeof(y) ? (signed)sizeof(x) : -1]; \
+     memcpy(__swap_temp, &y, sizeof(x)); \
+     memcpy(&y, &x, sizeof(x)); \
+     memcpy(&x, __swap_temp, sizeof(x)); \
+    } 
