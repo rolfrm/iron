@@ -36,12 +36,12 @@ int iron_process_run(const char * program, const char ** args, iron_process * ou
  iron_process_status iron_process_wait(iron_process proc, u64 timeout_us){
   iron_process_status status = iron_process_get_status(proc);
   u64 start_time = timestamp();
-  logd("Wait.. %i\n", status);
+  //logd("Wait.. %i\n", status);
   while(IRON_PROCESS_RUNNING == (status = iron_process_get_status(proc))
 	&& (timestamp() - start_time) < timeout_us){
-    iron_usleep(40000);
+    iron_usleep(timeout_us * 0.5);
   }
-  logd("process took %f s to complete\n", ((double)timestamp() - start_time) / 1000000.0);
+  //logd("process took %f s to complete\n", ((double)timestamp() - start_time) / 1000000.0);
   return status;
 }
 

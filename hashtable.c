@@ -7,6 +7,15 @@
 #include "types.h"
 #include "hashtable.h"
 
+u32 djb2_hash(void  * _str, int size)
+{
+  void * str = _str;
+  u32 hash = 5381;
+  int c;
+  while (c = *str++)
+    hash = ((hash << 5) + hash) + c;
+  return hash;
+}
 
 //A Fast, Minimal Memory, Consistent Hash Algorithm
 // John Lamping, Eric Veach
@@ -68,7 +77,7 @@ bool default_compare(void * key_a, void * key_b, hash_table * ht){
 // a simple but not super efficient hash table implementation.
 hash_table * ht_create(u32 buckets, u32 key_size, u32 elem_size){
   hash_table * ht = malloc(sizeof(hash_table));
-  memset(ht,0,sizeof(hash_table));
+  memset(ht, 0, sizeof(hash_table));
   ht->buckets = buckets;
   ht->key_size = key_size;
   ht->elem_size = elem_size;
