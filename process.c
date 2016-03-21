@@ -10,12 +10,14 @@
 #include "types.h"
 #include "time.h"
 #include "log.h"
+#include "utils.h"
 #include "process.h"
 
 int iron_process_run(const char * program, const char ** args, iron_process * out_process){
   int pipefd[2];
 
-  pipe(pipefd);
+  int out = pipe(pipefd);
+  UNUSED(out);
   out_process->stdin_pipe = pipefd[0];
   out_process->stdout_pipe = pipefd[1];
   int pid = fork();

@@ -1,7 +1,12 @@
 // Hashing
+
 i32 jump_consistent_hash(u64 key, i32 num_buckets);
 i32 jump_consistent_hash_raw(void * data, size_t length, i32 num_buckets);
 i32 jump_consistent_hash_str(char * str, i32 num_buckets);
+
+// aligned hash requiring that datasize is a multiple of sizeof(size_t).
+u64 aligned_hash(void * data, size_t datasize);
+
 i64 iron_hash(void * data, u64 len);
 void iron_hash_init();
 // Hash table //

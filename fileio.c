@@ -47,7 +47,8 @@ void write_buffer_to_file_(const void * buffer, size_t size, const char * filepa
   int fd = open(filepath, O_WRONLY | O_CREAT | O_TRUNC |O_SYNC, 0660);
   if(fd == 0)
     ERROR("Unable to open file '%s'",filepath);
-  write(fd, buffer,size);
+  size_t written = write(fd, buffer,size);
+  ASSERT(written == size);
   fsync(fd);
   fdatasync(fd);
 
@@ -78,7 +79,7 @@ void test_buffer_bug(){
       dealloc(buffer);
     }
     {
-      size_t s1,s2;
+      size_t s1 = 0,s2 = 0;
       char * b1 = read_file_to_buffer("__TEST1__", &s1);
       char * b2 = read_file_to_buffer("__TEST2__", &s2);
       ASSERT(s1 == BUFFER_SIZE);
@@ -138,9 +139,9 @@ void * read_file_to_buffer(const char * filepath, size_t * size){
 }
 
 char * read_file_to_string(const char * filepath){
-  size_t size;
+  size_t size = 0;
   char * d = read_file_to_buffer(filepath, &size);
-
+  ASSERT(size > 0);
   if(d[size - 1] != 0){
     // make sure there is a 0 in the end.
     char * str = alloc0(size + 1);
@@ -173,7 +174,7 @@ int enter_dir_of(const char * path){
     return -1;
   char dirbuf[100];
   sprintf(dirbuf, "%.*s", last_slash_idx, path);
-  chdir(dirbuf);
+  ASSERT(0 == chdir(dirbuf));
   return 0;
 }
 
