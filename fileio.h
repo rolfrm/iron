@@ -15,10 +15,11 @@ size_t append_buffer_to_file(const void * buffer, size_t s, const char * filepat
 char * read_stream_to_string(void * file);
 char * read_file_to_string(const char * filepath);
 void * read_file_to_buffer(const char * filepath, size_t * out_size);
-void * read_file_to_buffer(const char * filepath, size_t * size);
 
 int enter_dir_of(const char * path);
 int get_filename(char * buffer, const char * filepath);
+
+void ensure_directory(const char * path);
 
 extern int iron_default_permissions;
 

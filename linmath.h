@@ -62,9 +62,14 @@ LINMATH_H_DEFINE_VEC(4)
 vec2 vec2mk(float x, float y);
 vec3 vec3mk(float x, float y, float z);
 vec4 vec4mk(float x, float y, float z, float w);
-
+vec2 vec2_new(float x, float y);
+vec3 vec3_new(float x, float y, float z);
+vec4 vec4_new(float x, float y, float z, float w);
+vec2 vec2_round(vec2 v);
 vec3 vec3_mul_cross(vec3 const a, vec3 const b);
 vec3 vec3_reflect(vec3 const v, vec3 const n);
+vec3 vec3_less(vec3 a, vec3 b);
+bool vec3_eq(vec3 a, vec3 b);
 vec4 vec4_mul_cross(vec4 a, vec4 b);
 vec4 vec4_reflect(vec4 v, vec4 n);
 

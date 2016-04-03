@@ -50,6 +50,7 @@
   }  									\
   
 #include <smmintrin.h>
+#include <emmintrin.h>
 float vec2_len(vec2 v){
   return sqrtf(vec2_sqlen(v));
 }
@@ -63,12 +64,30 @@ vec2 vec2_normalize(vec2 v)
 {									
   float k = 1.0 / vec2_len(v);					
   return vec2_scale( v, k);						
-}	
+}
+
+vec2 vec2_round(vec2 v){
+  v.x = roundf(v.x);
+  v.y = roundf(v.y);
+  return v;
+}
+
 vec3 vec3_normalize(vec3 v){
   __m128 inverse_norm = _mm_rsqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x77));
   v.sse = _mm_mul_ps(v.sse, inverse_norm);
   return v;
-}	
+}
+
+/*vec3 vec3_less(vec3 a, vec3 b){
+  __m128 r = _mm_cmplt_ps(a.sse,b.sse);
+  a.sse = r;
+  return a;
+  }*/
+
+bool vec3_eq(vec3 a, vec3 b){
+
+  return _mm_comieq_ss(a.sse, b.sse);
+}
 vec4 vec4_normalize(vec4 v)
 {									
   float k = 1.0 / vec4_len(v);					
@@ -90,6 +109,20 @@ inline vec3 vec3mk(float x, float y, float z){
 inline vec4 vec4mk(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
+
+
+inline vec2 vec2_new(float x, float y){
+  return (vec2){.data = {x,y}};
+}
+
+inline vec3 vec3_new(float x, float y, float z){
+  return (vec3){.data = {x,y,z}};
+}
+
+inline vec4 vec4_new(float x, float y, float z, float w){
+  return (vec4){.data = {x,y,z,w}};
+}
+
 
 vec3 vec3_mul_cross(vec3 const a, vec3 const b)
 {

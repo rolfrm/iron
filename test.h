@@ -8,5 +8,9 @@
 #define TEST_ASSERT_STRING_EQUAL(s1, s2) if(strcmp(s1,s2) != 0){ERROR("Failed assertion: strcmp(\"%s\", \"%s\") == 0", s1, s2);}
 #define TEST_SUCCESS (true)
 #define TEST_FAIL (false)
+
+const char * get_test_opt(const char * name);
+void set_test_opt(const char ** args, int arg_cnt);
+
 // test
 bool test_utils();

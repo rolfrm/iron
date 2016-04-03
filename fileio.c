@@ -117,7 +117,7 @@ void * read_stream_to_buffer(FILE * f, size_t * size){
     return NULL;
   fseek(f,0,SEEK_END);
   *size = ftell(f);
-  char * buffer = alloc0(*size);
+  char * buffer = alloc0(*size + 1);
   fseek(f, 0, SEEK_SET);
   size_t l =fread(buffer,*size,1,f);
   (void)(l);
@@ -199,4 +199,10 @@ int iron_default_permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH |
 void iron_touch(const char * file){
   int fd = open (file, O_WRONLY | O_CREAT | O_NONBLOCK | O_NOCTTY, iron_default_permissions);
   close(fd);
+}
+
+void ensure_directory(const char * path){
+  char buf[1000];
+  sprintf(buf, "mkdir -p %s", path);
+  ASSERT(system(buf) == 0);
 }
