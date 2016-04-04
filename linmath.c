@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "types.h"
 #include "math.h"
-
+#include "utils.h"
 #define prefix __attribute__((const)) __attribute__((always_inline)) inline
 
 #define _LINMATH_H_OP(n,name, op)					\
@@ -110,9 +110,20 @@ inline vec4 vec4mk(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
 
-
 inline vec2 vec2_new(float x, float y){
   return (vec2){.data = {x,y}};
+}
+
+inline vec2 vec2_new1(float xy){
+  return (vec2){.data = {xy, xy}};
+}
+
+inline vec2 vec2_min(vec2 a, vec2 b){
+  return (vec2){.data = {MIN(a.x, b.x), MIN(a.y, b.y)}};
+}
+
+inline vec2 vec2_max(vec2 a, vec2 b){
+  return (vec2){.data = {MAX(a.x, b.x), MAX(a.y, b.y)}};
 }
 
 inline vec3 vec3_new(float x, float y, float z){

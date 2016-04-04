@@ -63,6 +63,11 @@ vec2 vec2mk(float x, float y);
 vec3 vec3mk(float x, float y, float z);
 vec4 vec4mk(float x, float y, float z, float w);
 vec2 vec2_new(float x, float y);
+vec2 vec2_new1(float xy);
+// element-wise min
+vec2 vec2_min(vec2 a, vec2 b);
+// element-wise max
+vec2 vec2_max(vec2 a, vec2 b);
 vec3 vec3_new(float x, float y, float z);
 vec4 vec4_new(float x, float y, float z, float w);
 vec2 vec2_round(vec2 v);
