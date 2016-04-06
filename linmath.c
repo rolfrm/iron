@@ -130,6 +130,20 @@ inline vec3 vec3_new(float x, float y, float z){
   return (vec3){.data = {x,y,z}};
 }
 
+
+inline vec3 vec3_min(vec3 a, vec3 b){
+  return (vec3){.data = {MIN(a.x, b.x), MIN(a.y, b.y), MIN(a.z, b.z)}};
+}
+vec3 vec3_max(vec3 a, vec3 b){
+  return (vec3){.data = {MAX(a.x, b.x), MAX(a.y, b.y), MAX(a.z, b.z)}};
+}
+
+float vec3_min_element(vec3 a){
+  return MIN(a.x, MIN(a.y, a.z));
+}
+float vec3_max_element(vec3 a){
+  return MAX(a.x, MAX(a.y, a.z));
+}
 inline vec4 vec4_new(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
