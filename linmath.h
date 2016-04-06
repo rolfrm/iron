@@ -69,6 +69,11 @@ vec2 vec2_min(vec2 a, vec2 b);
 // element-wise max
 vec2 vec2_max(vec2 a, vec2 b);
 vec3 vec3_new(float x, float y, float z);
+vec3 vec3_min(vec3 a, vec3 b);
+vec3 vec3_max(vec3 a, vec3 b);
+float vec3_min_element(vec3 a);
+float vec3_max_element(vec3 a);
+
 vec4 vec4_new(float x, float y, float z, float w);
 vec2 vec2_round(vec2 v);
 vec3 vec3_mul_cross(vec3 const a, vec3 const b);
