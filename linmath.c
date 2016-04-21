@@ -33,8 +33,8 @@
   }									\
   prefix float vec##n##_mul_inner(vec##n a, vec##n b)				\
   {									\
-    float p = 0.;							\
-    for(int i=0; i<n; ++i)						\
+    float p = 0.0f;							\
+    for(int i=0; i<n; i++)						\
       p += b.data[i]*a.data[i];						\
     return p;								\
   }									\
@@ -44,7 +44,7 @@
   }									\
   									\
   prefix bool vec##n##_compare(vec##n v1, vec##n v2, float eps){		\
-    bool ok = fabs(v1.data[0] -v2 .data[0]) < eps;			\
+    bool ok = fabs(v1.data[0] - v2.data[0]) < eps;			\
     for(int i = 1; i < n; i++) ok &= (fabs(v1.data[i] -v2 .data[i]) < eps); \
     return ok;								\
   }  									\
@@ -61,9 +61,9 @@ float vec4_len(vec4 v){
   return sqrtf(vec4_sqlen(v));//return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v.sse, v.sse, 0x71)));
 }
 vec2 vec2_normalize(vec2 v)
-{									
-  float k = 1.0 / vec2_len(v);					
-  return vec2_scale( v, k);						
+{
+  float k = 1.0 / vec2_len(v);
+  return vec2_scale( v, k);
 }
 
 vec2 vec2_round(vec2 v){
@@ -73,26 +73,38 @@ vec2 vec2_round(vec2 v){
 }
 
 vec3 vec3_normalize(vec3 v){
-  __m128 inverse_norm = _mm_rsqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x77));
-  v.sse = _mm_mul_ps(v.sse, inverse_norm);
+  //return vec3_scale(v, 1.0f / vec3_len(v));
+  __m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x7F));
+  v.sse = _mm_div_ps(v.sse, norm);
   return v;
 }
-
 /*vec3 vec3_less(vec3 a, vec3 b){
   __m128 r = _mm_cmplt_ps(a.sse,b.sse);
   a.sse = r;
   return a;
   }*/
-
 bool vec3_eq(vec3 a, vec3 b){
-
   return _mm_comieq_ss(a.sse, b.sse);
 }
+
+vec3 vec3_abs(vec3 a){
+  return vec3_new(fabs(a.x), fabs(a.y), fabs(a.z));
+}
+
+inline vec3 vec3_apply(vec3 v, float (*f)(float x)){
+  v.x = f(v.x);
+  v.y = f(v.y);
+  v.z = f(v.z);
+  return v;
+}
+
 vec4 vec4_normalize(vec4 v)
-{									
-  float k = 1.0 / vec4_len(v);					
-  return vec4_scale( v, k);						
-}	
+{
+  __m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0xFF));
+  v.sse = _mm_div_ps(v.sse, norm);
+  return v;
+  //return vec4_scale( v, 1.0f / vec4_len(v));
+}
 
 _LINMATH_H_DEFINE_VEC(2)
 _LINMATH_H_DEFINE_VEC(3)
@@ -130,6 +142,10 @@ inline vec3 vec3_new(float x, float y, float z){
   return (vec3){.data = {x,y,z}};
 }
 
+inline vec3 vec3_new1(float v){
+  return (vec3){.data = {v,v,v}};
+}
+
 
 inline vec3 vec3_min(vec3 a, vec3 b){
   return (vec3){.data = {MIN(a.x, b.x), MIN(a.y, b.y), MIN(a.z, b.z)}};
@@ -144,6 +160,9 @@ float vec3_min_element(vec3 a){
 float vec3_max_element(vec3 a){
   return MAX(a.x, MAX(a.y, a.z));
 }
+
+const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f};
+
 inline vec4 vec4_new(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }

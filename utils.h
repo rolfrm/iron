@@ -7,23 +7,27 @@
 
 #define UNUSED(x) (void)(x)
 
+#define auto __auto_type
+
 #define MAX(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
+   ({ auto _a = (a); \
+       auto _b = (b); \
      _a > _b ? _a : _b; })
 
 #define MIN(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
+   ({ auto _a = (a); \
+       auto _b = (b); \
      _a < _b ? _a : _b; })
 
-#define ABS(a) MAX(a,-a)
+#define CLAMP(value, min, max)({					\
+      auto _value = value; auto _min = min; auto _max = max;		\
+      _value < _min ? _min : _value > _max ? _max : _value;		\
+    })
 
-// gets the sign of value {-1 or 1}.
-#define SIGN(x)\
-  ({ __typeof__(x) _x = x; \
-    _x < 0 ? -1 : 1;})
+#define ABS(a) ({ auto _a = a; _a < 0 ? -_a : _a;})
 
+// gets the sign of value -1 or 1.
+#define SIGN(x) (x < 0 ? -1 : 1)
 
 #define lambda(return_type, body_and_args) \
   ({ \
@@ -32,9 +36,4 @@
   })
 
 // swap two variables. Each should be same type
-#define SWAP(x,y)\
-   { unsigned char __swap_temp[sizeof(x) == sizeof(y) ? (signed)sizeof(x) : -1]; \
-     memcpy(__swap_temp, &y, sizeof(x)); \
-     memcpy(&y, &x, sizeof(x)); \
-     memcpy(&x, __swap_temp, sizeof(x)); \
-    } 
+#define SWAP(x,y){ auto tmp = x; x = y; y = tmp;} 

@@ -84,7 +84,7 @@ bool test_utils(){
   //  nanosleep(tim);
   iron_usleep(wait-1000); //why is this needed?
   u64 stop = timestamp();
-  ok &= ABS(stop - start - wait) < 2000; //wont be exactly precise
+  ok &= ABS(((i64)(stop - start - wait))) < 2000; //wont be exactly precise
 
   logd("Test hibit\n");
   u64 smallval = 1024;
@@ -230,20 +230,6 @@ bool block_allocator_test(){
   }
   
   return ok;
-}
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-void _error(const char * file, int line, const char * msg, ...){
-  loge("Got error at %s line %i\n", file,line);
-  log("Error message *****\n");
-  va_list args;
-  va_start (args, msg);
-  vprintf (msg, args);
-  va_end (args);
-  log("*******************\n");
-  exit(255);
 }
 
 int main(){

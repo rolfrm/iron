@@ -7,12 +7,12 @@
 #include "types.h"
 #include "hashtable.h"
 
-u32 djb2_hash(void  * _str, int size)
+u32 djb2_hash(void  * _str)
 {
-  void * str = _str;
+  char * str = _str;
   u32 hash = 5381;
   int c;
-  while (c = *str++)
+  while ((c = *str++))
     hash = ((hash << 5) + hash) + c;
   return hash;
 }
