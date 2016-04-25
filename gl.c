@@ -26,7 +26,12 @@ void gl_window_swap(gl_window * win){
 
 void gl_window_destroy(gl_window ** win){
   gl_window * _win = *win;
-  *win = NULL;
+  *win = NULL;  
   glfwDestroyWindow(_win->handle);
+  dealloc(_win);
+
 }
 
+void gl_window_terminate(){
+  glfwTerminate();
+}
