@@ -75,13 +75,16 @@ vec3 vec3_apply(vec3 a, float (*f)(float v));
 float vec3_min_element(vec3 a);
 float vec3_max_element(vec3 a);
 extern const vec3 vec3_infinity;
-
+extern const vec3 vec3_zero;
+extern const vec3 vec3_half;
+extern const vec3 vec3_one;
 vec4 vec4_new(float x, float y, float z, float w);
 vec2 vec2_round(vec2 v);
 vec3 vec3_mul_cross(vec3 const a, vec3 const b);
 vec3 vec3_reflect(vec3 const v, vec3 const n);
 vec3 vec3_less(vec3 a, vec3 b);
-
+vec3 vec3_gt(vec3 a, vec3 b);
+vec3 vec3_gteq(vec3 a, vec3 b);
 
 
 bool vec3_eq(vec3 a, vec3 b);

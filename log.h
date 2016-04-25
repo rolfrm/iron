@@ -9,9 +9,9 @@
 #define ANSI_COLOR_GRAY "\x1b[37m"
 
 void log_print(const char * fmt, ...);
-
+extern __thread int logd_enable;
 #define log(...) {log_print(ANSI_COLOR_YELLOW __VA_ARGS__); log_print(ANSI_COLOR_RESET);}
-#define logd(...) { if(LOG_DEBUG){log_print(ANSI_COLOR_GRAY); log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}}
+#define logd(...) if(logd_enable){ if(LOG_DEBUG){log_print(ANSI_COLOR_GRAY); log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}}
 #define loge(...) {log_print(ANSI_COLOR_RED);log_print(__VA_ARGS__); log_print(ANSI_COLOR_GRAY);log_print(" ");}
 #define ERROR_TRACE logd( "error: at '" __FILE__  "' line %i: \n",  __LINE__);
 

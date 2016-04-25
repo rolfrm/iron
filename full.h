@@ -18,3 +18,11 @@
 #include "fileio.h"
 #include "mem.h"
 #include "coroutines.h"
+
+#include "image.h"
+
+#include <GL/gl.h>
+#include "gl.h"
+
+#include <stdlib.h>
+#include <stdio.h>

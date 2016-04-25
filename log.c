@@ -51,3 +51,5 @@ void iron_log_stacktrace(void)
   printf(end);
   free(bt_syms);
 }
+
+__thread int logd_enable = 1;

@@ -78,11 +78,18 @@ vec3 vec3_normalize(vec3 v){
   v.sse = _mm_div_ps(v.sse, norm);
   return v;
 }
-/*vec3 vec3_less(vec3 a, vec3 b){
-  __m128 r = _mm_cmplt_ps(a.sse,b.sse);
-  a.sse = r;
-  return a;
-  }*/
+vec3 vec3_less(vec3 a, vec3 b){
+
+  return vec3_new(a.x < b.x, a.y < b.y, a.z < b.z);
+}
+
+vec3 vec3_gt(vec3 a, vec3 b){
+  return vec3_new(a.x > b.x, a.y > b.y, a.z > b.z);
+}
+inline vec3 vec3_gteq(vec3 a, vec3 b){
+  return vec3_new(a.x >= b.x, a.y >= b.y, a.z >= b.z);
+}
+
 bool vec3_eq(vec3 a, vec3 b){
   return _mm_comieq_ss(a.sse, b.sse);
 }
@@ -90,6 +97,7 @@ bool vec3_eq(vec3 a, vec3 b){
 vec3 vec3_abs(vec3 a){
   return vec3_new(fabs(a.x), fabs(a.y), fabs(a.z));
 }
+
 
 inline vec3 vec3_apply(vec3 v, float (*f)(float x)){
   v.x = f(v.x);
@@ -146,10 +154,10 @@ inline vec3 vec3_new1(float v){
   return (vec3){.data = {v,v,v}};
 }
 
-
 inline vec3 vec3_min(vec3 a, vec3 b){
   return (vec3){.data = {MIN(a.x, b.x), MIN(a.y, b.y), MIN(a.z, b.z)}};
 }
+
 vec3 vec3_max(vec3 a, vec3 b){
   return (vec3){.data = {MAX(a.x, b.x), MAX(a.y, b.y), MAX(a.z, b.z)}};
 }
@@ -157,12 +165,15 @@ vec3 vec3_max(vec3 a, vec3 b){
 float vec3_min_element(vec3 a){
   return MIN(a.x, MIN(a.y, a.z));
 }
+
 float vec3_max_element(vec3 a){
   return MAX(a.x, MAX(a.y, a.z));
 }
 
 const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f};
-
+const vec3 vec3_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
+const vec3 vec3_half = {.x = 0.5f, .y = 0.5f, .z = 0.5f};
+const vec3 vec3_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f};
 inline vec4 vec4_new(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
