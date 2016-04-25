@@ -7,4 +7,3 @@ void gl_window_swap(gl_window *);
 
 void gl_window_make_current(gl_window * win);
 void gl_window_destroy(gl_window **);
-void gl_window_terminate();

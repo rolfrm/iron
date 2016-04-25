@@ -1,3 +1,8 @@
+// this does not work with optimizations. unsure why.
+// there is a lot of stack magic here..
+//#pragma GCC push_options
+//#pragma GCC optimize ("O0")
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -9,10 +14,11 @@
 #include <setjmp.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "mem.h"
 #include "types.h"
 #include "coroutines.h"
-
+#include "log.h"
+#include "utils.h"
 struct _costack{
   pthread_attr_t attr;
   void * stack;
@@ -119,7 +125,7 @@ void set_current_stack(costack * stk){
   *(ccstack()) = stk;
 }
 
-void yield(){
+static void yield(){
 
   costack * stk = *ccstack();
   int idx = stk_to_idx(stk) - 1;
@@ -154,14 +160,23 @@ struct _ccdispatch{
   sem_t running_sem;
 };
 
+static bool inited = false;
+#include <GLFW/glfw3.h>
 static void * run_dispatcher(void * _attr){
+  if(!inited){
+    inited = true;
+    glfwInit();
+  }
   ccdispatch * dis = (ccdispatch *) _attr;
+  logd("stks : %i\n", dis->stks_count);
   sem_wait(&dis->sem);
   dis->main_stack = costack_create(&dis->attr);
   *(mstack()) = dis->main_stack;
   costack_save(dis->main_stack);
   
   while(true){
+    ASSERT(dis->stks_count > 0);
+
     if(dis->stks_count == 0) continue;
     
     if(dis->stks_count > dis->last_stk 
@@ -186,14 +201,19 @@ static void * run_dispatcher(void * _attr){
 
       _stk = costack_create(&dis->attr);
       dis->stks[dis->last_stk] = _stk;
+      logd("stks 3: %i\n", dis->stks_count);
       set_current_stack(_stk);
+      logd("stks 4: %i\n", dis->stks_count);
       dis->loadfcn[dis->last_stk](dis->userptrs[dis->last_stk]);
+      logd("stks 5: %i\n", dis->stks_count);
     }else{
       set_current_stack(_stk);
+      logd("stks 6: %i\n", dis->stks_count);
       yeild_states[stk_to_idx(_stk) - 1] = CC_ENDED;
       costack_resume(_stk);
     }
    }
+
   return NULL;
 }
 
@@ -225,8 +245,7 @@ ccdispatch * ccstart(){
   sem_init(&dis->sem,0, -1);
   sem_init(&dis->running_sem,0, 1);
   int stacksize = 0x4000;
-  void * stack = malloc(stacksize);
-  memset(stack,0,stacksize);
+  void * stack = alloc0(stacksize);
   pthread_attr_init(&dis->attr);
   pthread_attr_setstack(&dis->attr,stack,stacksize);
   pthread_create( &dis->thread, &dis->attr, run_dispatcher, dis);
@@ -234,6 +253,7 @@ ccdispatch * ccstart(){
 }
 
 void ccstep(ccdispatch * dis){
+  logd("stacks: dis->stks_count=%i\n", dis->stks_count);
   if(dis->stks_count == 0) return;
   sem_wait(&dis->running_sem);
   sem_post(&dis->sem);
@@ -247,14 +267,203 @@ void costack_test(){
     yield();
     printf("%s: 2\n",name);
     yield();
+    printf("%s: 3\n",name);
+    yield();
   }
   
   ccdispatch * d = ccstart();
-  ccthread(d,test,"Kirk"); 
-  ccthread(d,test,"Clark"); 
-  ccthread(d,test,"Rita"); 
-  ccthread(d,test,"Steve"); 
+  ccthread(d,test,(char *) "Kirk"); 
+  ccthread(d,test,(char *) "Clark"); 
+  ccthread(d,test,(char *) "Rita"); 
+  ccthread(d,test,(char *)"Steve"); 
  for(int i = 0; i < 5; i++){
    ccstep(d);
  }
+}
+
+#define get_sp(p) __asm__ volatile ("movq %%rsp, %0" : "=r"(p))
+#define get_fp(p) __asm__ volatile ("movq %%rbp, %0" : "=r"(p))
+#define set_sp(p) __asm__ volatile ("movq %0, %%rsp" : : "r"(p))
+#define set_fp(p) __asm__ volatile ("movq %0, %%rbp" : : "r"(p))
+
+/*static __thread void * stack_ptr, frame_ptr;
+static __thread jmp_buf callee_context, caller_context;
+static __thread void * current_stack;
+enum { WORKING=1, DONE };*/
+/*void cc2yield(){
+  void * sp = NULL;
+  void * fp = NULL;
+  get_sp(sp);
+  get_fp(fp);
+  logd("INNER: %p %p\n", stack_ptr - sp, fp);
+  
+  if(!setjmp(callee_context)) {
+    longjmp(caller_context, WORKING);
+  }
+}
+
+void cc2run(void (*f)()){
+
+  UNUSED(f);
+  void * sp = NULL;
+  void * fp = NULL;
+
+  void * old_stack = stack_ptr;
+  void * old_frame = frame_ptr;
+  
+  get_sp(sp);
+  get_fp(fp);
+  stack_ptr = sp;
+  frame_ptr = fp;
+  int ret = setjmp(caller_context);
+  if(!ret){
+    setjmp(caller_context);
+  }
+  logd("%p %p\n", sp, fp);
+  f();
+  stack_ptr = old_stack;
+  frame_ptr = old_frame;
+  }*/
+//#pragma GCC pop_options
+
+
+typedef struct {
+  jmp_buf callee_context;
+  jmp_buf caller_context;
+} coroutine;
+
+typedef void (*func)(void*);
+
+void cc2start(coroutine* c, func f, void* arg, void* sp);
+void cc2yield(coroutine* c);
+int cc2next(coroutine* c);
+
+
+enum { WORKING=1, DONE };
+
+void cc2yield(coroutine* c) {
+  if(!setjmp(c->callee_context)) {
+    longjmp(c->caller_context, WORKING);
+  }
+}
+
+int cc2next(coroutine* c) {
+  int ret = setjmp(c->caller_context);
+  if(!ret) {
+    longjmp(c->callee_context, 1);
+  }
+  else {
+    return ret == WORKING;
+  }
+}
+
+
+typedef struct {
+  coroutine* c;
+  func f;
+  void* arg;
+  void* old_sp;
+  void* old_fp;
+} start_params;
+
+enum { FRAME_SZ=5 }; //fairly arbitrary
+
+void cc2start(coroutine* c, func f, void* arg, void* sp)
+{
+
+  start_params* p = ((start_params*)sp)-1;
+
+  //save params before stack switching
+  p->c = c;
+  p->f = f;
+  p->arg = arg;
+  get_sp(p->old_sp);
+  get_fp(p->old_fp);
+
+  set_sp(p - FRAME_SZ);
+  set_fp(p); //effectively clobbers p
+  //(and all other locals)
+  get_fp(p); //…so we read p back from $fp
+
+  //and now we read our params from p
+  if(!setjmp(p->c->callee_context)) {
+    set_sp(p->old_sp);
+    set_fp(p->old_fp);
+    return;
+  }
+  (*p->f)(p->arg);
+  longjmp(p->c->caller_context, DONE);
+}
+
+typedef struct _coroutine2{
+  jmp_buf callee_context, caller_context;
+  void * stack_ptr,  * frame_ptr;
+
+  void * stack_data;
+  size_t stack_size;
+}coroutine2;
+
+
+static __thread coroutine2 * current_cc;
+coroutine2 * cc3start(void (*f)()){
+  coroutine2 * c = alloc0(sizeof(coroutine2));
+  current_cc = c;
+  get_sp(c->stack_ptr);
+  get_fp(c->frame_ptr);
+  //set_sp(c->stack_ptr - 5);
+  int r = setjmp(c->caller_context);
+
+  //logd("R: %i \n", r);
+  if(!r){
+    current_cc = c;
+    f();
+  }
+  return c;
+}
+
+void cc3yield(){
+  coroutine2 * c = current_cc;
+  if(!setjmp(c->callee_context)) {
+    void * sp;
+    get_sp(sp);
+    size_t call_stack_size = c->stack_ptr - sp;
+    //logd("stack size: %i\n", call_stack_size);
+    int _i = call_stack_size;
+    ASSERT(_i > 0);
+    c->stack_data = realloc(c->stack_data, (c->stack_size = call_stack_size));
+    memcpy(c->stack_data, sp, c->stack_size);
+    /*int * d = c->stack_data;
+    for(u32 i = 0; i < call_stack_size / sizeof(int); i++){
+      logd("%i ", d[i]);
+      }*/
+    //logd("\nresume %i\n", c->caller_context);
+    longjmp(c->caller_context, DONE);
+  }else{
+    c = current_cc;
+    void * sp;
+    get_sp(sp);
+    //logd("resuming..\n");
+    memcpy(sp, c->stack_data, c->stack_size);
+    //logd("resumed..\n");
+  }
+}
+
+void cc3step(coroutine2 * c){
+  current_cc = c;
+  int ret = setjmp(c->caller_context);
+  if(!ret) {
+    //logd("Resume!\n");
+    void * sp;
+    get_sp(sp);
+    //memcpy(sp- c->stack_size - 8, c->stack_data, c->stack_size);
+    /*int * d = c->stack_data;
+    for(u32 i = 0; i < c->stack_size / sizeof(int); i++){
+      logd("%i ", d[i]);
+    }
+    logd("\n");*/
+    longjmp(c->callee_context, WORKING);
+  }
+  /*else {
+    return ret == WORKING;
+    }*/
 }

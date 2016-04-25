@@ -37,3 +37,7 @@
 
 // swap two variables. Each should be same type
 #define SWAP(x,y){ auto tmp = x; x = y; y = tmp;} 
+
+
+void iron_register_deinitializer(void (* f)(void * data), void * data);
+void iron_deinitialize();

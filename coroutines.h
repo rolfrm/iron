@@ -21,6 +21,10 @@ ccdispatch * ccstart();
 void ccthread(ccdispatch * dispatcher, void (* fcn)(void *), void * userdata);
 void ccstep(ccdispatch * dispatcher);
 
+typedef struct _coroutine2 coroutine2;
+coroutine2 * cc3start(void (*f)());
+void cc3yield();
+void cc3step(coroutine2 * c);
 
 // test //
 void costack_test();
