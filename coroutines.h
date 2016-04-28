@@ -1,31 +1,19 @@
-//requires stdbool, pthread.h
 
 
-// Corutine basics
-typedef struct _costack costack;
 
-//costack * costack_create(pthread_attr_t * attr);
-bool costack_save( costack * cc);
-void costack_resume( costack * stk);
-void costack_delete( costack * stk);
-void costack_copy(costack * src, costack * dst);
+typedef struct _coroutine coroutine;
 
-// microthreading
+// Calls f and returns the continuation.
+coroutine * ccstart(void (*f)());
 
+// resumes the continuation. returns true if it has ended.
+bool ccstep(coroutine * cc);
+
+// suspends the current continuation.
 void ccyield();
-void ccfork();
-void ccend();
-typedef struct _ccdispatch ccdispatch;
 
-ccdispatch * ccstart();
-void ccthread(ccdispatch * dispatcher, void (* fcn)(void *), void * userdata);
-void ccstep(ccdispatch * dispatcher);
+void * cc_get_stack_base();
 
-typedef struct _coroutine2 coroutine2;
-coroutine2 * cc3start(void (*f)());
-void cc3yield();
-void cc3step(coroutine2 * c);
+void cc_get_stack(coroutine * c, void ** out_stack_data, size_t * out_size);
 
-// test //
-void costack_test();
-
+bool coroutine_test();
