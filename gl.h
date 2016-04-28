@@ -68,3 +68,26 @@ typedef struct{
 
 
 void get_mouse_position(gl_window * win, int * x, int * y);
+
+enum{
+  KEY_UP = 265,
+  KEY_DOWN = 264,
+  KEY_LEFT = 263,
+  KEY_RIGHT = 262,
+  KEY_ENTER = 257,
+  KEY_ESC =  256,
+  KEY_CTRL = 341,
+  KEY_SHIFT = 340,
+  KEY_F1 = 290,
+  KEY_F2 = 291,
+  KEY_F3 = 292,
+  KEY_F4 = 293,
+  KEY_F5 = 294,
+  KEY_F6 = 295,
+  KEY_F7 = 296,
+  KEY_F8 = 297,
+  KEY_F9 = 298,
+  KEY_F10 = 299,
+  KEY_F11 = 300,
+  KEY_F12 = 301,
+};

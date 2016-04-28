@@ -46,9 +46,10 @@ static void register_evt(GLFWwindow * win, void * _evt, gl_event_known_event_typ
 
 void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
-  
+  if(action == GLFW_REPEAT)
+    return;
   evt_key keyevt = {.key = key , .ischar = false};
-  register_evt(win, &keyevt, action ? EVT_KEY_DOWN : EVT_KEY_UP);
+  register_evt(win, &keyevt, action == GLFW_PRESS ? EVT_KEY_DOWN : EVT_KEY_UP);
 }
 
 void charcallback(GLFWwindow * win, u32 codept){
@@ -77,6 +78,11 @@ void mousebuttoncallback(GLFWwindow * win, int button, int action, int mods){
   register_evt(win, &btn, action ? EVT_MOUSE_BTN_DOWN : EVT_MOUSE_BTN_UP);
 }
 
+void windowclosecallback(GLFWwindow * win){
+  gl_window_event evt;
+  register_evt(win, &evt, EVT_WINDOW_CLOSE);
+}
+
 gl_window * gl_window_open(i32 width, i32 height){
   if(!glfwInited){
     glfwInited = true;
@@ -91,6 +97,7 @@ gl_window * gl_window_open(i32 width, i32 height){
   glfwSetCursorPosCallback(win->handle, cursorposcallback);
   glfwSetCursorEnterCallback(win->handle, cursorentercallback);
   glfwSetScrollCallback(win->handle, scrollcallback);
+  glfwSetWindowCloseCallback(win->handle, windowclosecallback);
 
   list_push2(all_windows, all_window_cnt, win);
   
@@ -110,6 +117,13 @@ void gl_window_destroy(gl_window ** win){
   gl_window * _win = *win;
   *win = NULL;  
   glfwDestroyWindow(_win->handle);
+  for(int i = 0; i < all_window_cnt; i++){
+    if(all_windows[i] == _win){
+      list_remove2(all_windows, all_window_cnt, i);
+      break;
+    }
+  }
+  
   dealloc(_win);
 }
 
