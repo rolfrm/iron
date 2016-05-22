@@ -66,6 +66,12 @@ vec2 vec2_new1(float xy);
 vec2 vec2_min(vec2 a, vec2 b);
 // element-wise max
 vec2 vec2_max(vec2 a, vec2 b);
+extern const vec2 vec2_infinity;
+extern const vec2 vec2_zero;
+extern const vec2 vec2_half;
+extern const vec2 vec2_one;
+
+
 vec3 vec3_new(float x, float y, float z);
 vec3 vec3_new1(float v);
 vec3 vec3_min(vec3 a, vec3 b);
@@ -152,6 +158,7 @@ mat4 mat4_transpose(mat4 N);
 mat4 mat4_add(mat4 a, mat4 b);
 mat4 mat4_sub(mat4 a, mat4 b);
 mat4 mat4_scale(mat4 a, float k);
+mat4 mat4_scaled(float scale_x, float scale_y, float scale_z);
 mat4 mat4_scale_aniso(mat4 a, float x, float y, float z);
 mat4 mat4_mul(mat4 a, mat4 b);
 vec4 mat4_mul_vec4( mat4 M, vec4 v);
@@ -194,3 +201,5 @@ void mat2_print(mat2 mat);
 void vec4_print(vec4 v);
 void vec3_print(vec3 v);
 void vec2_print(vec2 v);
+
+bool linmath_test();

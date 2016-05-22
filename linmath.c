@@ -146,6 +146,12 @@ inline vec2 vec2_max(vec2 a, vec2 b){
   return (vec2){.data = {MAX(a.x, b.x), MAX(a.y, b.y)}};
 }
 
+const vec2 vec2_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f};
+const vec2 vec2_zero = {.x = 0.0f, .y = 0.0f};
+const vec2 vec2_half = {.x = 0.5f, .y = 0.5f};
+const vec2 vec2_one = {.x = 1.0f, .y = 1.0f};
+
+
 inline vec3 vec3_new(float x, float y, float z){
   return (vec3){.data = {x,y,z}};
 }
@@ -174,10 +180,10 @@ const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f
 const vec3 vec3_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
 const vec3 vec3_half = {.x = 0.5f, .y = 0.5f, .z = 0.5f};
 const vec3 vec3_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f};
+
 inline vec4 vec4_new(float x, float y, float z, float w){
   return (vec4){.data = {x,y,z,w}};
 }
-
 
 vec3 vec3_mul_cross(vec3 const a, vec3 const b)
 {
@@ -235,10 +241,9 @@ mat2 mat2_rotation(float angle){
 }
 
 vec2 mat2_mul_vec2(mat2 m, vec2 v){
-  vec2 r;
-  r.data[0] = m.data[0][0] * v.data[0] + m.data[1][0] * v.data[1];
-  r.data[1] = m.data[0][1] * v.data[0] + m.data[1][1] * v.data[1];
-  return r;
+  return (vec2) {
+    .x = m.data[0][0] * v.data[0] + m.data[1][0] * v.data[1],
+    .y = m.data[0][1] * v.data[0] + m.data[1][1] * v.data[1]};
 }
 
 mat2 mat2_mul(mat2 a, mat2 b){
@@ -253,7 +258,6 @@ mat2 mat2_mul(mat2 a, mat2 b){
   return temp;
 }
 
-
 // mat3
 mat3 mat3_identity(){
   mat3 m;
@@ -267,8 +271,9 @@ mat3 mat3_identity(){
 vec3 mat3_col(mat3 m, int i){
   return m.columns[i];
 }
+
 vec3 mat3_row(mat3 m, int i){
-  return (vec3) {.data = {m.data[0][i], m.data[1][i], m.data[2][i] }};
+  return (vec3) { .x = m.data[0][i], .y = m.data[1][i], .z = m.data[2][i]};
 }
 
 mat3 mat3_transpose(mat3 m){
@@ -290,11 +295,11 @@ mat3 mat3_mul(mat3 a, mat3 b){
     }
   return temp;
 }
+
 vec3 mat3_mul_vec3(mat3 m, vec3 v){
-  vec3 r;
+  vec3 r = {0};
   int i, j;
   for(j=0; j<3; ++j) {
-    r.data[j] = 0.f;
     for(i=0; i<3; ++i)
       r.data[j] += m.data[i][j] * v.data[i];
   }
@@ -302,8 +307,8 @@ vec3 mat3_mul_vec3(mat3 m, vec3 v){
 }
 
 vec2 mat3_mul_vec2(mat3 m, vec2 _v){
-  vec3 v = {.data = {_v.x, _v.y, 1.0}};
-  vec3 r = {.data = {0.0, 0.0, 0.0}};
+  vec3 v = {.x = _v.x, .y = _v.y, .z = 1.0};
+  vec3 r = {0};
   int i, j;
   for(j=0; j<2; ++j) 
     for(i=0; i<3; ++i)
@@ -504,6 +509,10 @@ mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle)
   return M;
 }
 
+mat4 mat4_scaled(float scale_x, float scale_y, float scale_z){
+  return (mat4) {.m00 = scale_x, .m11 = scale_y, .m22 = scale_z, .m33 = 1};
+}
+
 mat4 mat4_rotate_X(mat4 M, float angle)
 {
   float s = sinf(angle);
@@ -649,8 +658,8 @@ mat4 mat4_perspective(float y_fov, float aspect, float n, float f)
   mat4 m;
   /* NOTE: Degrees are an unhandy unit to work with.
    * linmath.h uses radians for everything! */
-  float const a = 1.f / tan(y_fov / 2.f);
-
+  float a = 1.f / tan(y_fov / 2.f);
+  
   m.data[0][0] = a / aspect;
   m.data[0][1] = 0.f;
   m.data[0][2] = 0.f;
@@ -713,10 +722,7 @@ mat4 mat4_look_at(vec3 eye, vec3 center, vec3 up)
 }
 
 quat quat_identity(){
-  quat q;
-  q.data[0] = q.data[1] = q.data[2] = 0.f;
-  q.data[3] = 1.f;
-  return q;
+  return (quat) {.x = 0.f, .y = 0.f, .z = 0.f, .w = 1.f};
 }
 
 quat quat_from_axis(vec3 dir, float angle){
@@ -726,17 +732,11 @@ quat quat_from_axis(vec3 dir, float angle){
 }
 
 quat quat_add(quat a, quat b){
-  int i;
-  for(i=0; i<4; ++i)
-    a.data[i] = a.data[i] + b.data[i];
-  return a;
+  return vec4_add(a,b);
 }
 
 quat quat_sub(quat a, quat b){
-  int i;
-  for(i=0; i<4; ++i)
-    a.data[i] -= b.data[i];
-  return a;
+  return vec4_sub(a, b);
 }
 
 quat quat_mul(quat p, quat q){
@@ -751,24 +751,15 @@ quat quat_mul(quat p, quat q){
   return r;
 }
 
-quat quat_scale(quat v, float s)
-{
-  quat r;
-  int i;
-  for(i=0; i<4; ++i)
-    r.data[i] = v.data[i] * s;
-  return r;
+quat quat_scale(quat v, float s){
+  return vec4_scale(v, s);
 }
-float quat_inner_product(quat a, quat b)
-{
-  float p = 0.f;
-  int i;
-  for(i=0; i<4; ++i)
-    p += b.data[i]*a.data[i];
-  return p;
+
+float quat_inner_product(quat a, quat b){
+  return vec4_mul_inner(a ,b);
 }
-quat quat_conj(quat q)
-{
+
+quat quat_conj(quat q){
   quat r;
   int i;
   for(i=0; i<3; ++i)
@@ -780,7 +771,7 @@ quat quat_conj(quat q)
 vec3 quat_mul_vec3(quat q, vec3 v)
 {
   vec4 r;
-  quat v_ = {.data = {v.data[0], v.data[1], v.data[2], 0.f}};
+  quat v_ = {.xyz = v};
 
   r = quat_conj(q);
   r = quat_normalize(r);
@@ -907,4 +898,25 @@ void vec3_print(vec3 v){
 
 void vec2_print(vec2 v){
   printf("(%f %f)", v.x, v.y);
+}
+
+#include "test.h"
+#include "log.h"
+bool linmath_test(){
+  { // Test initializers
+    vec4 tst = {.xyz = {.x = 1, .y = 2, .z = 3}};
+    for(int i = 0; i < 3; i++)
+      TEST_ASSERT(tst.data[i] == i + 1);
+    TEST_ASSERT(tst.data[3] == 0.0f);
+  
+  
+    if(false){ // this does not work!
+      vec4 tst = {.xyz = {.x = 1, .y = 2, .z = 3}, .w = 4};
+      for(int i = 0; i < 4; i++)
+	TEST_ASSERT(tst.data[i] == i + 1);
+    }
+  }
+  //logd("TAN: %f\n", 1.0f / tanf(3.14 * 0.5 * 0.5));
+  //return TEST_FAIL;
+  return TEST_SUCCESS;
 }

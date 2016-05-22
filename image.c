@@ -1,9 +1,12 @@
 
 #include <png.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "types.h"
 #include "image.h"
 #include "log.h"
+#include "mem.h"
+
 void write_png_file(const char *filename, const int width, const int height, const u8 * data, int channels, int bit_depth) {
 
   FILE *fp = fopen(filename, "wb");
@@ -51,4 +54,45 @@ void write_png_file(const char *filename, const int width, const int height, con
   png_write_image(png, row_pointers);
   png_write_end(png, NULL);
   fclose(fp);
+}
+
+size_t image_pixel_type_size(image_pixel_type type){
+  switch(type){
+  case PIXEL_RGBA:
+    return 4;
+  case PIXEL_RGB:
+    return 3;
+  }
+  ERROR("Unknown pixel type");
+  return 0;
+}
+
+image * image_new(int width, int height, image_pixel_type type){
+  void * buffer = alloc0(width * height * image_pixel_type_size(type));
+  image _pt = {.type = type, .width = width, .height = height, .buffer = buffer };
+  return iron_clone(&_pt, sizeof(_pt));
+}
+
+void image_delete(image ** img){
+  dealloc((void *) (*img)->buffer);
+  dealloc(*img);
+  *img = NULL;
+}
+
+void image_save(const image * img, const char * filename){
+  write_png_file(filename, img->width, img->height, img->buffer, img->type, 8);
+}
+
+image * image_load(const char * filename);
+
+void * image_get(image * img, int x, int y){
+  int pxsize = image_pixel_type_size(img->type);
+  if(x < 0 || y < 0 || x >= img->width || y >= img->height)
+    return NULL;
+  return img->buffer + (x + y * img->height) * pxsize;
+}
+
+void image_clear(image * img){
+  int pxsize = image_pixel_type_size(img->type);
+  memset(img->buffer, 0, pxsize * img->width * img->height);
 }
