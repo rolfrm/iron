@@ -136,3 +136,19 @@ void * array_find(void * array, size_t size, size_t elem_size, bool (* f)(void *
   }
   return NULL;
 }
+
+bool starts_with(const char *pre, const char *str)
+{
+  size_t lenpre = strlen(pre);
+  size_t lenstr = strlen(str);
+  return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
+
+void * memmem2(void * haystack, size_t haystack_size, void * needle, size_t needle_size, size_t stride){
+  void * end = haystack + haystack_size;
+  for(;haystack < end; haystack += stride)
+    if(memcmp(haystack, needle, needle_size) == 0)
+      return haystack;
+  return NULL;
+}

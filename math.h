@@ -17,3 +17,4 @@ u8 hibit(u64 x);
 // returns true if two floats are equal given 'prec' precission.
 int feq(float a, float b, float prec);
 
+float randf32();

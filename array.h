@@ -38,3 +38,8 @@ bool all_whitespace(char * str);
 
 void * array_find(void * array, size_t size, size_t elem_size, bool (* f)(void * item, void * userdata), void * userdata);
 #define find1(array,size,f,userdata) array_find((void *) array, size, sizeof(array[0]), (bool (*)(void *, void *))f, userdata)
+
+bool starts_with(const char *pre, const char *str);
+
+// like memmem but with stride.
+void * memmem2(void * haystack, size_t haystack_size, void * needle, size_t needle_size, size_t stride);
