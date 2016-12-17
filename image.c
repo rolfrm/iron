@@ -1,7 +1,7 @@
-
 #include <png.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "types.h"
 #include "image.h"
 #include "log.h"

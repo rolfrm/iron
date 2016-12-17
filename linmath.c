@@ -224,6 +224,11 @@ vec4 vec4_reflect(vec4 v, vec4 n)
   return r;
 }
 
+const vec4 vec4_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f, .w = 1.0f / 0.0f};
+const vec4 vec4_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 0.0f};
+const vec4 vec4_half = {.x = 0.5f, .y = 0.5f, .z = 0.5f, .w = 0.5f};
+const vec4 vec4_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f, .w = 1.0f};
+
 // mat2
 
 mat2 mat2_identity(){

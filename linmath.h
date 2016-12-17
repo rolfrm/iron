@@ -91,7 +91,10 @@ vec3 vec3_reflect(vec3 const v, vec3 const n);
 vec3 vec3_less(vec3 a, vec3 b);
 vec3 vec3_gt(vec3 a, vec3 b);
 vec3 vec3_gteq(vec3 a, vec3 b);
-
+extern const vec4 vec4_infinity;
+extern const vec4 vec4_zero;
+extern const vec4 vec4_half;
+extern const vec4 vec4_one;
 
 bool vec3_eq(vec3 a, vec3 b);
 vec4 vec4_mul_cross(vec4 a, vec4 b);
@@ -159,6 +162,7 @@ mat4 mat4_add(mat4 a, mat4 b);
 mat4 mat4_sub(mat4 a, mat4 b);
 mat4 mat4_scale(mat4 a, float k);
 mat4 mat4_scaled(float scale_x, float scale_y, float scale_z);
+mat4 mat4_scale_transform(float x, float y, float z);
 mat4 mat4_scale_aniso(mat4 a, float x, float y, float z);
 mat4 mat4_mul(mat4 a, mat4 b);
 vec4 mat4_mul_vec4( mat4 M, vec4 v);
