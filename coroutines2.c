@@ -19,6 +19,7 @@
 #include "test.h"
 
 
+
 #define get_sp(p) __asm__ volatile ("movq %%rsp, %0" : "=r"(p))
 #define get_fp(p) __asm__ volatile ("movq %%rbp, %0" : "=r"(p))
 #define set_sp(p) __asm__ volatile ("movq %0, %%rsp" : : "r"(p))
@@ -68,18 +69,21 @@ coroutine * _ccstart(void (*f)()){
     return c;
   }
 }
-
+#pragma GCC push_options
+#pragma GCC optimize ("O4")  
 coroutine * ccstart(void (*f)()){
   return _ccstart(f);
 }
 
-  
-inline void ccyield(){
+ void ccyield(){
   static __thread void * sp;
+
+
   if(!setjmp(current_cc->callee_context)) {
     get_sp(sp);
-    current_cc->stack_size = current_cc->stack_ptr - sp;
+    current_cc->stack_size = (current_cc->stack_ptr - sp);
     ASSERT(((int)current_cc->stack_size) >= 0);
+
     current_cc->stack_data = realloc(current_cc->stack_data, current_cc->stack_size);
     memcpy(current_cc->stack_data, sp, current_cc->stack_size);
     current_cc->is_yield = true;
@@ -89,7 +93,9 @@ inline void ccyield(){
     memcpy(sp, current_cc->stack_data, current_cc->stack_size);
     current_cc->is_yield = false;
   }
+
 }
+
 
 bool _ccstep(coroutine * c){
   if(c->is_yield == false)

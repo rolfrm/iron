@@ -191,7 +191,7 @@ bool bench_list_add_test(){
 }
 
 bool test_list(){
-  size_t cnt = 1000000;
+  size_t cnt = 100;
   u64 fast = measure_elapsed(lambda( void, (){bench_list_add(cnt);}));
   logd("listadd: %i\n", fast);
   return TEST_SUCCESS;
@@ -232,6 +232,37 @@ bool block_allocator_test(){
   return ok;
 }
 
+bool strtest(){
+  { // split / join test
+    char * testbuffer = "1:2:3  5:5:6";
+    int cnt;
+    char ** buffers = string_split(testbuffer, ":", &cnt);
+    
+    TEST_ASSERT(strlen(buffers[0]) == 1);
+    TEST_ASSERT(strlen(buffers[2]) == 4);
+    TEST_ASSERT(cnt == 5);
+    char * testbuffer2 = string_join(cnt, ":", buffers);
+    ASSERT(strcmp(testbuffer, testbuffer2) == 0);
+  }
+  
+  { // replace inplace test
+    char * str = fmtstr("%s", "        |REPLACE_THIS| |REPLACE_THIS|    |REPLACE_THIS||REPLACE_THIS||REPLACE_THIS|    ");
+    char * str_bak = fmtstr("%s", str); // backup
+    str = realloc(str, 1000);
+    replace_inplace(str, "REPLACE_THIS", ".");
+
+    ASSERT(strcmp(str, "        |.| |.|    |.||.||.|    ") == 0);
+    replace_inplace(str, ".", "REPLACE_THIS");
+    ASSERT(strcmp(str, str_bak) == 0);
+
+    dealloc(str);
+    dealloc(str_bak);
+  }
+
+  return TEST_SUCCESS;
+  
+}
+
 int main(){
 
 
@@ -244,6 +275,7 @@ int main(){
   TEST(test_utils);
   TEST(test_util_hash_table);
   TEST(bench_list_add_test);
-  TEST(block_allocator_test);
+  TEST(strtest);
+  //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 }

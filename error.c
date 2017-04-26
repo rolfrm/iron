@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "iron/types.h"
-#include "iron/log.h"
-#include "iron/utils.h"
+#include "types.h"
+#include "log.h"
+#include "utils.h"
 
 
 void _error(const char * file, int line, const char * msg, ...){

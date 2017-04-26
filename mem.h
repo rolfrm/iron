@@ -35,3 +35,7 @@ char * fmtstr(const char * fmt, ...);
 #define new(type) alloc0(sizeof(type))
 
 bool string_startswith(const char * target, const char * test);
+
+char * string_join(int cnt, const char * separator, char ** strings);
+void replace_inplace(char * out_buffer, const char * pattern, const char * insert);
+char ** string_split(char * str, const char * pattern, int * out_cnt);

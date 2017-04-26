@@ -300,3 +300,59 @@ bool string_startswith(const char * target, const char * test){
   return strncmp(target, test, strlen(test)) == 0;
 }
 
+char * string_join(int cnt, const char * separator, char ** strings){
+  if(cnt == 0) return fmtstr("");
+  char * output = fmtstr("%s", strings[0]);
+  for(int i = 1; i < cnt; i++){
+    char * o = fmtstr("%s%s%s",output, separator, strings[i]);
+    dealloc(output);
+    output = o;
+  }
+  return output; 
+}
+
+int count_occurences(char * str, const char * pattern){
+  int i = 0;
+  while(str){
+    str = strstr(str, pattern);
+    if(str == NULL)
+      break;
+    str += strlen(pattern);
+    i++;
+  }
+  return i;
+}
+
+char ** string_split(char * str, const char * pattern, int * out_cnt){
+  int outcnt = count_occurences(str, pattern);
+  char * outputs [outcnt + 1];
+  int i = 0;
+  bool doBreak = false;
+  while(!doBreak){
+    char * str2 = strstr(str, pattern);
+    if(str2 == NULL){
+      str2 = str + strlen(str);
+      doBreak = true;
+    }
+    int cnt = str2 - str;
+    char buf[cnt + 1];
+    memmove(buf, str, cnt);
+    buf[cnt] = 0;
+    outputs[i] = fmtstr("%s", buf);
+    i++;
+    str = str2 + strlen(pattern);
+  }
+  *out_cnt = i;
+  return iron_clone(outputs, sizeof(outputs));
+}
+
+void replace_inplace(char * out_buffer, const char * pattern, const char * insert){
+  while(true){
+    char * find = strstr(out_buffer, pattern);
+    if(!find) return;
+    int pattern_len = strlen(pattern), insert_len = strlen(insert);
+    memmove(find + insert_len, find + pattern_len, strlen(find + pattern_len) + 1);
+    memmove(find, insert, strlen(insert));
+    out_buffer = find + insert_len;
+  }
+}
