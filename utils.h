@@ -8,6 +8,8 @@
 #define UNUSED(x) (void)(x)
 
 #define auto __auto_type
+#define var __auto_type
+#define let __auto_type const
 
 #define MAX(a,b) \
    ({ auto _a = (a); \
@@ -36,8 +38,10 @@
   })
 
 // swap two variables. Each should be same type
-#define SWAP(x,y){ auto tmp = x; x = y; y = tmp;} 
-
+#define SWAP(x,y){ auto tmp = x; x = y; y = tmp;}
+// set location to a new value, Return previous value.
+#define REPLACE(location,newv)({int tmp = location; location = newv; tmp;})
 
 void iron_register_deinitializer(void (* f)(void * data), void * data);
 void iron_deinitialize();
+void __test_utils();
