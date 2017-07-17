@@ -11,6 +11,8 @@
 #define var __auto_type
 #define let __auto_type const
 
+#define WARN_UNUSED __attribute__((warn_unused_result))
+
 #define MAX(a,b) \
    ({ auto _a = (a); \
        auto _b = (b); \
