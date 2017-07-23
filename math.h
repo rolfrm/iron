@@ -20,3 +20,4 @@ int feq(float a, float b, float prec);
 f64 randf64();
 f32 randf32();
 u32 randu32(u32 range);
+

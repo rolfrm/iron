@@ -31,7 +31,9 @@
 #define ABS(a) ({ auto _a = a; _a < 0 ? -_a : _a;})
 
 // gets the sign of value -1 or 1.
-#define SIGN(x) (x < 0 ? -1 : 1)
+//#define SIGN(x) (x < 0 ? -1 : 1)
+#define SIGN(x) (x > 0 ? 1 : (x < 0 ? -1 : 0))
+
 
 #define lambda(return_type, body_and_args) \
   ({ \
