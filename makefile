@@ -1,4 +1,4 @@
-OPT = -g
+OPT = -g -Og
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out gl.c testmain.c, $(SOURCES))
 CC = gcc

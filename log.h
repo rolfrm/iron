@@ -31,10 +31,10 @@ void _error(const char * file, int line, const char * message, ...);
 #define ERROR(msg,...) _error(__FILE__,__LINE__,msg, ##__VA_ARGS__)
 
 #ifdef DEBUG
-#define ASSERT(expr) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}
+#define ASSERT(expr) if(__builtin_expect(!(expr), 0)){ERROR("Assertion '" #expr "' Failed");}
 #define UNREACHABLE() {ERROR("Should not be reachable");}
 #else
-#define ASSERT(expr) if(1) if(!(expr)){ERROR("Assertion '" #expr "' Failed");}
+#define ASSERT(expr) ;
 
 #define UNREACHABLE();
 #endif

@@ -83,7 +83,14 @@ void image_save(const image * img, const char * filename){
   write_png_file(filename, img->width, img->height, img->buffer, img->type, 8);
 }
 
-image * image_load(const char * filename);
+image * image_load(const char * filename){
+  png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  ASSERT(png);
+  FILE *fp = fopen(filename, "r");
+  if(!fp)
+    ERROR("Could not open '%s'", filename);
+
+}
 
 void * image_get(image * img, int x, int y){
   int pxsize = image_pixel_type_size(img->type);
