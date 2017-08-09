@@ -19,5 +19,5 @@ typedef char * str;
 
 typedef float f32;
 typedef double f64;
-
+typedef __float128 f128;
 

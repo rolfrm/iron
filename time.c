@@ -10,6 +10,12 @@ u64 timestamp(){
   return tv.tv_sec * 1e6 + tv.tv_usec;
 }
 
+f128 timestampf(){
+  f128 ts = (f128) timestamp();
+  return ts * ((f128) 1e-6);
+}
+
+
 u64 measure_elapsed(void (*fcn)()){
   u64 t1 = timestamp();
   fcn();
