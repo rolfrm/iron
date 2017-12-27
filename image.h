@@ -4,7 +4,9 @@ void write_png_file(const char *filename, const int width, const int height, con
 
 typedef enum{
   PIXEL_RGBA = 4,
-  PIXEL_RGB = 3
+  PIXEL_RGB = 3,
+  PIXEL_GRAY_ALPHA = 2,
+  PIXEL_GRAY = 1
 }image_pixel_type;
 
 typedef struct
@@ -20,3 +22,6 @@ void image_save(const image * img, const char * filename);
 image * image_load(const char * filename);
 void * image_get(image * img, int x, int y);
 void image_clear(image * img);
+
+// destructively removes the alpha channel.
+void image_remove_alpha(image * img);

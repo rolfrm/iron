@@ -17,7 +17,7 @@
 #define ANSI_COLOR_RESET   ""
 #define ANSI_COLOR_GRAY ""
 
-
+#define DEBUG
 void log_print(const char * fmt, ...);
 extern __thread int logd_enable;
 #define log(...) ({log_print(ANSI_COLOR_YELLOW __VA_ARGS__); log_print(ANSI_COLOR_RESET);})
@@ -34,10 +34,10 @@ void _error(const char * file, int line, const char * message, ...);
 #define ASSERT(expr) if(__builtin_expect(!(expr), 0)){ERROR("Assertion '" #expr "' Failed");}
 #define UNREACHABLE() {ERROR("Should not be reachable");}
 #else
-#define ASSERT(expr) ;
+#define ASSERT(expr) if(expr){};
 
 #define UNREACHABLE();
 #endif
 
 void iron_log_stacktrace();
-extern void (* iron_log_printer)(const char * fnt, va_list lst);
+//extern void (* iron_log_printer)(const char * fnt, va_list lst);

@@ -62,10 +62,15 @@ size_t image_pixel_type_size(image_pixel_type type){
     return 4;
   case PIXEL_RGB:
     return 3;
+  case PIXEL_GRAY_ALPHA:
+    return 2;
+  case PIXEL_GRAY:
+    return 1;
   }
   ERROR("Unknown pixel type");
   return 0;
 }
+
 
 image * image_new(int width, int height, image_pixel_type type){
   void * buffer = alloc0(width * height * image_pixel_type_size(type));
@@ -90,6 +95,61 @@ image * image_load(const char * filename){
   if(!fp)
     ERROR("Could not open '%s'", filename);
 
+  png_infop info_ptr = png_create_info_struct(png);
+  if (!png)
+    ERROR("png_create_info_struct failed");
+  
+  if (setjmp(png_jmpbuf(png)))
+    ERROR("Error during init_io");
+
+  png_init_io(png, fp);
+  png_set_sig_bytes(png, 0);
+  png_read_info(png, info_ptr);
+
+  int width = png_get_image_width(png, info_ptr);
+  int height = png_get_image_height(png, info_ptr);
+  int color_type = png_get_color_type(png, info_ptr);
+  int bit_depth = png_get_bit_depth(png, info_ptr);
+  ASSERT(bit_depth == 8);
+  //int number_of_passes = png_set_interlace_handling(png);
+  png_read_update_info(png, info_ptr);
+  
+  
+  // read file 
+  if (setjmp(png_jmpbuf(png)))
+    ERROR("Error during read_image");
+  u32 rowbytes = png_get_rowbytes(png,info_ptr);
+  void * dataptr = alloc(rowbytes * height);
+  png_bytep* row_pointers = (png_bytep*) alloc(sizeof(png_bytep) * height);
+  
+  for (int y=0; y<height; y++)
+    row_pointers[y] = dataptr + rowbytes * y;
+
+  png_read_image(png, row_pointers);
+
+  fclose(fp);
+  //image * img = alloc0(sizeof(image));
+
+  image_pixel_type px_type;
+  switch(color_type){
+  case PNG_COLOR_TYPE_RGB:
+    px_type = PIXEL_RGB;
+    break;
+  case PNG_COLOR_TYPE_GRAY:
+    px_type = PIXEL_GRAY;
+    break;
+  case PNG_COLOR_TYPE_GRAY_ALPHA:
+    px_type = PIXEL_GRAY_ALPHA;
+    break;
+  case PNG_COLOR_TYPE_RGB_ALPHA:
+    px_type = PIXEL_RGBA;
+    break;
+  }
+  
+  image img = {.buffer = dataptr, .height = height, .width = width, .type = px_type};	       
+  dealloc(row_pointers);
+
+  return iron_clone(&img, sizeof(img));
 }
 
 void * image_get(image * img, int x, int y){
@@ -102,4 +162,26 @@ void * image_get(image * img, int x, int y){
 void image_clear(image * img){
   int pxsize = image_pixel_type_size(img->type);
   memset(img->buffer, 0, pxsize * img->width * img->height);
+}
+
+void image_remove_alpha(image * img){
+  if(img->type == PIXEL_GRAY || img->type == PIXEL_RGB)
+    return;
+  int pxsize = 2;
+  int keepsize = 1;
+  if(img->type == PIXEL_RGBA){
+    pxsize = 4;
+    keepsize = 3;
+  }
+  u64 size = img->width * img->height * image_pixel_type_size(img->type);
+  u64 pxs = img->width * img->height;
+  void * buffer = (void *) img->buffer;
+  for(u64 i = 0; i < pxs; i+= 1){
+    u64 newi = i * keepsize;
+    u64 oldi = i * pxsize;
+    memmove(buffer + newi, buffer + oldi, keepsize);
+  }
+  image newimg = {.type = keepsize == 1 ? PIXEL_GRAY : PIXEL_RGBA, .width = img->width,
+		  .height = img->height, .buffer = img->buffer};
+  memcpy(img, &newimg, sizeof(image));
 }

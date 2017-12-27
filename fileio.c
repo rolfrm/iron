@@ -203,6 +203,6 @@ void iron_touch(const char * file){
 
 void ensure_directory(const char * path){
   char buf[1000];
-  sprintf(buf, "mkdir -p %s", path);
+  sprintf(buf, "mkdir -p \"%s\"", path);
   ASSERT(system(buf) == 0);
 }
