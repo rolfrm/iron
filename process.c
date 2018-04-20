@@ -73,9 +73,22 @@ void iron_process_clean(iron_process * proc){
   proc->pid = -1;
 }
 void * iron_clone(const void * src, size_t s);
+
 iron_thread * iron_start_thread(void * (* fcn)(void * data), void * data){
   pthread_t tid;
   if(pthread_create( &tid, NULL, fcn, data) != 0)
+    return NULL;
+  return (iron_thread *) iron_clone(&tid, sizeof(tid));
+}
+
+iron_thread * iron_start_thread0(void (* fcn)()){
+  void * run(void * _f){
+    void (* f)() = _f;
+    f();
+    return NULL;
+  }
+  pthread_t tid;
+  if(pthread_create( &tid, NULL, run, fcn) != 0)
     return NULL;
   return (iron_thread *) iron_clone(&tid, sizeof(tid));
 }
@@ -87,7 +100,8 @@ void iron_thread_join(iron_thread * thread){
 
 iron_mutex iron_mutex_create(){
   iron_mutex mtex;
-  mtex.data = alloc0(sizeof(pthread_mutex_t));
+  mtex.data = alloc(sizeof(pthread_mutex_t));
+  pthread_mutex_init(mtex.data, NULL);
   return mtex;
 }
 
@@ -100,6 +114,7 @@ void iron_mutex_unlock(iron_mutex m){
 }
 
 void iron_mutex_destroy(iron_mutex * m){
+  pthread_mutex_destroy(m->data);
   dealloc(m->data);
   memset(m, 0, sizeof(iron_mutex));
 }

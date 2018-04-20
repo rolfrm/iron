@@ -260,7 +260,39 @@ bool strtest(){
   }
 
   return TEST_SUCCESS;
-  
+}
+
+bool test_mutex(){
+
+    iron_mutex mtex = iron_mutex_create();
+    iron_mutex mtex2 = iron_mutex_create();
+    iron_mutex_lock(mtex);
+    int limit = 10000;
+    int counter = 0;
+    void _test_mutex(){
+      for(int i = 0; i < limit; i++){
+	iron_mutex_lock(mtex);
+	iron_mutex_lock(mtex2);
+	counter += 1;
+	iron_mutex_unlock(mtex2);
+	iron_mutex_unlock(mtex);
+      }
+    }
+    int threads = 15;
+    iron_thread * trds[threads];
+    for(int i = 0; i < threads;i++)
+      trds[i] = iron_start_thread0(_test_mutex);
+    
+    iron_mutex_unlock(mtex);
+    for(int i = 0; i < threads;i++)
+      iron_thread_join(trds[i]);
+
+    logd("CNT: %i\n", counter);
+    ASSERT(counter == limit * threads);
+    iron_mutex_destroy(&mtex);
+
+
+  return true;
 }
 
 int main(){
@@ -276,6 +308,8 @@ int main(){
   TEST(test_util_hash_table);
   TEST(bench_list_add_test);
   TEST(strtest);
+  TEST(test_mutex);
+  
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 }

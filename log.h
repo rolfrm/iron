@@ -30,14 +30,14 @@ extern __thread int logd_enable;
 void _error(const char * file, int line, const char * message, ...);
 #define ERROR(msg,...) _error(__FILE__,__LINE__,msg, ##__VA_ARGS__)
 
-#ifdef DEBUG
+//#ifdef 1
 #define ASSERT(expr) if(__builtin_expect(!(expr), 0)){ERROR("Assertion '" #expr "' Failed");}
 #define UNREACHABLE() {ERROR("Should not be reachable");}
-#else
-#define ASSERT(expr) if(expr){};
+//#else
+//#define ASSERT(expr) if(expr){};
 
-#define UNREACHABLE();
-#endif
+//#define UNREACHABLE();
+//#endif
 
 void iron_log_stacktrace();
 //extern void (* iron_log_printer)(const char * fnt, va_list lst);
