@@ -295,9 +295,58 @@ bool test_mutex(){
   return true;
 }
 
+void listen(const data_stream * s, const void * data, size_t length, void * userdata){
+  int * cnt = userdata;
+  *cnt += 1;
+  logd("%p  %s  '%s'\n", s, s->name, data);
+}
+
+bool test_datastream(){
+  static data_stream str1 = { .name = "Datastream 1"};
+  static data_stream str2 = { .name = "Datastream 2"};
+  
+  
+  data_stream_listener * l = alloc0(sizeof(data_stream_listener));
+  l->process = listen;
+  int * cnt = alloc0(sizeof(int));
+  l->userdata = cnt;
+  data_stream_listen_all(l);
+
+  data_stream_listener * l2 = alloc0(sizeof(data_stream_listener));
+  l2->process = listen;
+  int * cnt2 = alloc0(sizeof(int));
+  l2->userdata = cnt2;
+  data_stream_listen(l2, &str1);
+  
+  {
+    const char * msg = "test1";
+    dlog(str1, msg, sizeof(msg));
+  }
+  
+  {
+    const char * msg = "test1 asddwa dsa dsa";
+    dlog(str2, msg, sizeof(msg));
+    dlog(str1, msg, sizeof(msg));
+  }
+
+  dmsg(str2, "hello %i %i %i: %s", 1,2 ,3, "...");
+  ASSERT(*cnt == 4);
+  ASSERT(*cnt2 == 2);
+  data_stream_unlisten(l2, &str1);
+  dmsg(str2, "hello %i %i %i: %s", 1,2 ,5, "...");
+  ASSERT(*cnt2 == 2);
+  data_stream_unlisten_all(l);
+  dmsg(str2, "last... hello %i %i %i: %s", 1,2 ,3, "...");
+  ASSERT(*cnt == 5);
+  data_stream_listen_all(l);
+  data_stream_listen(l2, &str1);
+  return true;
+  
+}
+
 int main(){
 
-
+  
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
@@ -309,7 +358,8 @@ int main(){
   TEST(bench_list_add_test);
   TEST(strtest);
   TEST(test_mutex);
-  
+  //TEST(test_datastream);*/
+  TEST(test_datastream);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 }

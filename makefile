@@ -18,6 +18,10 @@ clean:
 	rm $(OBJECTS) $(TARGET) *.o.depends
 -include $(OBJECTS:.o=.o.depends)
 
+test: $(OBJECTS) testmain.c
+	$(CC) testmain.c $(OBJECTS) -L/usr/lib/nvidia-384/ -ldl -lm -lpthread  -lpng -o $@
+
+
 install: $(TARGET)
 	mkdir -v /usr/include/iron |true
 	cp -v ./*.h /usr/include/iron
