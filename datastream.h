@@ -2,7 +2,7 @@
 typedef struct {
   const char * name;
   const char * parent_stream_name;
-
+  
   // for internal use only.
   void * internal;
 }data_stream;
@@ -19,6 +19,10 @@ void data_stream_listen(data_stream_listener * listener, data_stream * stream);
 void data_stream_unlisten(data_stream_listener * listener, data_stream * stream);
 void data_stream_listen_all(data_stream_listener * listener);
 void data_stream_unlisten_all(data_stream_listener * listener);
+
+// Listen for activity. In this case, data and length with be 0 for process.
+void data_stream_listen_activity(data_stream_listener * listener);
+void data_stream_unlisten_activity(data_stream_listener * listener);
 
 #define dmsg(stream, msg, ...) data_stream_message(&stream, msg, ##__VA_ARGS__);
 #define dlog(stream, data, length) data_stream_data(&stream, data, length);

@@ -297,15 +297,23 @@ bool test_mutex(){
 
 void listen(const data_stream * s, const void * data, size_t length, void * userdata){
   int * cnt = userdata;
-  *cnt += 1;
+  if((strcmp("Datastream 1", s->name) == 0) || strcmp("Datastream 2", s->name) == 0){
+    *cnt += 1;
+  }
   logd("%p  %s  '%s'\n", s, s->name, data);
+}
+
+void listen_activity(const data_stream * s, const void * data, size_t length, void * userdata){
+  logd("Activity: on '%s' (%p)\n", s->name, s);
 }
 
 bool test_datastream(){
   static data_stream str1 = { .name = "Datastream 1"};
   static data_stream str2 = { .name = "Datastream 2"};
-  
-  
+
+  data_stream_listener * activity_listener = alloc0(sizeof(data_stream_listener));
+  activity_listener->process = listen_activity;
+  data_stream_listen_activity(activity_listener);
   data_stream_listener * l = alloc0(sizeof(data_stream_listener));
   l->process = listen;
   int * cnt = alloc0(sizeof(int));
@@ -358,7 +366,6 @@ int main(){
   TEST(bench_list_add_test);
   TEST(strtest);
   TEST(test_mutex);
-  //TEST(test_datastream);*/
   TEST(test_datastream);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
