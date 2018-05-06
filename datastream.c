@@ -98,8 +98,9 @@ void data_stream_data(const data_stream * stream, const void * data, size_t leng
   void send_msg(listener_data * next){
     while(next != NULL){
       var a = next->listener;
-      if(a->process != NULL)
+      if(a->process != NULL){
 	a->process(stream, data, length, a->userdata);
+      }
       next = next->next;
     }
   }
@@ -115,6 +116,7 @@ void data_stream_message(const data_stream * stream, const char * msg, ...){
     send_activity(activity_listeners, stream);
     return; 
   }
+  
   static __thread char writebuf[4000];
   va_list args;
   va_start (args, msg);
