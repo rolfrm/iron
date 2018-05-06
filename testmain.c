@@ -295,7 +295,7 @@ bool test_mutex(){
   return true;
 }
 
-void listen(const data_stream * s, const void * data, size_t length, void * userdata){
+static void listen(const data_stream * s, const void * data, size_t length, void * userdata){
   int * cnt = userdata;
   if((strcmp("Datastream 1", s->name) == 0) || strcmp("Datastream 2", s->name) == 0){
     *cnt += 1;
@@ -303,7 +303,7 @@ void listen(const data_stream * s, const void * data, size_t length, void * user
   logd("%p  %s  '%s'\n", s, s->name, data);
 }
 
-void listen_activity(const data_stream * s, const void * data, size_t length, void * userdata){
+static void listen_activity(const data_stream * s, const void * data, size_t length, void * userdata){
   logd("Activity: on '%s' (%p)\n", s->name, s);
 }
 
@@ -348,13 +348,11 @@ bool test_datastream(){
   ASSERT(*cnt == 5);
   data_stream_listen_all(l);
   data_stream_listen(l2, &str1);
-  return true;
-  
+  return true;  
 }
 
 int main(){
 
-  
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
