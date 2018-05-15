@@ -88,7 +88,7 @@ void data_stream_unlisten_activity(data_stream_listener * listener){
 static void send_activity(listener_data * next, const data_stream * stream){
   while(next != NULL){
     var a = next->listener;
-    if(a->process != NULL)
+    if(a != NULL && a->process != NULL)
       a->process(stream, NULL, 0, a->userdata);
     next = next->next;
   }
