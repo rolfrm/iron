@@ -98,9 +98,9 @@ void data_stream_data(const data_stream * stream, const void * data, size_t leng
   void send_msg(listener_data * next){
     while(next != NULL){
       var a = next->listener;
-      if(a->process != NULL){
+      if(a != NULL && a->process != NULL)
 	a->process(stream, data, length, a->userdata);
-      }
+      
       next = next->next;
     }
   }
