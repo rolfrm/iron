@@ -32,11 +32,11 @@ static void data_stream_add_listener(data_stream_listener *l, listener_data ** l
       while(!__sync_bool_compare_and_swap(list, NULL, ld)){
 	*list = (*list)->next;
       }
-      dmsg(data_stream_log, "Using new listener slot at %p (listener %p)", *list, l);
+      //dmsg(data_stream_log, "Using new listener slot at %p (listener %p)", *list, l);
       return;
     }
     if(__sync_bool_compare_and_swap(&(*list)->listener, NULL, l)){
-      dmsg(data_stream_log, "Reusing listener slot at %p (listener %p)", *list, l);
+      //dmsg(data_stream_log, "Reusing listener slot at %p (listener %p)", *list, l);
       return;
     }
     list = &(*list)->next;

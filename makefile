@@ -6,7 +6,7 @@ TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L. -L../libconcurrency-read-only/  $(OPT) -Wextra -shared -L/usr/lib/nvidia-384/ -fPIC #setrlimit on linux 
 LIBS= -ldl -lm -lpthread  -lGL -lpng 
-CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0  -g0 -O4 -msse4.1 -D_GNU_SOURCE  -fdiagnostics-color -shared -fPIC
+CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0  -msse4.1 -D_GNU_SOURCE  -fdiagnostics-color -shared -fPIC
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
