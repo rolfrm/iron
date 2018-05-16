@@ -206,3 +206,7 @@ void ensure_directory(const char * path){
   sprintf(buf, "mkdir -p \"%s\"", path);
   ASSERT(system(buf) == 0);
 }
+
+bool file_exists(const char * path){
+  return access(path, F_OK ) != -1;
+}
