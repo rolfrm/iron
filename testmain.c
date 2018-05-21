@@ -114,6 +114,8 @@ bool mem_test(){
 
   char * r = fmtstr("1%s2","hello");
   TEST_ASSERT(strcmp(r,"1hello2") == 0);
+  const char * r2 = quickfmt("1%s2","hello");
+  TEST_ASSERT(strcmp(r,r2) == 0);
   dealloc(r);
   return TEST_SUCCESS;
 }

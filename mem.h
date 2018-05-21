@@ -32,6 +32,11 @@ size_t trace_allocator_allocated_pointers(allocator * trace_allocator);
 void trace_allocator_release(allocator * trace_allocator);
 
 char * fmtstr(const char * fmt, ...);
+
+// buffered fmt for small things.
+// only one value can be used at a time.
+const char * quickfmt(const char * fmt, ...);
+
 #define new(type) alloc0(sizeof(type))
 
 bool string_startswith(const char * target, const char * test);

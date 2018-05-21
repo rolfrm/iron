@@ -290,6 +290,17 @@ char * vfmtstr(const char * fmt, va_list args){
   return out;
 }
 
+const char * quickfmt(const char * fmt, ...){
+   static __thread char buffer[1024];
+   va_list args;
+   va_start (args, fmt);
+   vsnprintf (buffer, sizeof(buffer), fmt, args) ;
+   va_end(args);
+  
+  return buffer;
+}
+
+
 char * fmtstr(const char * fmt, ...){
   va_list args;
   va_start (args, fmt);
