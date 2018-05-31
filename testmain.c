@@ -270,6 +270,8 @@ bool strtest(){
     TEST_ASSERT(string_skip("hello world", "hello")[0] == ' ');
     TEST_ASSERT(string_skip("hello world", "hello  ") == NULL);
     TEST_ASSERT(string_skip_all(string_skip("hello    world", "hello"), " ")[0] == 'w');
+    TEST_ASSERT(string_skip_all(string_skip("helloworld", "hello"), " ")[0] == 'w');
+    TEST_ASSERT(string_skip_all(string_skip("helworld", "hello"), " ") == NULL);
     
   }
   
