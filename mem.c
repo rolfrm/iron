@@ -311,6 +311,26 @@ bool string_startswith(const char * target, const char * test){
   return strncmp(target, test, strlen(test)) == 0;
 }
 
+
+char * string_skip(char * target, const char * test){
+  if(target == NULL) return NULL;
+  while(test[0] != 0 && target[0] != 0 && target[0] == test[0]){
+    target +=1;
+    test += 1;
+  }
+  if(test[0] == 0)
+    return target;
+  return NULL;
+}
+
+char * string_skip_all(char * target, const char * substring){
+  char * newtarget = NULL;
+  while((newtarget = string_skip(target, substring)))
+    target = newtarget;
+  
+  return target;
+}
+
 char * string_join(int cnt, const char * separator, char ** strings){
   if(cnt == 0) return fmtstr("");
   char * output = fmtstr("%s", strings[0]);

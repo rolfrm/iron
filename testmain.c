@@ -261,6 +261,19 @@ bool strtest(){
     dealloc(str_bak);
   }
 
+  {
+    logd("testing string commands\n");
+    TEST_ASSERT(string_startswith("hello world", "hell"));
+    TEST_ASSERT(string_startswith("hello world", "hello "));
+    TEST_ASSERT(string_startswith("hello world", "hello  ") == false);
+
+    TEST_ASSERT(string_skip("hello world", "hello")[0] == ' ');
+    TEST_ASSERT(string_skip("hello world", "hello  ") == NULL);
+    TEST_ASSERT(string_skip_all(string_skip("hello    world", "hello"), " ")[0] == 'w');
+    
+  }
+  
+
   return TEST_SUCCESS;
 }
 

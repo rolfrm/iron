@@ -40,7 +40,10 @@ const char * quickfmt(const char * fmt, ...);
 #define new(type) alloc0(sizeof(type))
 
 bool string_startswith(const char * target, const char * test);
-
+// returns the things following substring in target, unless it does not contain it.
+char * string_skip(char * target, const char * substring);
+char * string_skip_all(char * target, const char * substring);
 char * string_join(int cnt, const char * separator, char ** strings);
 void replace_inplace(char * out_buffer, const char * pattern, const char * insert);
 char ** string_split(char * str, const char * pattern, int * out_cnt);
+ 
