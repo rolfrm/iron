@@ -48,15 +48,28 @@
     for(int i = 1; i < n; i++) ok &= (fabs(v1.data[i] -v2 .data[i]) < eps); \
     return ok;								\
   }  									\
-  
+
+#ifdef __SSE4_1
+#define SIMD
+#endif
+#ifdef SIMD
 #include <smmintrin.h>
 #include <emmintrin.h>
+#endif
+
 float vec2_len(vec2 v){
   return sqrtf(vec2_sqlen(v));
 }
+#ifdef SIMD
 float vec3_len(vec3 v){
   return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v.sse, v.sse, 0x71)));
 }
+#else
+float vec3_len(vec3 v){
+  return sqrtf(vec3_sqlen(v));
+}
+#endif
+
 float vec4_len(vec4 v){
   return sqrtf(vec4_sqlen(v));//return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v.sse, v.sse, 0x71)));
 }
@@ -73,10 +86,10 @@ vec2 vec2_round(vec2 v){
 }
 
 vec3 vec3_normalize(vec3 v){
-  //return vec3_scale(v, 1.0f / vec3_len(v));
-  __m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x7F));
-  v.sse = _mm_div_ps(v.sse, norm);
-  return v;
+  return vec3_scale(v, 1.0f / vec3_len(v));
+  //__m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x7F));
+  //v.sse = _mm_div_ps(v.sse, norm);
+  //return v;
 }
 vec3 vec3_less(vec3 a, vec3 b){
 
@@ -91,7 +104,8 @@ inline vec3 vec3_gteq(vec3 a, vec3 b){
 }
 
 bool vec3_eq(vec3 a, vec3 b){
-  return _mm_comieq_ss(a.sse, b.sse);
+  return a.x == b.x && a.y == b.y && a.z == b.z;
+  //return _mm_comieq_ss(a.sse, b.sse);
 }
 
 vec3 vec3_abs(vec3 a){
@@ -108,10 +122,10 @@ inline vec3 vec3_apply(vec3 v, float (*f)(float x)){
 
 vec4 vec4_normalize(vec4 v)
 {
-  __m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0xFF));
-  v.sse = _mm_div_ps(v.sse, norm);
-  return v;
-  //return vec4_scale( v, 1.0f / vec4_len(v));
+  //__m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0xFF));
+  //v.sse = _mm_div_ps(v.sse, norm);
+  //return v;
+  return vec4_scale( v, 1.0f / vec4_len(v));
 }
 
 _LINMATH_H_DEFINE_VEC(2)
@@ -502,7 +516,7 @@ mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle)
 	}};
     S = mat4_scale(S, s);
 
-    mat4 C = mat4_identity(C);
+    mat4 C = mat4_identity();
     C = mat4_sub(C, T);
     C = mat4_scale(C, c);
     T = mat4_add(T, C);
