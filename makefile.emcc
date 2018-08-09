@@ -1,0 +1,25 @@
+OPT = -O3
+SOURCES = linmath.c math.c
+CC = ~/bin/emcc
+TARGET = libiron.bc
+OBJECTS =$(SOURCES:.c=.bc)
+LDFLAGS= 
+LIBS=  
+CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0 -D_GNU_SOURCE  -fdiagnostics-color
+all: $(TARGET)
+$(TARGET): $(OBJECTS)
+	$(CC) -s WASM=1  $(OBJECTS) $(LIBS) -o $@
+
+%.bc: %.c $(HEADERS)
+	$(CC) -s WASM=1 $(CFLAGS) $< -o $@ -MMD -MF $@.depends
+depend: h-depend
+clean:
+	rm $(OBJECTS) $(TARGET) *.bc.depends
+-include $(OBJECTS:.bc=.bc.depends)
+
+
+
+install: $(TARGET)
+	mkdir -v /usr/include/iron |true
+	cp -v ./*.h /usr/include/iron
+	cp -v ./libiron.so /usr/lib/
