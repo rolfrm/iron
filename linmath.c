@@ -12,14 +12,24 @@
 #include "types.h"
 #include "math.h"
 #include "utils.h"
-#define prefix __attribute__((const)) __attribute__((always_inline)) inline
+#ifdef __SSE4_1
+#define SIMD
+#endif
 
+#define prefix __attribute__((const)) __attribute__((always_inline)) inline
+#ifdef SIMD
 #define _LINMATH_H_OP(n,name, op)					\
   prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
     a.sse = a.sse op b.sse;						\
     return a;								\
   }
-
+#else
+#define _LINMATH_H_OP(n,name, op)					\
+prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
+  for(int i = 0; i < n; i++) a.data[i] = a.data[i] op b.data[i];        \ 
+    return a;								\
+}									
+#endif
 
 #define _LINMATH_H_DEFINE_VEC(n)					\
   _LINMATH_H_OP(n,add,+)						\
@@ -28,10 +38,10 @@
   _LINMATH_H_OP(n,div,/)						\
   prefix vec##n vec##n##_scale(vec##n v, float s)			\
   {									\
-    v.sse *= s;								\
+  for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \  
     return v;								\
   }									\
-  prefix float vec##n##_mul_inner(vec##n a, vec##n b)				\
+prefix float vec##n##_mul_inner(vec##n a, vec##n b)			\
   {									\
     float p = 0.0f;							\
     for(int i=0; i<n; i++)						\
@@ -47,11 +57,8 @@
     bool ok = fabs(v1.data[0] - v2.data[0]) < eps;			\
     for(int i = 1; i < n; i++) ok &= (fabs(v1.data[i] -v2 .data[i]) < eps); \
     return ok;								\
-  }  									\
+  }  									
 
-#ifdef __SSE4_1
-#define SIMD
-#endif
 #ifdef SIMD
 #include <smmintrin.h>
 #include <emmintrin.h>
@@ -112,7 +119,6 @@ vec3 vec3_abs(vec3 a){
   return vec3_new(fabs(a.x), fabs(a.y), fabs(a.z));
 }
 
-
 inline vec3 vec3_apply(vec3 v, float (*f)(float x)){
   v.x = f(v.x);
   v.y = f(v.y);
@@ -158,6 +164,10 @@ inline vec2 vec2_min(vec2 a, vec2 b){
 
 inline vec2 vec2_max(vec2 a, vec2 b){
   return (vec2){.data = {MAX(a.x, b.x), MAX(a.y, b.y)}};
+}
+
+vec2 vec2_abs(vec2 a){
+  return vec2_new(fabs(a.x), fabs(a.y));
 }
 
 const vec2 vec2_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f};
@@ -353,6 +363,17 @@ mat3 mat3_2d_translation(float x, float y){
       {1.0, 0.0, 0.0},
       {0.0, 1.0, 0.0},
       {x, y, 1.0}
+    }
+  };
+}
+
+
+mat3 mat3_2d_scale(float x, float y){
+  return (mat3){
+    .data = {
+      {x, 0.0, 0.0},
+      {0.0, y, 0.0},
+      {0, 0, 1.0}
     }
   };
 }

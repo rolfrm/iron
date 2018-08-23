@@ -66,6 +66,7 @@ vec2 vec2_new1(float xy);
 vec2 vec2_min(vec2 a, vec2 b);
 // element-wise max
 vec2 vec2_max(vec2 a, vec2 b);
+vec2 vec2_abs(vec2);
 extern const vec2 vec2_infinity;
 extern const vec2 vec2_zero;
 extern const vec2 vec2_half;
@@ -140,6 +141,7 @@ vec3 mat3_mul_vec3(mat3 m, vec3 v);
 vec2 mat3_mul_vec2(mat3 m, vec2 v);
 mat3 mat3_2d_rotation(float angle);
 mat3 mat3_2d_translation(float x, float y);
+mat3 mat3_2d_scale(float x, float y);
 
 typedef struct{
   union{
