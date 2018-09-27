@@ -3,12 +3,21 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "types.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h> 
+u64 timestamp(){
+  emscripten_get_now() * 1000;
 
+}
+#else
 u64 timestamp(){
   struct timeval tv;
   gettimeofday(&tv,NULL);
   return tv.tv_sec * 1e6 + tv.tv_usec;
 }
+#endif
+
+
 
 f128 timestampf(){
   f128 ts = (f128) timestamp();
