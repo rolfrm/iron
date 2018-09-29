@@ -25,8 +25,8 @@
   }
 #else
 #define _LINMATH_H_OP(n,name, op)					\
-prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
-  for(int i = 0; i < n; i++) a.data[i] = a.data[i] op b.data[i];        \ 
+  prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
+  for(int i = 0; i < n; i++) a.data[i] = a.data[i] op b.data[i];        \
     return a;								\
 }									
 #endif
@@ -38,7 +38,7 @@ prefix vec##n vec##n##_##name (vec##n a, vec##n const b){		\
   _LINMATH_H_OP(n,div,/)						\
   prefix vec##n vec##n##_scale(vec##n v, float s)			\
   {									\
-  for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \  
+  for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \
     return v;								\
   }									\
 prefix float vec##n##_mul_inner(vec##n a, vec##n b)			\
@@ -334,6 +334,33 @@ vec3 mat3_mul_vec3(mat3 m, vec3 v){
   }
   return r;
 }
+
+mat3 mat3_add(mat3 a, mat3 b)
+{
+  mat3 M;
+  int i;
+  for(i=0; i<3; ++i)
+    M.columns[i] = vec3_add(a.columns[i], b.columns[i]);
+  return M;
+}
+mat3 mat3_sub(mat3 a, mat3 b)
+{
+  mat3 M;
+  int i;
+  for(i=0; i<3; ++i)
+    M.columns[i] = vec3_sub(a.columns[i], b.columns[i]);
+  return M;
+}
+
+mat3 mat3_scale(mat3 a, float k)
+{
+  mat3 M;
+  int i;
+  for(i=0; i<3; ++i)
+    M.columns[i] = vec3_scale(a.columns[i], k);
+  return M;
+}
+
 
 vec2 mat3_mul_vec2(mat3 m, vec2 _v){
   vec3 v = {.x = _v.x, .y = _v.y, .z = 1.0};
