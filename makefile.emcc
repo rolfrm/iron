@@ -1,5 +1,5 @@
 OPT = -O3
-SOURCES = linmath.c math.c time.c
+SOURCES = linmath.c math.c time.c utils.c
 CC = emcc
 TARGET = libiron.bc
 OBJECTS =$(SOURCES:.c=.bc)

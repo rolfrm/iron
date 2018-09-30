@@ -139,6 +139,7 @@ mat3 mat3_transpose(mat3 m);
 mat3 mat3_add(mat3 a, mat3 b);
 mat3 mat3_sub(mat3 a, mat3 b);
 mat3 mat3_scale(mat3 a, float k);
+bool mat3_compare_binary(mat3 a, mat3 b);
 mat3 mat3_mul(mat3 a, mat3 b);
 vec3 mat3_mul_vec3(mat3 m, vec3 v);
 vec2 mat3_mul_vec2(mat3 m, vec2 v);

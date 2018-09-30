@@ -10,6 +10,7 @@ CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration 
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
+	ar rcs libiron.a $(OBJECTS)
 
 .c.o: $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@ -MMD -MF $@.depends

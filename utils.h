@@ -58,3 +58,4 @@
 void iron_register_deinitializer(void (* f)(void * data), void * data);
 void iron_deinitialize();
 void __test_utils();
+void print_raw(void * data, size_t size);

@@ -361,6 +361,10 @@ mat3 mat3_scale(mat3 a, float k)
   return M;
 }
 
+bool mat3_compare_binary(mat3 a, mat3 b){
+  return memcmp(&a, &b, sizeof(a)) == 0;
+}
+
 
 vec2 mat3_mul_vec2(mat3 m, vec2 _v){
   vec3 v = {.x = _v.x, .y = _v.y, .z = 1.0};
