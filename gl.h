@@ -4,10 +4,11 @@ typedef struct _gl_window gl_window;
 gl_window * gl_window_open(int width, int height);
 
 void gl_window_swap(gl_window *);
+void gl_window_get_size(gl_window * win, int * width, int *height);
 
 void gl_window_make_current(gl_window * win);
 void gl_window_destroy(gl_window **);
-
+void gl_window_poll_events();
 typedef enum{
   EVT_MOUSE_MOVE,
   EVT_MOUSE_LEAVE,
@@ -91,3 +92,28 @@ enum{
   KEY_F11 = 300,
   KEY_F12 = 301,
 };
+
+typedef struct _image_source image_source;
+
+typedef struct{
+  image_source * source;
+  int width, height, channels;
+}image;
+
+void * image_data(image * image);
+image image_from_file(const char * path);
+image image_from_data(void * data, int len);
+void image_delete(image * image);
+
+typedef struct _texture_handle texture_handle;
+typedef struct {
+  texture_handle * handle;
+  int width, height;
+}texture;
+void blit_begin();
+void blit_end();
+texture texture_from_image(image * image);
+void blit_translate(float x, float y);
+void blit_scale(float x, float y);
+void blit(float x, float y, texture * texture);
+void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);

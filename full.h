@@ -19,7 +19,7 @@
 #include "mem.h"
 #include "coroutines.h"
 
-#include "image.h"
+//#include "image.h"
 
 //#include <GL/gl.h>
 //#include "gl.h"

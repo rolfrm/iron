@@ -22,7 +22,6 @@ typedef struct{
     };
     float data[3];
     vec2 xy;
-    v3sf sse;
   };
 
 }vec3;

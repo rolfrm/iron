@@ -1,6 +1,7 @@
 // Test Section
 //#include <unistd.h>
 #include "full.h"
+#include "gl.h"
 #include "stdio.h"
 bool test_util_hash_table(){
   hash_table * ht = ht_create(128,sizeof(u64),sizeof(u64));
@@ -368,6 +369,7 @@ bool test_datastream(){
   return true;  
 }
 
+#include "duck_img.png.c"
 int main(){
 
   TEST(test_hibit);
@@ -384,4 +386,23 @@ int main(){
   TEST(test_datastream);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
+
+  gl_window * w = gl_window_open(400,400);
+  gl_window_make_current(w);
+  image img = image_from_data(duck_png, duck_png_len);
+  printf("duck: %i %i %i\n", img.width, img.height, img.channels);
+  image img2 = image_from_file("duck.png");
+  
+  printf("duck: %i %i %i\n", img2.width, img2.height, img2.channels);
+  texture duck_tex = texture_from_image(&img);
+  for(int i = 0; i <3 ;i++){
+
+    blit_begin();
+    blit_rectangle(10,10,100,100, 1,1,1,1);
+    blit(10,10,&duck_tex);
+    
+    gl_window_swap(w);
+    iron_usleep(1000000/3);
+  }
+  gl_window_destroy(&w);
 }
