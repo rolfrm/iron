@@ -145,6 +145,7 @@ vec2 mat3_mul_vec2(mat3 m, vec2 v);
 mat3 mat3_2d_rotation(float angle);
 mat3 mat3_2d_translation(float x, float y);
 mat3 mat3_2d_scale(float x, float y);
+mat3 mat3_invert(mat3 M);
 
 typedef struct{
   union{

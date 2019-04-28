@@ -1,14 +1,18 @@
 OPT = -O3
-SOURCES = linmath.c math.c time.c utils.c
+SOURCES = linmath.c math.c time.c utils.c gl.c stb_image.c mem.c
 CC = emcc
 TARGET = libiron.bc
 OBJECTS =$(SOURCES:.c=.bc)
 LDFLAGS= 
-LIBS=  
+LIBS= -lglfw3
 CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0 -D_GNU_SOURCE  -fdiagnostics-color
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) -s WASM=1   $(OBJECTS) $(LIBS) -o $@
+gl.bc: texture.shader.c
+texture.shader.c: texture.shader.fs texture.shader.vs
+	xxd -i texture.shader.vs > texture.shader.c
+	xxd -i texture.shader.fs >> texture.shader.c
 
 %.bc: %.c $(HEADERS)
 	$(CC) -s WASM=1 $(CFLAGS) $< -o $@ -MMD -MF $@.depends

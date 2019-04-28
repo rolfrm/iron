@@ -409,6 +409,32 @@ mat3 mat3_2d_scale(float x, float y){
   };
 }
 
+mat3 mat3_invert(mat3 M)
+{
+  float m(int x, int y){
+    return M.data[x][y];
+  }
+  // computes the inverse of a matrix m
+  float det = m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
+    m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
+    m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+  
+  float invdet = 1 / det;
+  
+  mat3 minv; // inverse of matrix m
+  minv.m00 = (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) * invdet;
+  minv.m01 = (m(0, 2) * m(2, 1) - m(0, 1) * m(2, 2)) * invdet;
+  minv.m02 = (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1)) * invdet;
+  minv.m10 = (m(1, 2) * m(2, 0) - m(1, 0) * m(2, 2)) * invdet;
+  minv.m11 = (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0)) * invdet;
+  minv.m12 = (m(1, 0) * m(0, 2) - m(0, 0) * m(1, 2)) * invdet;
+  minv.m20 = (m(1, 0) * m(2, 1) - m(2, 0) * m(1, 1)) * invdet;
+  minv.m21 = (m(2, 0) * m(0, 1) - m(0, 0) * m(2, 1)) * invdet;
+  minv.m22 = (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1)) * invdet;
+  
+  return mat3_transpose(minv);
+}
+
 // mat4 
 
 mat4 mat4_identity()

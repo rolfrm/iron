@@ -16,7 +16,7 @@ static bool glfwInited = false;
 static void glfw_deinit(void * unused){
   UNUSED(unused);
   glfwTerminate();
-  logd("GLFW terminated..\n");
+  //logd("GLFW terminated..\n");
 }
 
 static gl_window ** all_windows = NULL;
@@ -99,7 +99,7 @@ gl_window * gl_window_open(i32 width, i32 height){
   }
   gl_window * win = alloc0(sizeof(gl_window));
   win->handle = glfwCreateWindow(width, height, "", NULL, NULL);
-  glfwMakeContextCurrent(win);
+  glfwMakeContextCurrent(win->handle);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
   glfwSetKeyCallback(win->handle, keycallback);
   glfwSetCharCallback(win->handle, charcallback);
@@ -119,6 +119,10 @@ gl_window * current_window;
 void gl_window_make_current(gl_window * win){
   //logd("handle: %p\n", win->handle);
   glfwMakeContextCurrent(win->handle);
+
+  int win_width, win_height;
+  gl_window_get_size(win, &win_width, &win_height);
+  glViewport(0,0,win_width, win_height);
   current_window = win;
 }
 
@@ -153,6 +157,14 @@ void get_mouse_position(gl_window * win, int * x, int * y){
   glfwGetCursorPos(win->handle, &_x, &_y);
   *x = _x;
   *y = _y;
+}
+
+bool gl_window_get_btn_state(gl_window * win, int btn){
+  return glfwGetMouseButton(win->handle, btn) == GLFW_PRESS;
+}
+
+bool gl_window_get_key_state(gl_window * win, int key){
+  return glfwGetKey(win->handle, key) == GLFW_PRESS;
 }
 
 static void ** deinitializers = NULL;
@@ -216,6 +228,16 @@ void * image_data(image * image){
   return image->source->data;
 }
 
+image image_new(int width, int height, int channels){
+
+  image_source src;
+  src.kind = IMAGE_SOURCE_MEMORY;
+  src.data = alloc0(width * height * channels);
+
+  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src)};
+  return img;
+}
+
 void image_delete(image * img){
   if(img->source->data != NULL)
     dealloc(img->source->data);
@@ -228,29 +250,38 @@ struct _texture_handle {
   GLuint tex;
 };
 
-texture texture_from_image(image * image){
+texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
   GLuint tex;
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);
-  
+  int interp2;
+  if(interp == TEXTURE_INTERPOLATION_BILINEAR){
+    interp2 = GL_LINEAR_MIPMAP_LINEAR;
+  }else{
+    interp2 = GL_NEAREST;
+  }
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interp2);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interp2);
 
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  int chn[] = {GL_RED, GL_RG, GL_RGB, GL_RGBA};
+  int chn[] = {GL_R, GL_RG, GL_RGB, GL_RGBA};
   void * data = image_data(image);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
-  
+  if(interp == TEXTURE_INTERPOLATION_BILINEAR)
+    glGenerateMipmap(GL_TEXTURE_2D);
   texture_handle hndl = {.tex = tex};
   texture texture = { .handle = IRON_CLONE(hndl), .width = image->width, .height = image->height};
   return texture;
 }
-
+texture texture_from_image(image * image){
+  return texture_from_image2(image, TEXTURE_INTERPOLATION_BILINEAR);
+}
 
 u32 compile_shader(int shader_type, const char * code){
   u32 ss = glCreateShader(shader_type);
@@ -300,7 +331,7 @@ u32 create_shader_from_files(const char * vs_path, const char * fs_path){
   dealloc(fscode);
   return prog;
 }
-
+/*
 void GLAPIENTRY
 MessageCallback( GLenum source,
                  GLenum type,
@@ -313,7 +344,7 @@ MessageCallback( GLenum source,
   //if(type == GL_DEBUG_TYPE_ERROR)
     ERROR("GL ERROR: %s", message);
   
-}
+    }*/
 
 typedef struct _textured_shader{
   int vertex_transform_loc, uv_transform_loc, texture_loc, textured_loc, color_loc;
@@ -324,17 +355,24 @@ typedef struct _textured_shader{
 
 static textured_shader shader;
 static mat3 blit_transform;
-void blit_begin(){
+static BLIT_MODE blit_mode;
+
+mat3 blit_get_view_transform(){
+  return blit_transform;
+}
+
+void blit_begin(BLIT_MODE _blit_mode){
+  blit_mode = _blit_mode;
   if(shader.blit_shader == 0){
     glEnable( GL_DEBUG_OUTPUT );
-    glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
+    /*glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
                               GL_DONT_CARE,
                               GL_DONT_CARE,
                               0,
                               NULL,
                               GL_TRUE);
     //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
-    glDebugMessageCallback( MessageCallback, 0 );
+    glDebugMessageCallback( MessageCallback, 0 );*/
     shader.blit_shader = create_shader_from_codes(texture_shader_vs, texture_shader_fs);
 
     shader.pos_attr = 0;
@@ -351,13 +389,15 @@ void blit_begin(){
   
   mat3 identity = mat3_identity();
   blit_transform = identity;
-  blit_translate(-1,-1);
-  blit_scale(2,2);
+  
+  //blit_translate(1,1);
+  //blit_scale(0.5,0.5);
   int w,h;
-
-  gl_window_get_size(current_window, &w, &h);
-  blit_scale(1.0f / (float)w, 1.0f/ (float)h);
-  ;
+  if(blit_mode == BLIT_MODE_PIXEL){
+    gl_window_get_size(current_window, &w, &h);
+    blit_scale(1.0f / (float)w, 1.0f/ (float)h);
+  }
+  
   glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &identity.m00);
   glUniform1i(shader.texture_loc, 0);
   glEnable(GL_TEXTURE_2D);
@@ -369,7 +409,9 @@ void blit_begin(){
 
 void blit(float x,float y, texture * tex){
   blit_translate(x,y);
-  blit_scale(tex->width, tex->height);
+  if(blit_mode == BLIT_MODE_PIXEL){
+    blit_scale(tex->width, tex->height);
+  }
 
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
@@ -382,12 +424,14 @@ void blit(float x,float y, texture * tex){
 
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
   glBindTexture(GL_TEXTURE_2D, 0);
-
-  blit_scale(1.0f / tex->width, 1.0f/ tex->height);
+  if(blit_mode == BLIT_MODE_PIXEL){
+    blit_scale(1.0f / tex->width, 1.0f/ tex->height);
+  }
   blit_translate(-x,-y);
 }
 
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a){
+  var t = blit_transform;
   blit_translate(x,y);
   blit_scale(w, h);
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
@@ -399,14 +443,14 @@ void blit_rectangle(float x, float y, float w, float h, float r, float g, float 
   glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, uvs);
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 
-  blit_scale(1.0f/w, 1.0f/h);
-  blit_translate(-x,-y);
+  blit_transform = t;
 }
 
 void blit_translate(float x, float y){
-  blit_transform = mat3_mul(blit_transform, mat3_2d_translation(x, y));
+  blit_transform = mat3_mul(blit_transform, mat3_2d_translation(x, y) );
   
 }
 void blit_scale(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_scale(x, y));
 }
+
