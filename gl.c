@@ -1,23 +1,19 @@
 #include "full.h"
 #define GL_GLEXT_PROTOTYPES
 #include "gl.h"
-#include <GLFW/glfw3.h>
-
+#include <GL/gl.h>
 #include <GL/glext.h>
 #include "stb_image.h"
 #include "texture.shader.c"
 
 struct _gl_window{
-  GLFWwindow * handle;
+  void * handle;
 };
-
-static bool glfwInited = false;
-
-static void glfw_deinit(void * unused){
-  UNUSED(unused);
-  glfwTerminate();
-  //logd("GLFW terminated..\n");
-}
+gl_backend * glfw_create_backend();
+gl_backend * x11_create_backend();
+static bool backend_initialized = false;
+gl_backend * current_backend = NULL;
+IRON_GL_BACKEND iron_gl_backend = IRON_GL_BACKEND_GLFW;
 
 static gl_window ** all_windows = NULL;
 static int all_window_cnt = 0;
@@ -26,7 +22,7 @@ static gl_window_event * events = NULL;
 static int event_cnt = 0;
 
 size_t gl_get_events(gl_window_event * event_buffer, size_t max_read){
-  glfwPollEvents();
+  current_backend->poll_events();
   int to_read = MIN(max_read, (size_t)event_cnt);
   memcpy(event_buffer, events, to_read * sizeof(events[0]));
   memmove(events, events + to_read,  (event_cnt - to_read)* sizeof(events[0]));
@@ -35,7 +31,7 @@ size_t gl_get_events(gl_window_event * event_buffer, size_t max_read){
   return to_read;
 }
 
-gl_window * window_from_handle(GLFWwindow * win){
+gl_window * window_from_handle(void * win){
   ASSERT(all_window_cnt > 0);
   for(int i = 0; i < all_window_cnt; i++)
     if(all_windows[i]->handle  == win)
@@ -43,7 +39,7 @@ gl_window * window_from_handle(GLFWwindow * win){
   return NULL;
 }
 
-static void register_evt(GLFWwindow * win, void * _evt, gl_event_known_event_types type){
+void register_evt(void * win, void * _evt, gl_event_known_event_types type){
   gl_window_event * evt = _evt;
   evt->win = window_from_handle(win);
   evt->timestamp = timestamp();
@@ -51,63 +47,18 @@ static void register_evt(GLFWwindow * win, void * _evt, gl_event_known_event_typ
   list_push2(events, event_cnt, *evt);
 }
 
-void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
-  UNUSED(mods); UNUSED(scancode);
-  if(action == GLFW_REPEAT)
-    return;
-  evt_key keyevt = {.key = key , .ischar = false};
-  register_evt(win, &keyevt, action == GLFW_PRESS ? EVT_KEY_DOWN : EVT_KEY_UP);
-}
-
-void charcallback(GLFWwindow * win, u32 codept){
-  evt_key keyevt = {.codept = codept, .ischar = true};
-  register_evt(win, &keyevt, EVT_KEY_DOWN);
-}
-
-void cursorposcallback(GLFWwindow * win, double x, double y){
-  evt_mouse_move evt = {.x = x, .y = y};
-  register_evt(win, &evt, EVT_MOUSE_MOVE);
-}
-
-void scrollcallback(GLFWwindow * win, double x, double y){
-  evt_mouse_scroll evt= {.scroll_x = x, .scroll_y = y};
-  register_evt(win, &evt, EVT_MOUSE_SCROLL);
-}
-
-void cursorentercallback(GLFWwindow * win, int enter){
-  gl_window_event evt;
-  register_evt(win, &evt, enter ? EVT_MOUSE_ENTER : EVT_MOUSE_LEAVE);
-}
-
-void mousebuttoncallback(GLFWwindow * win, int button, int action, int mods){
-  UNUSED(mods);
-  evt_mouse_btn btn = {.button = button};
-  register_evt(win, &btn, action ? EVT_MOUSE_BTN_DOWN : EVT_MOUSE_BTN_UP);
-}
-
-void windowclosecallback(GLFWwindow * win){
-  gl_window_event evt;
-  register_evt(win, &evt, EVT_WINDOW_CLOSE);
-}
 
 gl_window * gl_window_open(i32 width, i32 height){
-  if(!glfwInited){
-    glfwInited = true;
-    glfwInit();
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-    iron_register_deinitializer(glfw_deinit, NULL);
+  if(!backend_initialized){
+    if(iron_gl_backend == IRON_GL_BACKEND_GLFW)
+      current_backend = glfw_create_backend();
+    else if(iron_gl_backend == IRON_GL_BACKEND_X11)
+      current_backend = x11_create_backend();
+    current_backend->init();
+    backend_initialized = true;
   }
   gl_window * win = alloc0(sizeof(gl_window));
-  win->handle = glfwCreateWindow(width, height, "", NULL, NULL);
-  glfwMakeContextCurrent(win->handle);
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-  glfwSetKeyCallback(win->handle, keycallback);
-  glfwSetCharCallback(win->handle, charcallback);
-  glfwSetMouseButtonCallback(win->handle, mousebuttoncallback);
-  glfwSetCursorPosCallback(win->handle, cursorposcallback);
-  glfwSetCursorEnterCallback(win->handle, cursorentercallback);
-  glfwSetScrollCallback(win->handle, scrollcallback);
-  glfwSetWindowCloseCallback(win->handle, windowclosecallback);
+  win->handle = current_backend->create_window(width, height, "");
 
   list_push2(all_windows, all_window_cnt, win);
   
@@ -118,8 +69,8 @@ gl_window * current_window;
 
 void gl_window_make_current(gl_window * win){
   //logd("handle: %p\n", win->handle);
-  glfwMakeContextCurrent(win->handle);
-
+  current_backend->make_current(win->handle);
+  
   int win_width, win_height;
   gl_window_get_size(win, &win_width, &win_height);
   glViewport(0,0,win_width, win_height);
@@ -127,13 +78,13 @@ void gl_window_make_current(gl_window * win){
 }
 
 void gl_window_swap(gl_window * win){
-  glfwSwapBuffers(win->handle);
+  current_backend->swap_buffers(win->handle);
 }
 
 void gl_window_destroy(gl_window ** win){
   gl_window * _win = *win;
-  *win = NULL;  
-  glfwDestroyWindow(_win->handle);
+  *win = NULL;
+  current_backend->destroy_window(_win->handle);
   for(int i = 0; i < all_window_cnt; i++){
     if(all_windows[i] == _win){
       list_remove2(all_windows, all_window_cnt, i);
@@ -145,26 +96,27 @@ void gl_window_destroy(gl_window ** win){
 }
 
 void gl_window_get_size(gl_window * win, int *w, int *h){
-  glfwGetWindowSize(win->handle, w, h);
+  current_backend->get_window_size(win->handle, w, h);
 }
 
 void gl_window_poll_events(){
-  glfwPollEvents();
+  current_backend->poll_events();
 }
 
 void get_mouse_position(gl_window * win, int * x, int * y){
-  double _x, _y;
-  glfwGetCursorPos(win->handle, &_x, &_y);
-  *x = _x;
-  *y = _y;
+  current_backend->get_cursor_position(win->handle, x, y);
 }
 
 bool gl_window_get_btn_state(gl_window * win, int btn){
-  return glfwGetMouseButton(win->handle, btn) == GLFW_PRESS;
+  if(current_backend->get_button_state == NULL)
+    return false;
+  return current_backend->get_button_state(win->handle, btn);
 }
 
 bool gl_window_get_key_state(gl_window * win, int key){
-  return glfwGetKey(win->handle, key) == GLFW_PRESS;
+  if(current_backend->get_key_state == NULL)
+    return false;
+  return current_backend->get_key_state(win->handle, key);
 }
 
 static void ** deinitializers = NULL;

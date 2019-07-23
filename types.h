@@ -18,14 +18,6 @@ typedef char * str;
 typedef float f32;
 typedef double f64;
 
-#ifndef __int128
-// dangerous fallback..
-typedef i64 i128;
-typedef u64 u128;
-typedef f64 f128;
-
-#else
 typedef __int128 i128;
 typedef unsigned __int128 u128;
 typedef __float128 f128;
-#endif

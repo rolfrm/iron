@@ -1,6 +1,30 @@
 
 typedef struct _gl_window gl_window;
 
+typedef enum{
+  IRON_GL_BACKEND_GLFW,
+  IRON_GL_BACKEND_X11
+}IRON_GL_BACKEND;
+
+extern IRON_GL_BACKEND iron_gl_backend;
+
+typedef struct{
+  void (* poll_events)();
+  void (* init)();
+  void (* deinit)();
+  void * (* create_window)(int width, int height, const char * title);
+  void (* destroy_window)(void * window);
+  void (* make_current)(void * window);
+  void (* swap_buffers)(void * window);
+  void (* get_window_size) (void * window, int * w, int *h);
+  void (* get_cursor_position)(void * window, int * x, int * y);
+  bool (* get_button_state)(void * window, int button);
+  bool (* get_key_state) (void * window, int key);
+}gl_backend;
+extern gl_backend * current_backend;
+
+void gl_set_backend(IRON_GL_BACKEND backend);
+
 gl_window * gl_window_open(int width, int height);
 
 void gl_window_swap(gl_window *);
@@ -24,7 +48,8 @@ typedef enum{
   EVT_WINDOW_MINIMIZE,
   EVT_WINDOW_MAXIMIZE,
   EVT_WINDOW_RESTORE,
-  EVT_WINDOW_CUSTOM
+  EVT_WINDOW_CUSTOM,
+  EVT_WINDOW_REFRESH
 }gl_event_known_event_types;
 
 typedef struct _gl_window_event{
@@ -95,6 +120,7 @@ enum{
   KEY_F12 = 301,
 };
 
+void register_evt(void * win, void * _evt, gl_event_known_event_types type);
 // images
 typedef struct _image_source image_source;
 
@@ -140,3 +166,4 @@ void blit(float x, float y, texture * texture);
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);
 
 mat3 blit_get_view_transform();
+

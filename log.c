@@ -5,7 +5,6 @@
 #include <execinfo.h>
 #include <errno.h>
 #include <unistd.h>
-
 void (* iron_log_printer)(const char * fnt, va_list lst) = NULL;
 
 static void do_log_print(const char * fmt, va_list lst){
