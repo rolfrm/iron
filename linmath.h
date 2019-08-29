@@ -190,7 +190,7 @@ mat4 mat4_frustum(float l, float r, float b, float t, float n, float f);
 mat4 mat4_ortho(float l, float r, float b, float t, float n, float f);
 mat4 mat4_perspective(float y_fov, float aspect, float n, float f);
 mat4 mat4_look_at(vec3 eye, vec3 center, vec3 up);
-
+mat4 mat4_new(float * values);
 typedef vec4 quat;
 quat quat_identity();
 quat quat_from_axis(vec3 dir, float angle);

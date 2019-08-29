@@ -9,7 +9,7 @@ uniform vec4 color;
 void main() 
 {
   if(textured != 0)
-    out_color = texture2D( texture, v_tex_coord );   
+  ;//    out_color = texture2D( texture, v_tex_coord );   
   else
     out_color = color;
 } 

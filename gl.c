@@ -265,7 +265,7 @@ u32 compile_shader_from_file(u32 gl_prog_type, const char * filepath){
   return vs;
 }
 
-u32 create_shader_from_codes(const char * vsc, const char * fsc){
+u32 gl_shader_compile(const char * vsc, const char * fsc){
   u32 vs = compile_shader(GL_VERTEX_SHADER, vsc);
   u32 fs = compile_shader(GL_FRAGMENT_SHADER, fsc);
   u32 prog = glCreateProgram();
@@ -275,10 +275,23 @@ u32 create_shader_from_codes(const char * vsc, const char * fsc){
   return prog;
 }
 
+u32 gl_shader_compile2(const char * vsc, int vlen, const char * fsc, int flen){
+  void * buffer1 = alloc0(vlen + 1);
+  memcpy(buffer1, vsc, vlen);
+  void * buffer2 = alloc0(flen + 1);
+  memcpy(buffer2, fsc, flen);  
+  u32 result = gl_shader_compile(buffer1, buffer2);
+  printf("vertex shader code: %s\n", buffer1);
+  printf("fragment shader code: %s\n", buffer2);
+  dealloc(buffer1);
+  dealloc(buffer2);
+  return result;
+}
+
 u32 create_shader_from_files(const char * vs_path, const char * fs_path){
   char * vscode = read_file_to_string(vs_path);
   char * fscode = read_file_to_string(fs_path);
-  u32 prog = create_shader_from_codes(vscode, fscode);
+  u32 prog = gl_shader_compile(vscode, fscode);
   dealloc(vscode);
   dealloc(fscode);
   return prog;
@@ -305,18 +318,60 @@ typedef struct _textured_shader{
   
 }textured_shader;
 
+static u32 quadbuffer;
+static u32 quadbuffer_uvs;
 static textured_shader shader;
 static mat3 blit_transform;
 static BLIT_MODE blit_mode;
+
+struct{
+  mat3 blit_transform;
+  BLIT_MODE blit_mode;
+
+}blit_stack[10];
+
+int current = -1;
+
+void blit_push(){
+  if(current == 9) ERROR("Unable to push blit transforms: To many on stack.");
+  current += 1;
+  blit_stack[current].blit_transform = blit_transform;
+  blit_stack[current].blit_mode = blit_mode;
+}
+
+
+void blit_pop(){
+  if(current < 0) ERROR("Unable to pop blit transforms: Stack empty.");
+  blit_begin(blit_mode);
+  blit_transform = blit_stack[current].blit_transform;
+  blit_mode = blit_stack[current].blit_mode;
+  current -= 1;
+}
 
 mat3 blit_get_view_transform(){
   return blit_transform;
 }
 
 void blit_begin(BLIT_MODE _blit_mode){
+  //return;
   blit_mode = _blit_mode;
   if(shader.blit_shader == 0){
-    glEnable( GL_DEBUG_OUTPUT );
+    glGenBuffers(1, &quadbuffer);
+    glGenBuffers(1, &quadbuffer_uvs);
+
+    
+    float quad[] = {0,0, 1,0, 0,1, 1,1};
+    // triangle strip
+    float quad_uvs[] = {1,0,3,2};
+    
+    
+    glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_uvs), quad_uvs, GL_STATIC_DRAW);
+    
+    //glEnable( GL_DEBUG_OUTPUT );
     /*glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
                               GL_DONT_CARE,
                               GL_DONT_CARE,
@@ -325,7 +380,7 @@ void blit_begin(BLIT_MODE _blit_mode){
                               GL_TRUE);
     //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
     glDebugMessageCallback( MessageCallback, 0 );*/
-    shader.blit_shader = create_shader_from_codes(texture_shader_vs, texture_shader_fs);
+    shader.blit_shader = gl_shader_compile2((char *)texture_shader_vs,texture_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
 
     shader.pos_attr = 0;
     shader.tex_coord_attr = 1;
@@ -337,7 +392,6 @@ void blit_begin(BLIT_MODE _blit_mode){
     glUseProgram(shader.blit_shader);
   }
   glUseProgram(shader.blit_shader);
-
   
   mat3 identity = mat3_identity();
   blit_transform = identity;
@@ -352,14 +406,16 @@ void blit_begin(BLIT_MODE _blit_mode){
   
   glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &identity.m00);
   glUniform1i(shader.texture_loc, 0);
-  glEnable(GL_TEXTURE_2D);
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void blit(float x,float y, texture * tex){
+
   blit_translate(x,y);
   if(blit_mode == BLIT_MODE_PIXEL){
     blit_scale(tex->width, tex->height);
@@ -369,10 +425,12 @@ void blit(float x,float y, texture * tex){
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
   //printf("Binding texture: %i\n", tex->handle->tex);
   glUniform1i(shader.textured_loc, 1);
-  float points[] = {0,0, 1,0, 0,1,1,1};
-  float uvs[] = {0,1, 1,1, 0,0, 1,0};
-  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, points);
-  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, uvs);
+
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
+  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
+    
+  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -383,16 +441,18 @@ void blit(float x,float y, texture * tex){
 }
 
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a){
+
   var t = blit_transform;
   blit_translate(x,y);
   blit_scale(w, h);
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
-  float points[] = {0,0, 1,0, 0,1,1,1};
   glUniform1i(shader.textured_loc, 0);
   glUniform4f(shader.color_loc, r, g, b, a);
-  float uvs[] = {0,0,0,0,0,0,0,0};
-  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, points);
-  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, uvs);
+
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
+  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
+  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 
   blit_transform = t;

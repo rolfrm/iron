@@ -94,6 +94,9 @@ typedef struct{
   char codept;
 }evt_key;
 
+u32 gl_shader_compile(const char * vertex_src, const char * fragment_src);
+u32 gl_shader_compile2(const char * vertex_src, int vertex_src_len, const char * fragment_src, int fragment_len);
+
 
 void get_mouse_position(gl_window * win, int * x, int * y);
 
@@ -164,6 +167,9 @@ void blit_translate(float x, float y);
 void blit_scale(float x, float y);
 void blit(float x, float y, texture * texture);
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);
+
+void blit_push();
+void blit_pop();
 
 mat3 blit_get_view_transform();
 

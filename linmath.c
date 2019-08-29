@@ -326,7 +326,7 @@ mat3 mat3_mul(mat3 a, mat3 b){
 }
 
 vec3 mat3_mul_vec3(mat3 m, vec3 v){
-  vec3 r = {0};
+  vec3 r = vec3_zero;
   int i, j;
   for(j=0; j<3; ++j) {
     for(i=0; i<3; ++i)
@@ -368,7 +368,7 @@ bool mat3_compare_binary(mat3 a, mat3 b){
 
 vec2 mat3_mul_vec2(mat3 m, vec2 _v){
   vec3 v = {.x = _v.x, .y = _v.y, .z = 1.0};
-  vec3 r = {0};
+  vec3 r = vec3_zero;
   int i, j;
   for(j=0; j<2; ++j) 
     for(i=0; i<3; ++i)
@@ -411,9 +411,8 @@ mat3 mat3_2d_scale(float x, float y){
 
 mat3 mat3_invert(mat3 M)
 {
-  float m(int x, int y){
-    return M.data[x][y];
-  }
+#define m(X,Y) M.data[X][Y]
+  
   // computes the inverse of a matrix m
   float det = m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
     m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
@@ -431,11 +430,18 @@ mat3 mat3_invert(mat3 M)
   minv.m20 = (m(1, 0) * m(2, 1) - m(2, 0) * m(1, 1)) * invdet;
   minv.m21 = (m(2, 0) * m(0, 1) - m(0, 0) * m(2, 1)) * invdet;
   minv.m22 = (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1)) * invdet;
-  
+#undef m  
   return mat3_transpose(minv);
+
 }
 
 // mat4 
+
+mat4 mat4_new(float * values){
+  mat4 out;
+  memcpy(out.data[0], values, sizeof(mat4));
+  return out;
+}
 
 mat4 mat4_identity()
 {
