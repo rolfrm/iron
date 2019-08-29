@@ -57,6 +57,8 @@ void glfw_deinit(){
 
 
 void * glfw_create_window(int width, int height, const char * title){
+  
+  glfwWindowHint(GLFW_DEPTH_BITS, 16);
   GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, NULL);
   glfwSetKeyCallback(handle, keycallback);
   glfwSetCharCallback(handle, charcallback);
@@ -80,6 +82,10 @@ void glfw_swap_buffers(void * window){
 
 void glfw_get_window_size (void * window, int * w, int * h){
   glfwGetWindowSize((GLFWwindow *) window, w, h);
+}
+
+void glfw_set_window_size(void * window, int w, int h){
+  glfwSetWindowSize((GLFWwindow *) window, w, h);
 }
 
 void glfw_get_cursor_position(void * window, int * x, int * y){
@@ -108,6 +114,7 @@ gl_backend * glfw_create_backend(){
   backend->make_current = glfw_make_current;
   backend->swap_buffers = glfw_swap_buffers;
   backend->get_window_size = glfw_get_window_size;
+  backend->set_window_size = glfw_set_window_size;
   backend->get_cursor_position = glfw_get_cursor_position;
   backend->get_button_state = glfw_get_button_state;
   backend->get_key_state = glfw_get_key_state;

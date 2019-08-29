@@ -78,6 +78,17 @@ void x11_get_window_size(void * handle, int * w, int * _h){
   *_h = gwa.height;
 }
 
+void x11_set_window_size(void * handle, int w, int h){
+  ERROR("Not supported");
+  //TODO: This might is wrong
+  XWindowAttributes gwa;
+  window_handle * _h = handle;
+  XGetWindowAttributes(display, _h->win, &gwa);
+  gwa.width = w;
+  gwa.height = h;
+  XChangeWindowAttributes(display, _h->win, 0, &gwa);
+}
+
 void x11_get_cursor_position(void * handle, int * x, int * y){
   window_handle * h = handle;
   Window root, child;

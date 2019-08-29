@@ -99,6 +99,11 @@ void gl_window_get_size(gl_window * win, int *w, int *h){
   current_backend->get_window_size(win->handle, w, h);
 }
 
+void gl_window_set_size(gl_window * win, int w, int h){
+  ASSERT(current_backend->set_window_size != NULL);
+  current_backend->set_window_size(win->handle, w, h);
+}
+
 void gl_window_poll_events(){
   current_backend->poll_events();
 }

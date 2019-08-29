@@ -17,6 +17,7 @@ typedef struct{
   void (* make_current)(void * window);
   void (* swap_buffers)(void * window);
   void (* get_window_size) (void * window, int * w, int *h);
+  void (* set_window_size) (void * window, int w, int h);
   void (* get_cursor_position)(void * window, int * x, int * y);
   bool (* get_button_state)(void * window, int button);
   bool (* get_key_state) (void * window, int key);
@@ -29,7 +30,7 @@ gl_window * gl_window_open(int width, int height);
 
 void gl_window_swap(gl_window *);
 void gl_window_get_size(gl_window * win, int * width, int *height);
-
+void gl_window_set_size(gl_window * win, int width, int height);
 void gl_window_make_current(gl_window * win);
 void gl_window_destroy(gl_window **);
 void gl_window_poll_events();
