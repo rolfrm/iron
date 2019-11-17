@@ -1,4 +1,3 @@
-#define LOG_DEBUG 1
 /*#define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -16,13 +15,17 @@
 #define ANSI_COLOR_CYAN    ""
 #define ANSI_COLOR_RESET   ""
 #define ANSI_COLOR_GRAY ""
+typedef enum{
+  LOG_DEBUG = 1,
+  LOG_INFO = 2,
+  LOG_ERROR = 3
 
-#define DEBUG
-void log_print(const char * fmt, ...);
-extern __thread int logd_enable;
-#define log(...) ({log_print(ANSI_COLOR_YELLOW __VA_ARGS__); log_print(ANSI_COLOR_RESET);})
-#define logd(...) ({if(logd_enable){ if(LOG_DEBUG){log_print(ANSI_COLOR_GRAY); log_print(__VA_ARGS__); log_print(ANSI_COLOR_RESET);}}})
-#define loge(...) {log_print(ANSI_COLOR_RED);log_print(__VA_ARGS__); log_print(ANSI_COLOR_GRAY);log_print(" ");}
+}log_level;
+void log_print(log_level level, const char * fmt, ...);
+extern int logd_enable;
+#define log(...) ({log_print(LOG_INFO, __VA_ARGS__);})
+#define logd(...) ({log_print(LOG_DEBUG, __VA_ARGS__);})
+#define loge(...) ({log_print(LOG_ERROR< __VA_ARGS__);})
 #define ERROR_TRACE logd( "error: at '" __FILE__  "' line %i: \n",  __LINE__);
 
 // used for error handling

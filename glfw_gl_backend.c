@@ -5,10 +5,25 @@
 
 void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
-  if(action == GLFW_REPEAT)
-    return;
   evt_key keyevt = {.key = key , .ischar = false};
-  register_evt(win, &keyevt, action == GLFW_PRESS ? EVT_KEY_DOWN : EVT_KEY_UP);
+
+  int keytype;
+  switch(action){
+  case GLFW_PRESS:
+    keytype = EVT_KEY_DOWN;
+    break;
+  case GLFW_RELEASE:
+    keytype = EVT_KEY_UP;
+    break;
+  case GLFW_REPEAT:
+    keytype = EVT_KEY_REPEAT;
+    break;
+  default:
+    return;
+
+  }
+  
+  register_evt(win, &keyevt, keytype);
 }
 
 void charcallback(GLFWwindow * win, u32 codept){
@@ -55,10 +70,65 @@ void glfw_deinit(){
   glfwTerminate();
 }
 
+static void glfw_debug_print (GLenum _source, 
+                            GLenum _type, 
+                            GLuint id, 
+                            GLenum _severity, 
+                            GLsizei length, 
+                            const GLchar *message, 
+                            void *userParam)
+{
+    // ignore non-significant error/warning codes
+    if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
+    const char * source = "_";
+    
+    switch (_source)
+      {
+      case GL_DEBUG_SOURCE_API:             source = "API"; break;
+      case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   source = "Window System"; break;
+      case GL_DEBUG_SOURCE_SHADER_COMPILER: source = "Shader Compiler"; break;
+      case GL_DEBUG_SOURCE_THIRD_PARTY: source = "Third Party"; break;
+      case GL_DEBUG_SOURCE_APPLICATION: source = "Application"; break;
+      case GL_DEBUG_SOURCE_OTHER: source =  "Other"; break;
+      }
+    const char * type = "_";
+    switch (_type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               type ="Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type ="Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type ="Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         type ="Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         type ="Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              type ="Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          type ="Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           type ="Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               type ="Other"; break;
+    };
+    const char * severity = "_";
+    switch (_severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         severity = "high"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       severity = "medium"; break;
+        case GL_DEBUG_SEVERITY_LOW:          severity = "low"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: severity = "notification"; break;
+    }
+
+    logd("GL DEBUG %s %s %s", severity, type, source);
+    logd("%i: %s", id, message);
+}
+
 
 void * glfw_create_window(int width, int height, const char * title){
   
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
+  if(iron_gl_debug){
+    logd("GL DEBUG: Enable OPENGL Debug context\n");
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+    //glDebugMessageCallback(glfw_debug_print, NULL);
+    //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+  }
   GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, NULL);
   glfwSetKeyCallback(handle, keycallback);
   glfwSetCharCallback(handle, charcallback);
@@ -67,6 +137,7 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetCursorEnterCallback(handle, cursorentercallback);
   glfwSetScrollCallback(handle, scrollcallback);
   glfwSetWindowCloseCallback(handle, windowclosecallback);
+  
 
   glfwMakeContextCurrent(handle);
   return handle;

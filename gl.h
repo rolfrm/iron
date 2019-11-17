@@ -7,7 +7,7 @@ typedef enum{
 }IRON_GL_BACKEND;
 
 extern IRON_GL_BACKEND iron_gl_backend;
-
+extern bool iron_gl_debug;
 typedef struct{
   void (* poll_events)();
   void (* init)();
@@ -45,6 +45,7 @@ typedef enum{
   EVT_MOUSE_SCROLL,
   EVT_KEY_DOWN,
   EVT_KEY_UP,
+  EVT_KEY_REPEAT,
   EVT_WINDOW_CLOSE,
   EVT_WINDOW_MINIMIZE,
   EVT_WINDOW_MAXIMIZE,
@@ -149,12 +150,13 @@ typedef struct {
 typedef enum{
   TEXTURE_INTERPOLATION_NEAREST,
   TEXTURE_INTERPOLATION_BILINEAR,
+  TEXTURE_INTERPOLATION_LINEAR,
   
 }TEXTURE_INTERPOLATION;
 
 texture texture_from_image(image * image);
 texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
-
+void gl_texture_bind(texture tex);
 // blitting
 typedef enum{
   BLIT_MODE_PIXEL,

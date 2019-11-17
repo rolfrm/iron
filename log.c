@@ -10,8 +10,12 @@ void (* iron_log_printer)(const char * fnt, va_list lst) = NULL;
 static void do_log_print(const char * fmt, va_list lst){
   vprintf (fmt, lst);
 }
+int logd_enable = 1;
+
 #include <stdbool.h>
-void log_print(const char * fmt, ...){
+void log_print(int log_level, const char * fmt, ...){
+  if(log_level == 1 && logd_enable == false)
+    return;
   static bool is_printing = false;
   if(is_printing) return;
   is_printing = true;
@@ -65,4 +69,3 @@ void iron_log_stacktrace(void)
 
 
 
-__thread int logd_enable = 1;

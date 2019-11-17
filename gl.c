@@ -14,7 +14,7 @@ gl_backend * x11_create_backend();
 static bool backend_initialized = false;
 gl_backend * current_backend = NULL;
 IRON_GL_BACKEND iron_gl_backend = IRON_GL_BACKEND_GLFW;
-
+bool iron_gl_debug = false;
 static gl_window ** all_windows = NULL;
 static int all_window_cnt = 0;
 
@@ -214,6 +214,8 @@ texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
   int interp2;
   if(interp == TEXTURE_INTERPOLATION_BILINEAR){
     interp2 = GL_LINEAR_MIPMAP_LINEAR;
+  }else if(interp == TEXTURE_INTERPOLATION_LINEAR){
+    interp2 = GL_LINEAR;
   }else{
     interp2 = GL_NEAREST;
   }
@@ -240,10 +242,14 @@ texture texture_from_image(image * image){
   return texture_from_image2(image, TEXTURE_INTERPOLATION_BILINEAR);
 }
 
+void gl_texture_bind(texture tex){
+  glBindTexture(GL_TEXTURE_2D, tex.handle->tex);
+}
+
+
 u32 compile_shader(int shader_type, const char * code){
   u32 ss = glCreateShader(shader_type);
   i32 l = strlen(code);
-  logd("CODE: %s\n", code);
   glShaderSource(ss, 1, (void *) &code, &l); 
   glCompileShader(ss);
   int compileStatus = 0;	
@@ -286,8 +292,6 @@ u32 gl_shader_compile2(const char * vsc, int vlen, const char * fsc, int flen){
   void * buffer2 = alloc0(flen + 1);
   memcpy(buffer2, fsc, flen);  
   u32 result = gl_shader_compile(buffer1, buffer2);
-  printf("vertex shader code: %s\n", buffer1);
-  printf("fragment shader code: %s\n", buffer2);
   dealloc(buffer1);
   dealloc(buffer2);
   return result;
