@@ -269,7 +269,7 @@ u32 compile_shader(int shader_type, const char * code){
     char * buffer = alloc0(loglen + 10);
     glGetShaderInfoLog(ss, loglen, &loglen, buffer);
     buffer[loglen] = 0;
-    logd("%i: '%s'\n", loglen, buffer);
+    printf("%i: '%s'\n", loglen, buffer);
     dealloc(buffer);
   } else{
     logd("Compiled shader with success\n");
@@ -403,7 +403,7 @@ void blit_begin(BLIT_MODE _blit_mode){
     shader.tex_coord_attr = 1;
     shader.vertex_transform_loc = glGetUniformLocation(shader.blit_shader, "vertex_transform");
     shader.uv_transform_loc = glGetUniformLocation(shader.blit_shader, "uv_transform");
-    shader.texture_loc = glGetUniformLocation(shader.blit_shader, "texture");
+    shader.texture_loc = glGetUniformLocation(shader.blit_shader, "_texture");
     shader.color_loc = glGetUniformLocation(shader.blit_shader, "color");
     shader.textured_loc = glGetUniformLocation(shader.blit_shader, "textured");
     glUseProgram(shader.blit_shader);
@@ -497,7 +497,9 @@ void blit_create_framebuffer(blit_framebuffer * buf){
   glBindFramebuffer(GL_FRAMEBUFFER, buf->id); 
   gl_texture_bind(tex);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle->tex, 0);
-  ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  //printf("ERROR: %i\n", glGetError());
+  
+  ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE); 
   buf->texture = tex.handle;
 }
 
