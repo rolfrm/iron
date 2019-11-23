@@ -482,8 +482,11 @@ void blit_scale(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_scale(x, y));
 }
 
+static blit_framebuffer * current_frame_buffer = {0};
+
 void blit_create_framebuffer(blit_framebuffer * buf){
   ASSERT(buf->width > 0 && buf->height > 0);
+  ASSERT(current_frame_buffer == NULL);
   image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 3};
   texture tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_LINEAR);
 
@@ -493,12 +496,11 @@ void blit_create_framebuffer(blit_framebuffer * buf){
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle->tex, 0);
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   buf->texture = tex.handle;
-  printf("GL ERROR %i\n", glGetError());
 }
 
-
-
 void blit_use_framebuffer(blit_framebuffer * buf){
+  ASSERT(current_frame_buffer == NULL);
+  current_frame_buffer = buf;
   glBindFramebuffer(GL_FRAMEBUFFER, buf->id);
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   glViewport(0, 0, buf->width, buf->height);
@@ -507,7 +509,8 @@ void blit_use_framebuffer(blit_framebuffer * buf){
 }
 
 void blit_unuse_framebuffer(blit_framebuffer * buf){
-  UNUSED(buf);
+  ASSERT(current_frame_buffer == buf);
+  current_frame_buffer = NULL;
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   int width, height;
@@ -518,6 +521,5 @@ void blit_unuse_framebuffer(blit_framebuffer * buf){
 void blit_blit_framebuffer(blit_framebuffer * buf){
   texture tex = {.width = buf->width, .height = buf->height, .handle = buf->texture};
   blit(0, 0, &tex);
-  printf("ERR: %i\n", glGetError());
 }
 
