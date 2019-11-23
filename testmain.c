@@ -395,13 +395,25 @@ int main(){
   
   printf("duck: %i %i %i\n", img2.width, img2.height, img2.channels);
   texture duck_tex = texture_from_image(&img);
+
+  gl_window_make_current(w);
+  blit_framebuffer fbuf = {.width = 32, .height = 32};
+  
+  blit_create_framebuffer(&fbuf);
+  blit_use_framebuffer(&fbuf);
+  blit_begin(BLIT_MODE_UNIT);
+  blit(0,0,&duck_tex);
+  blit_unuse_framebuffer(&fbuf);
+  
   for(int i = 0; i <3 ;i++){
 
-    gl_window_make_current(w);
+
     blit_begin(BLIT_MODE_UNIT);
     blit_rectangle(-0.5,-0.5,1,1, 1,1,1,1);
-    blit_begin(BLIT_MODE_PIXEL);
+    blit_blit_framebuffer(&fbuf);
+    //blit_begin(BLIT_MODE_PIXEL);
     blit(0,0,&duck_tex);
+    //blit(-15,0,&duck_tex);
     
     gl_window_swap(w);
     iron_usleep(10000000/3);

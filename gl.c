@@ -23,6 +23,7 @@ static int event_cnt = 0;
 
 size_t gl_get_events(gl_window_event * event_buffer, size_t max_read){
   current_backend->poll_events();
+
   int to_read = MIN(max_read, (size_t)event_cnt);
   memcpy(event_buffer, events, to_read * sizeof(events[0]));
   memmove(events, events + to_read,  (event_cnt - to_read)* sizeof(events[0]));
@@ -50,10 +51,13 @@ void register_evt(void * win, void * _evt, gl_event_known_event_types type){
 
 gl_window * gl_window_open(i32 width, i32 height){
   if(!backend_initialized){
+    stbi_set_flip_vertically_on_load(1);
     if(iron_gl_backend == IRON_GL_BACKEND_GLFW)
       current_backend = glfw_create_backend();
+#ifndef __EMSCRIPTEN__
     else if(iron_gl_backend == IRON_GL_BACKEND_X11)
       current_backend = x11_create_backend();
+#endif
     current_backend->init();
     backend_initialized = true;
   }
@@ -182,6 +186,8 @@ image image_from_data(void * data, int len){
 
 
 void * image_data(image * image){
+  if(image->source == NULL)
+    return NULL;
   return image->source->data;
 }
 
@@ -230,7 +236,7 @@ texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
 
   int chn[] = {GL_R, GL_RG, GL_RGB, GL_RGBA};
   void * data = image_data(image);
-
+  
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
   if(interp == TEXTURE_INTERPOLATION_BILINEAR)
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -371,7 +377,7 @@ void blit_begin(BLIT_MODE _blit_mode){
     
     float quad[] = {0,0, 1,0, 0,1, 1,1};
     // triangle strip
-    float quad_uvs[] = {1,0,3,2};
+    float quad_uvs[] = {0,0,1,0,0,1,1,1};
     
     
     glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
@@ -471,7 +477,47 @@ void blit_translate(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_translation(x, y) );
   
 }
+
 void blit_scale(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_scale(x, y));
+}
+
+void blit_create_framebuffer(blit_framebuffer * buf){
+  ASSERT(buf->width > 0 && buf->height > 0);
+  image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 3};
+  texture tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_LINEAR);
+
+  glGenFramebuffers(1, &buf->id);
+  glBindFramebuffer(GL_FRAMEBUFFER, buf->id); 
+  gl_texture_bind(tex);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle->tex, 0);
+  ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  buf->texture = tex.handle;
+  printf("GL ERROR %i\n", glGetError());
+}
+
+
+
+void blit_use_framebuffer(blit_framebuffer * buf){
+  glBindFramebuffer(GL_FRAMEBUFFER, buf->id);
+  ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  glViewport(0, 0, buf->width, buf->height);
+  glClearColor(0,0,0,0);
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void blit_unuse_framebuffer(blit_framebuffer * buf){
+  UNUSED(buf);
+  ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  int width, height;
+  gl_window_get_size(current_window, &width, &height);
+  glViewport(0,0, width, height);
+}
+
+void blit_blit_framebuffer(blit_framebuffer * buf){
+  texture tex = {.width = buf->width, .height = buf->height, .handle = buf->texture};
+  blit(0, 0, &tex);
+  printf("ERR: %i\n", glGetError());
 }
 

@@ -176,3 +176,17 @@ void blit_pop();
 
 mat3 blit_get_view_transform();
 
+typedef struct{
+  u32 id;
+  
+  int width, height;
+
+  // -- INTERNALS --
+  texture_handle * texture;
+}blit_framebuffer;
+
+void blit_create_framebuffer(blit_framebuffer * buf);
+void blit_use_framebuffer(blit_framebuffer * buf);
+void blit_unuse_framebuffer();
+void blit_blit_framebuffer(blit_framebuffer * buf);
+void blit_delete_framebuffer(blit_framebuffer * buf);
