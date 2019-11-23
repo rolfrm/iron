@@ -51,7 +51,9 @@ void register_evt(void * win, void * _evt, gl_event_known_event_types type){
 
 gl_window * gl_window_open(i32 width, i32 height){
   if(!backend_initialized){
+#ifndef __EMSCRIPTEN__
     stbi_set_flip_vertically_on_load(1);
+#endif
     if(iron_gl_backend == IRON_GL_BACKEND_GLFW)
       current_backend = glfw_create_backend();
 #ifndef __EMSCRIPTEN__
@@ -231,8 +233,8 @@ texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interp2);
 
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   int chn[] = {GL_R, GL_RG, GL_RGB, GL_RGBA};
   void * data = image_data(image);
@@ -460,6 +462,7 @@ void blit_rectangle(float x, float y, float w, float h, float r, float g, float 
   var t = blit_transform;
   blit_translate(x,y);
   blit_scale(w, h);
+
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
   glUniform1i(shader.textured_loc, 0);
   glUniform4f(shader.color_loc, r, g, b, a);
