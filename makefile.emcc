@@ -1,4 +1,4 @@
-OPT = -O2
+OPT = -O3 -g0
 SOURCES = linmath.c math.c time.c utils.c gl.c glfw_gl_backend.c 
 CC = emcc
 TARGET = libiron.bc

@@ -169,13 +169,14 @@ void blit_end();
 void blit_translate(float x, float y);
 void blit_scale(float x, float y);
 void blit(float x, float y, texture * texture);
+void blit2(texture * texture);
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);
-
+void blit_rectangle2(float r, float g, float b, float a);
 void blit_push();
 void blit_pop();
 
 mat3 blit_get_view_transform();
-
+vec2 blit_translate_point(vec2 p);
 typedef struct{
   u32 id;
   
