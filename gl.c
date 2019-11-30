@@ -344,6 +344,8 @@ static textured_shader shader;
 static mat3 blit_transform;
 static BLIT_MODE blit_mode;
 
+
+
 struct{
   mat3 blit_transform;
   BLIT_MODE blit_mode;
@@ -439,6 +441,17 @@ void blit_begin(BLIT_MODE _blit_mode){
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+texture get_default_tex(){
+  static texture tex;
+  if(tex.handle == NULL){
+    var img = image_new(4,4,4);
+    tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_NEAREST);
+    image_delete(&img);
+  }
+  return tex;
+		 
+}
+
 void blit2(texture * tex){
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
@@ -456,6 +469,8 @@ void blit2(texture * tex){
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+
+
 void blit(float x,float y, texture * tex){
 
   blit_translate(x,y);
@@ -471,6 +486,8 @@ void blit(float x,float y, texture * tex){
 }
 
 void blit_rectangle2(float r, float g, float b, float a){
+  var tex = get_default_tex();
+  glBindTexture(GL_TEXTURE_2D, tex.handle->tex);
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
 
   glUniform4f(shader.color_loc, r, g, b, a);
