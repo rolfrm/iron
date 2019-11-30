@@ -123,6 +123,31 @@ enum{
   KEY_F10 = 299,
   KEY_F11 = 300,
   KEY_F12 = 301,
+  KEY_A = 65,
+  KEY_B = 66,
+  KEY_C = 67,
+  KEY_D = 68,
+  KEY_E = 69,
+  KEY_F = 70,
+  KEY_G = 71,
+  KEY_H = 72,
+  KEY_I = 73,
+  KEY_J = 74,
+  KEY_K = 75,
+  KEY_L = 76,
+  KEY_M = 77,
+  KEY_N = 78,
+  KEY_O = 79,
+  KEY_P = 80,
+  KEY_Q = 81,
+  KEY_R = 82,
+  KEY_S = 83,
+  KEY_T = 84,
+  KEY_U = 85,
+  KEY_V = 86,
+  KEY_X = 87,
+  KEY_Y = 88,
+  KEY_Z = 89
 };
 
 void register_evt(void * win, void * _evt, gl_event_known_event_types type);
@@ -156,6 +181,7 @@ typedef enum{
 
 texture texture_from_image(image * image);
 texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
+texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp);
 void gl_texture_bind(texture tex);
 // blitting
 typedef enum{

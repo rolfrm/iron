@@ -64,6 +64,7 @@ void glfw_poll_events(){
 void glfw_init(){
   glfwInit();
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
+  glfwSwapInterval(1);
 }
 
 void glfw_deinit(){

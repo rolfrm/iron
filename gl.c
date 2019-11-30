@@ -215,22 +215,26 @@ struct _texture_handle {
   GLuint tex;
 };
 
-texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
+u32 gl_tex_interp(TEXTURE_INTERPOLATION interp){
+  if(interp == TEXTURE_INTERPOLATION_BILINEAR){
+    return GL_LINEAR_MIPMAP_LINEAR;
+  }else if(interp == TEXTURE_INTERPOLATION_LINEAR){
+    return GL_LINEAR;
+  }else{
+    return GL_NEAREST;
+  }
+
+}
+
+texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
   GLuint tex;
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);
   int interp2;
-  if(interp == TEXTURE_INTERPOLATION_BILINEAR){
-    interp2 = GL_LINEAR_MIPMAP_LINEAR;
-  }else if(interp == TEXTURE_INTERPOLATION_LINEAR){
-    interp2 = GL_LINEAR;
-  }else{
-    interp2 = GL_NEAREST;
-  }
+  
 
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interp2);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interp2);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp));
 
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -243,12 +247,17 @@ texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
   }else{
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
   }
-  if(interp == TEXTURE_INTERPOLATION_BILINEAR)
+  if(sub_interp == TEXTURE_INTERPOLATION_BILINEAR || super_interp == TEXTURE_INTERPOLATION_BILINEAR)
     glGenerateMipmap(GL_TEXTURE_2D);
   texture_handle hndl = {.tex = tex};
   texture texture = { .handle = IRON_CLONE(hndl), .width = image->width, .height = image->height};
   return texture;
 }
+
+texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp){
+  return texture_from_image3(image, interp, interp);
+}
+
 texture texture_from_image(image * image){
   return texture_from_image2(image, TEXTURE_INTERPOLATION_BILINEAR);
 }
@@ -526,7 +535,7 @@ void blit_create_framebuffer(blit_framebuffer * buf){
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
   image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 3};
-  texture tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_NEAREST);
+  texture tex = texture_from_image3(&img, TEXTURE_INTERPOLATION_LINEAR, TEXTURE_INTERPOLATION_NEAREST);
 
   glGenFramebuffers(1, &buf->id);
   glBindFramebuffer(GL_FRAMEBUFFER, buf->id); 
