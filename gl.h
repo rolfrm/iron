@@ -145,9 +145,10 @@ enum{
   KEY_T = 84,
   KEY_U = 85,
   KEY_V = 86,
-  KEY_X = 87,
-  KEY_Y = 88,
-  KEY_Z = 89
+  KEY_W = 87,
+  KEY_X = 88,
+  KEY_Y = 89,
+  KEY_Z = 90
 };
 
 void register_evt(void * win, void * _evt, gl_event_known_event_types type);
