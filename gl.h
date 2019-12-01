@@ -6,6 +6,11 @@ typedef enum{
   IRON_GL_BACKEND_X11
 }IRON_GL_BACKEND;
 
+typedef enum{
+  IRON_CURSOR_NORMAL,
+  IRON_CURSOR_CROSSHAIR
+
+}iron_cursor_type;
 extern IRON_GL_BACKEND iron_gl_backend;
 extern bool iron_gl_debug;
 typedef struct{
@@ -21,6 +26,8 @@ typedef struct{
   void (* get_cursor_position)(void * window, int * x, int * y);
   bool (* get_button_state)(void * window, int button);
   bool (* get_key_state) (void * window, int key);
+  void (* set_cursor_type)( void * window, iron_cursor_type ctype);
+  void (* show_cursor)( void * window, bool show);
 }gl_backend;
 extern gl_backend * current_backend;
 
@@ -54,6 +61,8 @@ typedef enum{
   EVT_WINDOW_REFRESH
 }gl_event_known_event_types;
 
+void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type);
+void gl_window_show_cursor(gl_window * win, bool);
 typedef struct _gl_window_event{
   u64 timestamp;
   u64 type;

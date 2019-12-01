@@ -117,7 +117,6 @@ void gl_window_poll_events(){
 void get_mouse_position(gl_window * win, int * x, int * y){
   current_backend->get_cursor_position(win->handle, x, y);
 }
-
 bool gl_window_get_btn_state(gl_window * win, int btn){
   if(current_backend->get_button_state == NULL)
     return false;
@@ -129,6 +128,19 @@ bool gl_window_get_key_state(gl_window * win, int key){
     return false;
   return current_backend->get_key_state(win->handle, key);
 }
+
+void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type){
+  var f = current_backend->set_cursor_type;
+  if(f == NULL) return;
+  f(win->handle, type);
+}
+
+void gl_window_show_cursor(gl_window * win, bool show){
+  var f = current_backend->show_cursor;
+ if(f == NULL) return;
+  f(win->handle, show);
+}
+
 
 static void ** deinitializers = NULL;
 static void ** deinitializer_data = NULL;
@@ -229,9 +241,7 @@ u32 gl_tex_interp(TEXTURE_INTERPOLATION interp){
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
   GLuint tex;
   glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  int interp2;
-  
+  glBindTexture(GL_TEXTURE_2D, tex);  
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp));

@@ -1,10 +1,10 @@
-#version 300 es
+#version 100
 
 uniform mat3 vertex_transform;
 uniform mat3 uv_transform;
-layout(location = 0) in vec2 pos;
-layout(location = 1) in vec2 tex_coord;
-out vec2 v_tex_coord;
+attribute vec2 pos;
+attribute vec2 tex_coord;
+varying out vec2 v_tex_coord;
 
 void main() 
 {

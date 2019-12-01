@@ -80,7 +80,7 @@ static void glfw_debug_print (GLenum _source,
                             void *userParam)
 {
     // ignore non-significant error/warning codes
-    if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
+    //if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
     const char * source = "_";
     
     switch (_source)
@@ -114,22 +114,21 @@ static void glfw_debug_print (GLenum _source,
         case GL_DEBUG_SEVERITY_NOTIFICATION: severity = "notification"; break;
     }
 
-    logd("GL DEBUG %s %s %s", severity, type, source);
-    logd("%i: %s", id, message);
+    logd("GL DEBUG %s %s %s\n", severity, type, source);
+    logd("%i: %s\n", id, message);
 }
 
+
+static void errorcallback(int errid, const char * err){
+  
+  printf("GLFW %i: %s\n", errid, err);
+
+}
 
 void * glfw_create_window(int width, int height, const char * title){
   
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
-  if(iron_gl_debug){
-    logd("GL DEBUG: Enable OPENGL Debug context\n");
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
-    //glDebugMessageCallback(glfw_debug_print, NULL);
-    //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-  }
+  
   GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, NULL);
   glfwSetKeyCallback(handle, keycallback);
   glfwSetCharCallback(handle, charcallback);
@@ -138,9 +137,23 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetCursorEnterCallback(handle, cursorentercallback);
   glfwSetScrollCallback(handle, scrollcallback);
   glfwSetWindowCloseCallback(handle, windowclosecallback);
+  glfwSetErrorCallback(errorcallback);
   
 
   glfwMakeContextCurrent(handle);
+
+  if(iron_gl_debug){
+    logd("GL DEBUG: Enable OPENGL Debug context\n");
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#ifndef __EMSCRIPTEN__
+
+    glDebugMessageCallback(glfw_debug_print, NULL);
+    //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+#endif
+  }
+  
   return handle;
 }
 
@@ -175,6 +188,69 @@ bool glfw_get_key_state(void * window, int key){
   return glfwGetKey((GLFWwindow *) window, key) == GLFW_PRESS;
 }
 
+static GLFWcursor * cross_cursor = NULL;
+static GLFWcursor * normal_cursor = NULL;
+
+void glfw_set_cursor_type(void * window, iron_cursor_type type){
+  static GLFWcursor * custom_cursor;
+  var win = (GLFWwindow *) window;
+  int glfwCursor;
+  GLFWcursor* cursor=  NULL;
+  switch(type){
+  case IRON_CURSOR_NORMAL:
+    glfwCursor = GLFW_ARROW_CURSOR;
+    break;
+  case IRON_CURSOR_CROSSHAIR:
+    glfwCursor = GLFW_CROSSHAIR_CURSOR;
+    if(custom_cursor == NULL){
+      unsigned char pixels[8 * 8 * 4] = {0};
+      u32 * px = (u32 *) pixels;
+
+      int wpos[] = {1,1, 2,1,3,1, 1,2,1,3};
+      int bpos[] = {2,2, 3,2,4,2, 2,3,2,4};
+      
+      for(u32 i = 0; i < array_count(wpos) / 2; i++){
+	int index = wpos[i * 2] * 8 + wpos[i * 2 + 1];
+	px[index] = 0xFFFFFFFF;
+      }
+      for(u32 i = 0; i < array_count(bpos) / 2; i++){
+	int index = bpos[i * 2] * 8 + bpos[i * 2 + 1];
+	px[index] = 0xFF000000;
+      }
+      
+      
+      GLFWimage image;
+      image.width = 8;
+      image.height = 8;
+      image.pixels = pixels;
+      custom_cursor = glfwCreateCursor(&image, 0, 0);
+    }
+    //glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    cursor = custom_cursor;
+    printf("CROSSHAIR CURSOR %i\n", cursor);
+    break;
+  default:
+    ERROR("INVALID CURSOR");
+    return;
+  }
+  if(cursor != NULL){
+    printf("Set custom  CURSOR %i\n", cursor);
+    glfwSetCursor(win, cursor);
+  }else{
+    normal_cursor = glfwCreateStandardCursor(glfwCursor);
+    glfwSetCursor(win, normal_cursor);
+  }
+  
+}
+
+void glfw_show_cursor(void * window, bool show){
+  if(show){
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  }else{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  }
+
+}
 
 
 gl_backend * glfw_create_backend(){
@@ -190,5 +266,7 @@ gl_backend * glfw_create_backend(){
   backend->get_cursor_position = glfw_get_cursor_position;
   backend->get_button_state = glfw_get_button_state;
   backend->get_key_state = glfw_get_key_state;
+  backend->set_cursor_type = glfw_set_cursor_type;
+  backend->show_cursor = glfw_show_cursor;
   return backend;
 }
