@@ -298,7 +298,7 @@ mat3 mat3_identity(){
 }
 
 vec3 mat3_col(mat3 m, int i){
-  return m.columns[i];
+  return vec3_new(m.data[i][0], m.data[i][1], m.data[i][2]);
 }
 
 vec3 mat3_row(mat3 m, int i){
@@ -338,26 +338,29 @@ vec3 mat3_mul_vec3(mat3 m, vec3 v){
 mat3 mat3_add(mat3 a, mat3 b)
 {
   mat3 M;
-  int i;
+  int i,j;
   for(i=0; i<3; ++i)
-    M.columns[i] = vec3_add(a.columns[i], b.columns[i]);
+    for(j=0;j<3; j++)
+      M.data[i][j] = a.data[i][j] + b.data[i][j];
   return M;
 }
 mat3 mat3_sub(mat3 a, mat3 b)
 {
   mat3 M;
-  int i;
+  int i,j;
   for(i=0; i<3; ++i)
-    M.columns[i] = vec3_sub(a.columns[i], b.columns[i]);
+    for(j=0;j<3; j++)
+      M.data[i][j] = a.data[i][j] - b.data[i][j];
   return M;
 }
 
 mat3 mat3_scale(mat3 a, float k)
 {
   mat3 M;
-  int i;
+  int i,j;
   for(i=0; i<3; ++i)
-    M.columns[i] = vec3_scale(a.columns[i], k);
+    for(j=0;j<3; j++)
+      M.data[i][j] = a.data[i][j] * k;
   return M;
 }
 

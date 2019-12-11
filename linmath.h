@@ -125,8 +125,6 @@ typedef struct{
 	m20, m21, m22;
     };
 
-    // todo: Since vec3 is actually 4 floats, it does not alias to data.
-    vec3 columns[3];
     float data[3][3];
   };
 }mat3;

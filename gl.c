@@ -383,7 +383,7 @@ void blit_push(){
 
 void blit_pop(){
   if(current < 0) ERROR("Unable to pop blit transforms: Stack empty.");
-  blit_begin(blit_mode);
+  //blit_begin(blit_mode);
   blit_transform = blit_stack[current].blit_transform;
   blit_mode = blit_stack[current].blit_mode;
   current -= 1;
