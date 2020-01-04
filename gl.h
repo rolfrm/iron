@@ -57,6 +57,7 @@ typedef enum{
   EVT_WINDOW_MINIMIZE,
   EVT_WINDOW_MAXIMIZE,
   EVT_WINDOW_RESTORE,
+  EVT_WINDOW_RESIZE,
   EVT_WINDOW_CUSTOM,
   EVT_WINDOW_REFRESH
 }gl_event_known_event_types;
@@ -67,43 +68,31 @@ typedef struct _gl_window_event{
   u64 timestamp;
   u64 type;
   gl_window * win;
-  u8 data[32];
+  union{
+    struct{
+      int x, y;
+    }mouse_move;
+    struct{
+      double x, y;
+    }mouse_scroll;
+    
+    struct{
+      int button;
+    }mouse_btn;
+    struct{
+      bool ischar;
+      int key;
+      char codept;
+    }key;
+
+    struct{
+      int width, height;
+    }window_size_change;
+  };
 }gl_window_event;
 
 size_t gl_get_events(gl_window_event * event_buffer, size_t max_read);
 
-typedef struct{
-  u64 timestamp;
-  u64 type;
-  gl_window * win;
-  
-  int x, y;
-}evt_mouse_move;
-
-typedef struct{
-  u64 timestamp;
-  u64 type;
-  gl_window * win;
-  
-  int button;
-} evt_mouse_btn;
-
-typedef struct{
-  u64 timestamp;
-  u64 type;
-  gl_window * win;
-  
-  double scroll_x, scroll_y;
-}evt_mouse_scroll;
-
-typedef struct{
-  u64 timestamp;
-  u64 type;
-  gl_window * win;
-  bool ischar;
-  int key;
-  char codept;
-}evt_key;
 
 u32 gl_shader_compile(const char * vertex_src, const char * fragment_src);
 u32 gl_shader_compile2(const char * vertex_src, int vertex_src_len, const char * fragment_src, int fragment_len);
@@ -160,7 +149,8 @@ enum{
   KEY_Z = 90
 };
 
-void register_evt(void * win, void * _evt, gl_event_known_event_types type);
+void register_evt(void * win, gl_window_event * _evt, gl_event_known_event_types type);
+
 // images
 typedef struct _image_source image_source;
 
@@ -192,6 +182,7 @@ typedef enum{
 texture texture_from_image(image * image);
 texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp);
+void texture_load_image(texture * texture, image * image);
 void gl_texture_bind(texture tex);
 // blitting
 typedef enum{
@@ -227,3 +218,4 @@ void blit_use_framebuffer(blit_framebuffer * buf);
 void blit_unuse_framebuffer();
 void blit_blit_framebuffer(blit_framebuffer * buf);
 void blit_delete_framebuffer(blit_framebuffer * buf);
+texture blit_framebuffer_as_texture(blit_framebuffer * buf);

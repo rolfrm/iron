@@ -5,7 +5,7 @@
 
 void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
-  evt_key keyevt = {.key = key , .ischar = false};
+  gl_window_event evt = {.key = {.key = key , .ischar = false}};
 
   int keytype;
   switch(action){
@@ -23,21 +23,21 @@ void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
 
   }
   
-  register_evt(win, &keyevt, keytype);
+  register_evt(win, &evt, keytype);
 }
 
 void charcallback(GLFWwindow * win, u32 codept){
-  evt_key keyevt = {.codept = codept, .ischar = true};
-  register_evt(win, &keyevt, EVT_KEY_DOWN);
+  gl_window_event evt = {.key = {.codept = codept, .ischar = true}};
+  register_evt(win, &evt, EVT_KEY_DOWN);
 }
 
 void cursorposcallback(GLFWwindow * win, double x, double y){
-  evt_mouse_move evt = {.x = x, .y = y};
+  gl_window_event evt = {.mouse_move = {.x = x, .y = y}};
   register_evt(win, &evt, EVT_MOUSE_MOVE);
 }
 
 void scrollcallback(GLFWwindow * win, double x, double y){
-  evt_mouse_scroll evt= {.scroll_x = x, .scroll_y = y};
+  gl_window_event evt = {.mouse_scroll = {.x = x, .y = y}};
   register_evt(win, &evt, EVT_MOUSE_SCROLL);
 }
 
@@ -48,13 +48,18 @@ void cursorentercallback(GLFWwindow * win, int enter){
 
 void mousebuttoncallback(GLFWwindow * win, int button, int action, int mods){
   UNUSED(mods);
-  evt_mouse_btn btn = {.button = button};
+  gl_window_event btn = {.mouse_btn = {.button = button}};
   register_evt(win, &btn, action ? EVT_MOUSE_BTN_DOWN : EVT_MOUSE_BTN_UP);
 }
 
 void windowclosecallback(GLFWwindow * win){
   gl_window_event evt;
   register_evt(win, &evt, EVT_WINDOW_CLOSE);
+}
+
+void windowsizecallback(GLFWwindow * win, int width, int height){
+  gl_window_event evt = {.window_size_change = {.width = width, .height = height}};
+  register_evt(win, &evt, EVT_WINDOW_RESIZE);
 }
 
 void glfw_poll_events(){
@@ -71,6 +76,7 @@ void glfw_deinit(){
   glfwTerminate();
 }
 
+
 static void glfw_debug_print (GLenum _source, 
                             GLenum _type, 
                             GLuint id, 
@@ -79,6 +85,9 @@ static void glfw_debug_print (GLenum _source,
                             const GLchar *message, 
                             void *userParam)
 {
+  UNUSED(length);
+  UNUSED(userParam);
+  
     // ignore non-significant error/warning codes
     //if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
     const char * source = "_";
@@ -126,10 +135,12 @@ static void errorcallback(int errid, const char * err){
 }
 
 void * glfw_create_window(int width, int height, const char * title){
-  
+  static GLFWwindow * main_context = NULL;
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
   
-  GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, NULL);
+  GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, main_context);
+  if(main_context == NULL)
+    main_context = handle;
   glfwSetKeyCallback(handle, keycallback);
   glfwSetCharCallback(handle, charcallback);
   glfwSetMouseButtonCallback(handle, mousebuttoncallback);
@@ -138,6 +149,7 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetScrollCallback(handle, scrollcallback);
   glfwSetWindowCloseCallback(handle, windowclosecallback);
   glfwSetErrorCallback(errorcallback);
+  glfwSetWindowSizeCallback(handle, windowsizecallback);
   
 
   glfwMakeContextCurrent(handle);
@@ -149,7 +161,7 @@ void * glfw_create_window(int width, int height, const char * title){
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #ifndef __EMSCRIPTEN__
 
-    glDebugMessageCallback(glfw_debug_print, NULL);
+    glDebugMessageCallback((void *)glfw_debug_print, NULL);
     //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
   }
@@ -180,6 +192,10 @@ void glfw_get_cursor_position(void * window, int * x, int * y){
   *y = _y;
 }
 
+void glfw_destroy_window(void * window){
+  glfwDestroyWindow((GLFWwindow *)window);
+}
+
 bool glfw_get_button_state(void * window, int btn){
   return glfwGetMouseButton((GLFWwindow *) window, btn) == GLFW_PRESS;
 }
@@ -188,7 +204,6 @@ bool glfw_get_key_state(void * window, int key){
   return glfwGetKey((GLFWwindow *) window, key) == GLFW_PRESS;
 }
 
-static GLFWcursor * cross_cursor = NULL;
 static GLFWcursor * normal_cursor = NULL;
 
 void glfw_set_cursor_type(void * window, iron_cursor_type type){
@@ -259,6 +274,7 @@ gl_backend * glfw_create_backend(){
   backend->init = glfw_init;
   backend->deinit = glfw_deinit;
   backend->create_window = glfw_create_window;
+  backend->destroy_window = glfw_destroy_window;
   backend->make_current = glfw_make_current;
   backend->swap_buffers = glfw_swap_buffers;
   backend->get_window_size = glfw_get_window_size;

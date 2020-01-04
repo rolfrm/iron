@@ -197,8 +197,8 @@ void x11_poll_events(){
 
       int sym = XKeycodeToKeysym(display, event.xkey.keycode, 0);
       
-      evt_key keyevt = {.key = x11_to_glfw_key(sym) , .ischar = false};
-      register_evt(h, &keyevt, keytype);
+      gl_window_event evt = {.key = {.key = x11_to_glfw_key(sym) , .ischar = false} };
+      register_evt(h, &evt, keytype);
 
     }
 

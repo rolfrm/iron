@@ -35,13 +35,12 @@ size_t gl_get_events(gl_window_event * event_buffer, size_t max_read){
 gl_window * window_from_handle(void * win){
   ASSERT(all_window_cnt > 0);
   for(int i = 0; i < all_window_cnt; i++)
-    if(all_windows[i]->handle  == win)
+    if(all_windows[i]->handle == win)
       return all_windows[i];
   return NULL;
 }
 
-void register_evt(void * win, void * _evt, gl_event_known_event_types type){
-  gl_window_event * evt = _evt;
+void register_evt(void * win, gl_window_event * evt, gl_event_known_event_types type){
   evt->win = window_from_handle(win);
   evt->timestamp = timestamp();
   evt->type = type;
@@ -238,7 +237,7 @@ u32 gl_tex_interp(TEXTURE_INTERPOLATION interp){
 
 }
 
-texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
+texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
   GLuint tex;
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);  
@@ -250,6 +249,13 @@ texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEX
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+  texture_handle hndl = {.tex = tex};
+  texture texture = { .handle = IRON_CLONE(hndl), .width = 0, .height = 0};
+  return texture;
+}
+
+void texture_load_image(texture * texture, image * image){
+  gl_texture_bind(*texture);
   int chn[] = {GL_R, GL_RG, GL_RGB, GL_RGBA};
   void * data = image_data(image);
   if(data == NULL){
@@ -257,10 +263,15 @@ texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEX
   }else{
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
   }
+  texture->width = image->width;
+  texture->height = image->height;
+}
+
+texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
+  var texture = texture_new(sub_interp, super_interp);
+  texture_load_image(&texture, image);
   if(sub_interp == TEXTURE_INTERPOLATION_BILINEAR || super_interp == TEXTURE_INTERPOLATION_BILINEAR)
     glGenerateMipmap(GL_TEXTURE_2D);
-  texture_handle hndl = {.tex = tex};
-  texture texture = { .handle = IRON_CLONE(hndl), .width = image->width, .height = image->height};
   return texture;
 }
 
@@ -556,6 +567,7 @@ void blit_create_framebuffer(blit_framebuffer * buf){
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE); 
   buf->texture = tex.handle;
   glBindTexture(GL_TEXTURE_2D, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void blit_use_framebuffer(blit_framebuffer * buf){
@@ -566,6 +578,7 @@ void blit_use_framebuffer(blit_framebuffer * buf){
   glViewport(0, 0, buf->width, buf->height);
   glClearColor(0,0,0,0);
   glClear(GL_COLOR_BUFFER_BIT);
+
 }
 
 void blit_unuse_framebuffer(blit_framebuffer * buf){
@@ -578,8 +591,13 @@ void blit_unuse_framebuffer(blit_framebuffer * buf){
   glViewport(0,0, width, height);
 }
 
-void blit_blit_framebuffer(blit_framebuffer * buf){
+texture blit_framebuffer_as_texture(blit_framebuffer * buf){
   texture tex = {.width = buf->width, .height = buf->height, .handle = buf->texture};
+  return tex;
+}
+
+void blit_blit_framebuffer(blit_framebuffer * buf){
+  var tex = blit_framebuffer_as_texture(buf);
   blit(0, 0, &tex);
 }
 
