@@ -62,6 +62,13 @@ void windowsizecallback(GLFWwindow * win, int width, int height){
   register_evt(win, &evt, EVT_WINDOW_RESIZE);
 }
 
+void window_pos_callback(GLFWwindow* win, int xpos, int ypos)
+{
+  gl_window_event evt = {.window_position_change = {.x = xpos, .y = ypos}};
+  register_evt(win, &evt, EVT_WINDOW_MOVE);
+}
+
+
 void glfw_poll_events(){
   glfwPollEvents();
 }
@@ -150,6 +157,7 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetWindowCloseCallback(handle, windowclosecallback);
   glfwSetErrorCallback(errorcallback);
   glfwSetWindowSizeCallback(handle, windowsizecallback);
+  glfwSetWindowPosCallback(handle, window_pos_callback);
   
 
   glfwMakeContextCurrent(handle);
@@ -264,7 +272,14 @@ void glfw_show_cursor(void * window, bool show){
   }else{
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   }
+}
 
+void glfw_set_window_position(void * window, int x, int y){
+  glfwSetWindowPos((GLFWwindow *)window, x, y);
+}
+
+void glfw_get_window_position(void * window, int * x, int * y){
+  glfwGetWindowPos((GLFWwindow *)window, x, y);
 }
 
 
@@ -279,6 +294,8 @@ gl_backend * glfw_create_backend(){
   backend->swap_buffers = glfw_swap_buffers;
   backend->get_window_size = glfw_get_window_size;
   backend->set_window_size = glfw_set_window_size;
+  backend->get_window_position = glfw_get_window_position;
+  backend->set_window_position = glfw_set_window_position;
   backend->get_cursor_position = glfw_get_cursor_position;
   backend->get_button_state = glfw_get_button_state;
   backend->get_key_state = glfw_get_key_state;

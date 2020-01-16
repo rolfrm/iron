@@ -109,6 +109,15 @@ void gl_window_set_size(gl_window * win, int w, int h){
   current_backend->set_window_size(win->handle, w, h);
 }
 
+void gl_window_set_position(gl_window * win, int x, int y){
+  if(current_backend->set_window_position != NULL)
+    current_backend->set_window_position(win->handle, x, y);
+}
+void gl_window_get_position(gl_window * win, int *x, int * y){
+  if(current_backend->get_window_position != NULL)
+    current_backend->get_window_position(win->handle, x, y);
+}
+
 void gl_window_poll_events(){
   current_backend->poll_events();
 }

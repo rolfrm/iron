@@ -23,6 +23,8 @@ typedef struct{
   void (* swap_buffers)(void * window);
   void (* get_window_size) (void * window, int * w, int *h);
   void (* set_window_size) (void * window, int w, int h);
+  void (* get_window_position)(void * window, int * x, int * y);
+  void (* set_window_position)(void * window, int x, int y);
   void (* get_cursor_position)(void * window, int * x, int * y);
   bool (* get_button_state)(void * window, int button);
   bool (* get_key_state) (void * window, int key);
@@ -38,6 +40,8 @@ gl_window * gl_window_open(int width, int height);
 void gl_window_swap(gl_window *);
 void gl_window_get_size(gl_window * win, int * width, int *height);
 void gl_window_set_size(gl_window * win, int width, int height);
+void gl_window_set_position(gl_window * win, int x, int y);
+void gl_window_get_position(gl_window * win, int *x, int * y);
 void gl_window_make_current(gl_window * win);
 void gl_window_destroy(gl_window **);
 void gl_window_poll_events();
@@ -59,7 +63,8 @@ typedef enum{
   EVT_WINDOW_RESTORE,
   EVT_WINDOW_RESIZE,
   EVT_WINDOW_CUSTOM,
-  EVT_WINDOW_REFRESH
+  EVT_WINDOW_REFRESH,
+  EVT_WINDOW_MOVE
 }gl_event_known_event_types;
 
 void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type);
@@ -88,6 +93,10 @@ typedef struct _gl_window_event{
     struct{
       int width, height;
     }window_size_change;
+
+    struct{
+      int x, y;
+    }window_position_change;
   };
 }gl_window_event;
 
@@ -105,8 +114,9 @@ enum{
   KEY_DOWN = 264,
   KEY_LEFT = 263,
   KEY_RIGHT = 262,
-  KEY_ENTER = 257,
   KEY_ESC =  256,
+  KEY_ENTER = 257,
+  KEY_BACKSPACE = 259,
   KEY_CTRL = 341,
   KEY_SHIFT = 340,
   KEY_F1 = 290,
