@@ -63,7 +63,7 @@ gl_window * gl_window_open(i32 width, i32 height){
     backend_initialized = true;
   }
   gl_window * win = alloc0(sizeof(gl_window));
-  win->handle = current_backend->create_window(width, height, "");
+  win->handle = current_backend->create_window(width, height, "OpenGL Window");
 
   list_push2(all_windows, all_window_cnt, win);
   
@@ -245,8 +245,8 @@ u32 gl_tex_interp(TEXTURE_INTERPOLATION interp){
   }
 
 }
-
 texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
+
   GLuint tex;
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);  
@@ -382,7 +382,7 @@ static u32 quadbuffer_uvs;
 static textured_shader shader;
 static mat3 blit_transform;
 static BLIT_MODE blit_mode;
-
+static texture * blit_current_texture = NULL;
 
 
 struct{
@@ -417,7 +417,22 @@ vec2 blit_translate_point(vec2 p){
   return mat3_mul_vec3(blit_transform, vec3_new(p.x, p.y, 1)).xy;
 
 }
+void blit_bind_texture(texture * tex){
+  if(true || blit_current_texture != tex){
+    blit_current_texture = tex;
+    if(tex == NULL){
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glUniform1i(shader.textured_loc, 0);
+    }else{
+      gl_texture_bind(*tex);
+      //glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+      glUniform1i(shader.textured_loc, 1);
 
+    }
+
+    }
+  
+}
 void blit_begin(BLIT_MODE _blit_mode){
   //return;
   blit_mode = _blit_mode;
@@ -458,10 +473,15 @@ void blit_begin(BLIT_MODE _blit_mode){
     glUseProgram(shader.blit_shader);
   }
   glUseProgram(shader.blit_shader);
-  
+
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
+  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
+  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glUniform1i(shader.textured_loc, 1);
   mat3 identity = mat3_identity();
   blit_transform = identity;
-  
+  blit_bind_texture(NULL);
   //blit_translate(1,1);
   //blit_scale(0.5,0.5);
   int w,h;
@@ -480,32 +500,25 @@ void blit_begin(BLIT_MODE _blit_mode){
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-texture get_default_tex(){
+texture * get_default_tex(){
   static texture tex;
   if(tex.handle == NULL){
     var img = image_new(4,4,4);
+    memset(image_data(&img),255, 4 * 4 * 4);
     tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_NEAREST);
     image_delete(&img);
   }
-  return tex;
+  return &tex;
 		 
 }
 
-void blit2(texture * tex){
-  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
-  glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
-  //printf("Binding texture: %i\n", tex->handle->tex);
-  glUniform1i(shader.textured_loc, 1);
 
-  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
-  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
-    
-  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+void blit2(texture * tex){
+  glUniform4f(shader.color_loc, 1,1,1,1);
+  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
+  blit_bind_texture(tex);
 
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
-  glUniform1i(shader.textured_loc, 0);
-  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -526,15 +539,11 @@ void blit(float x,float y, texture * tex){
 
 void blit_rectangle2(float r, float g, float b, float a){
   var tex = get_default_tex();
-  glBindTexture(GL_TEXTURE_2D, tex.handle->tex);
-  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
+  blit_bind_texture(tex);
 
+  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
   glUniform4f(shader.color_loc, r, g, b, a);
 
-  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
-  glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
-  glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 }
 
@@ -562,6 +571,7 @@ void blit_scale(float x, float y){
 static blit_framebuffer * current_frame_buffer = {0};
 
 void blit_create_framebuffer(blit_framebuffer * buf){
+  blit_bind_texture(NULL);
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
   image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 3};

@@ -9,7 +9,7 @@ uniform vec4 color;
 void main() 
 {
   if(textured != 0)
-     gl_FragColor = texture2D( _texture, v_tex_coord );   
+     gl_FragColor = texture2D( _texture, v_tex_coord ) * color;   
   else
     gl_FragColor = color;
 } 
