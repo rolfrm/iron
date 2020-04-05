@@ -3,6 +3,7 @@
 #include "full.h"
 #include "gl.h"
 #include "stdio.h"
+#include <unistd.h>
 bool test_util_hash_table(){
   hash_table * ht = ht_create(128,sizeof(u64),sizeof(u64));
   u64 cnt = 200;
@@ -369,6 +370,53 @@ bool test_datastream(){
   return true;  
 }
 
+bool test_process(){
+
+  return true;
+// todo: Find bette way of testing
+  //const char * args1[] = {"/usr/bin/xclip", "/proc/cpuinfo", 0};
+  //const char * args1[] = {"/bin/cat", "/proc/cpuinfo", 0};
+  const char * args1[] = {"", NULL};
+  const char * args2[] = {"/usr/bin/xclip", "-se", "clipboard", "-target", "image/png", "-out", 0};
+  iron_process p;
+  /*
+  //iron_process_run("/usr/bin/xclip",args1 , &p)
+  iron_process_run("./hello.sh",args1 , &p);
+  //iron_process_run("/bin/cat", args1 , &p);
+  //iron_process_run("/bin/sleep",args1 , &p);
+  while(true){
+    iron_process_wait(p, 100000);
+    char buffer[1024] = {0};
+    printf("Reading...\n");
+    int rd = read(p.stdout_pipe, buffer, sizeof(buffer));
+    printf("rd: %i\n", rd);
+    if(rd == -1)
+      break;
+    if(rd == 0)
+      break;
+    printf("Buf: %s\n", buffer);
+  }
+  printf("stat: %i\n", iron_process_get_status(p));
+  //iron_process_wait(p, 10000);
+  iron_process_clean(&p);
+    
+*/
+  p = (iron_process){0};
+  iron_process_run("/usr/bin/xclip",args2 , &p);
+  while(true){
+    iron_process_wait(p, 100000);
+    char buffer[1024] = {0};
+    int rd = read(p.stdout_pipe, buffer, sizeof(buffer));
+    printf("rd: %i\n", rd);
+    if(rd == -1 || rd == 0)
+      break;
+    printf("Buf: %s\n", buffer);
+  }
+  printf("stat: %i\n", iron_process_get_status(p));
+  
+  return true;
+}
+
 #include "duck_img.png.c"
 int main(){
 
@@ -384,6 +432,7 @@ int main(){
   TEST(strtest);
   TEST(test_mutex);
   TEST(test_datastream);
+  TEST(test_process);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 
@@ -404,8 +453,7 @@ int main(){
   blit_begin(BLIT_MODE_UNIT);
   blit(0,0,&duck_tex);
   blit_unuse_framebuffer(&fbuf);
-  
-  for(int i = 0; i <3 ;i++){
+  for(int i = 0; i <30000 ;i++){
 
 
     blit_begin(BLIT_MODE_UNIT);
@@ -413,10 +461,20 @@ int main(){
     blit_blit_framebuffer(&fbuf);
     //blit_begin(BLIT_MODE_PIXEL);
     blit(0,0,&duck_tex);
-    //blit(-15,0,&duck_tex);
     
+    //blit(-15,0,&duck_tex);
+    printf("%i\n", gl_window_get_key_state(w, KEY_CTRL));
+    if(gl_window_get_key_state(w, KEY_CTRL)){
+      var clipboard = gl_window_get_clipboard(w);
+      if(clipboard)
+	printf("%s\n", clipboard);
+      iron_usleep(1000000);
+      TEST(test_process);
+    }
+
+    gl_window_poll_events();
     gl_window_swap(w);
-    iron_usleep(10000000/3);
+    iron_usleep(100000/3);
   }
   gl_window_destroy(&w);
 }

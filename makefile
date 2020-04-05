@@ -1,6 +1,6 @@
 OPT = -g1 -O3
 SOURCES = $(wildcard *.c)
-SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c, $(SOURCES))
+SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c , $(SOURCES))
 CC = gcc
 TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)

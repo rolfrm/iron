@@ -19,21 +19,32 @@
 #include "mem.h"
 
 int iron_process_run(const char * program, const char ** args, iron_process * out_process){
-  int pipefd[2];
-
-  int out = pipe(pipefd);
-  UNUSED(out);
-  out_process->stdin_pipe = pipefd[0];
-  out_process->stdout_pipe = pipefd[1];
+  int pipe_in[2]; // in to this process, so out from execv
+  //int pipe_out[2];
+  // [0] is read
+  // [1] is write
+  int out = pipe2(pipe_in, O_CLOEXEC);
+  
   int pid = fork();
   if(pid == 0){
-    dup2(out_process->stdout_pipe, STDOUT_FILENO);
-    dup2(out_process->stdout_pipe, STDERR_FILENO);
-    prctl(PR_SET_PDEATHSIG, SIGHUP);
+    dup2(pipe_in[1], STDOUT_FILENO);
+    close(pipe_in[0]);
+    close(pipe_in[1]);
+
+    char buf[1024];
+    sprintf(buf, "program starting.. %s %s\n", program, args[0]);
+    perror(buf); 
+    
     int exitstatus = execv(program, (char * const *) args);
+    printf("exit\n");
+    perror( "program ended..\n");
+    sync();
+    close(pipe_in[1]);
     exit(exitstatus == -1 ? 253 : 252);
   }else if(pid < 0)
     return -1;
+  close(pipe_in[1]);
+  out_process->stdout_pipe = pipe_in[0];
   out_process->pid = pid;
   return 0;
 }

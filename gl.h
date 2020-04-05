@@ -30,7 +30,8 @@ typedef struct{
   bool (* get_key_state) (void * window, int key);
   void (* set_cursor_type)( void * window, iron_cursor_type ctype);
   void (* show_cursor)( void * window, bool show);
-  //const char * (* get_clipboard)(void * window);
+  const char * (* get_clipboard)(void * window);
+  void (* set_window_title)(void * window, const char * new_title);
 }gl_backend;
 extern gl_backend * current_backend;
 
@@ -48,7 +49,8 @@ void gl_window_destroy(gl_window **);
 void gl_window_poll_events();
 bool gl_window_get_btn_state(gl_window * win, int btn);
 bool gl_window_get_key_state(gl_window * win, int key);
-//const char * gl_window_get_clipboard(gl_window * win);
+const char * gl_window_get_clipboard(gl_window * win);
+void gl_window_set_title(gl_window * win, const char * title);
 typedef enum{
   EVT_MOUSE_MOVE,
   EVT_MOUSE_LEAVE,

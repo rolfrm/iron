@@ -137,6 +137,16 @@ bool gl_window_get_key_state(gl_window * win, int key){
   return current_backend->get_key_state(win->handle, key);
 }
 
+
+const char * gl_window_get_clipboard(gl_window * win){
+  if(current_backend->get_clipboard == NULL) return NULL;
+  return current_backend->get_clipboard(win->handle);
+}
+void gl_window_set_title(gl_window * win, const char * title){
+  if(current_backend->set_window_title == NULL) return;
+  current_backend->set_window_title(win->handle, title);
+}
+
 void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type){
   var f = current_backend->set_cursor_type;
   if(f == NULL) return;

@@ -266,7 +266,7 @@ void glfw_set_cursor_type(void * window, iron_cursor_type type){
   
 }
 
-void glfw_show_cursor(void * window, bool show){
+static void glfw_show_cursor(void * window, bool show){
   if(show){
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }else{
@@ -274,14 +274,21 @@ void glfw_show_cursor(void * window, bool show){
   }
 }
 
-void glfw_set_window_position(void * window, int x, int y){
+static void glfw_set_window_position(void * window, int x, int y){
   glfwSetWindowPos((GLFWwindow *)window, x, y);
 }
 
-void glfw_get_window_position(void * window, int * x, int * y){
+static void glfw_get_window_position(void * window, int * x, int * y){
   glfwGetWindowPos((GLFWwindow *)window, x, y);
 }
 
+static const char * glfw_get_clipboard(void * window){
+  return glfwGetClipboardString((GLFWwindow *)window);
+}
+
+static void glfw_set_window_title(void * window, const char * new_title){
+  glfwSetWindowTitle((GLFWwindow *) window, new_title);
+}
 
 gl_backend * glfw_create_backend(){
   gl_backend * backend = alloc0(sizeof(gl_backend));
@@ -301,5 +308,7 @@ gl_backend * glfw_create_backend(){
   backend->get_key_state = glfw_get_key_state;
   backend->set_cursor_type = glfw_set_cursor_type;
   backend->show_cursor = glfw_show_cursor;
+  backend->get_clipboard = glfw_get_clipboard;
+  backend->set_window_title = glfw_set_window_title;
   return backend;
 }
