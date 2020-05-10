@@ -223,16 +223,20 @@ void gl_texture_bind(texture tex);
 
 // font
 typedef struct _font font;
-font * blit_load_font_from_buffer(void * data, size_t size);
-font * blit_load_font_file(const char * fontfile);
+font * blit_load_font_from_buffer(void * data, size_t size, float font_size);
+font * blit_load_font_file(const char * fontfile, float font_size);
 void blit_set_current_font(font * fnt);
 
 // blitting
 typedef enum{
-  BLIT_MODE_PIXEL,
-  BLIT_MODE_UNIT
-
+  BLIT_MODE_PIXEL = 1,
+  BLIT_MODE_UNIT = 2,
+  BLIT_MODE_SCREEN_BIT = 4,
+  BLIT_MODE_PIXEL_SCREEN = 1|BLIT_MODE_SCREEN_BIT,
+  
 }BLIT_MODE;
+
+BLIT_MODE blit_mode_get();
 
 void blit_begin(BLIT_MODE blit_mode);
 void blit_end();

@@ -426,6 +426,10 @@ struct{
 
 int current = -1;
 
+BLIT_MODE blit_mode_get(){
+  return blit_mode;
+}
+
 void blit_push(){
   if(current == 9) ERROR("Unable to push blit transforms: To many on stack.");
   current += 1;
@@ -515,9 +519,14 @@ void blit_begin(BLIT_MODE _blit_mode){
   blit_transform = identity;
   blit_bind_texture(NULL);
   int w,h;
-  if(blit_mode == BLIT_MODE_PIXEL){
+  if(blit_mode & BLIT_MODE_PIXEL){
     gl_window_get_size(current_window, &w, &h);
-    blit_scale(1.0f / (float)w, 1.0f/ (float)h);
+    blit_scale(1.0f / (float)w, -1.0f/ (float)h);
+    if(blit_mode & BLIT_MODE_SCREEN_BIT){
+
+      blit_translate(-w,-h);
+      blit_scale(2,2);
+    }
   }
   
   glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &identity.m00);
@@ -568,12 +577,12 @@ void blit2(texture * tex){
 void blit(float x,float y, texture * tex){
 
   blit_translate(x,y);
-  if(blit_mode == BLIT_MODE_PIXEL){
+  if(blit_mode & BLIT_MODE_PIXEL){
     blit_scale(tex->width, tex->height);
   }
   blit2(tex);
   
-  if(blit_mode == BLIT_MODE_PIXEL){
+  if(blit_mode & BLIT_MODE_PIXEL){
     blit_scale(1.0f / tex->width, 1.0f/ tex->height);
   }
   blit_translate(-x,-y);

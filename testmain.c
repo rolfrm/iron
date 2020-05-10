@@ -436,7 +436,7 @@ int main(){
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 
-  gl_window * w = gl_window_open(200,200);
+  gl_window * w = gl_window_open(200,196);
   gl_window_make_current(w);
   image img = image_from_data(duck_png, duck_png_len);
   printf("duck: %i %i %i\n", img.width, img.height, img.channels);
@@ -468,7 +468,7 @@ int main(){
  
   var checkered_texture = texture_from_image2(&checkered_image, TEXTURE_INTERPOLATION_NEAREST);
   const char * fontfile = "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"; //DejaVuSansMono
-  var fnt = blit_load_font_file(fontfile);
+  var fnt = blit_load_font_file(fontfile, 32);
 
   for(int i = 0; i <30000 ;i++){
     gl_window_make_current(w);
@@ -494,22 +494,24 @@ int main(){
     blit3d_view(blit3d, mat4_rotate(mat4_identity(),0,0,1,0.1f * i));
     blit3d_color(blit3d, vec4_new(1, 1, 0,1));
     blit3d_polygon_blit(blit3d, poly1);
-    blit_begin(BLIT_MODE_UNIT);
-    blit_scale(0.01, 0.01);
+    blit_begin(BLIT_MODE_PIXEL_SCREEN);
+    
     blit_color(0.2,0.9,0.2,1.0);
-    char * lines[] = {"It's a", "  DUCK!"};//, "", "I Dont give ", "  a duck!"};
+    char * lines[] = {"It's a", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!"};//, "", "I Dont give ", "  a duck!"};
     float offsety = 0;
-    blit_translate(-10, 20);
     blit_set_current_font(NULL);
+    blit_set_current_font(fnt);
     for(int i = 0; i < array_count(lines); i++){
+      
       if(i > 2){
 	blit_color(0.0,0.0,0.0,1.0);
       }
-      blit_translate(0, -offsety);
-      blit_text(lines[i]);
+      blit_push();
       blit_translate(0, offsety);
-      offsety += measure_text(lines[i], strlen(lines[i])).y + 10;
-      blit_set_current_font(fnt);
+      blit_text(lines[i]);
+      blit_pop();
+      offsety += measure_text(lines[i], strlen(lines[i])).y;
+
     }
 
     
