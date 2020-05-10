@@ -416,7 +416,7 @@ bool test_process(){
   
   return true;
 }
-
+extern texture * font_tex;
 #include "duck_img.png.c"
 int main(){
 
@@ -441,25 +441,40 @@ int main(){
   image img = image_from_data(duck_png, duck_png_len);
   printf("duck: %i %i %i\n", img.width, img.height, img.channels);
   image img2 = image_from_file("duck.png");
-  
+  logd("load? texture: %i\n", glGetError());   
   printf("duck: %i %i %i\n", img2.width, img2.height, img2.channels);
   texture duck_tex = texture_from_image(&img);
 
   gl_window_make_current(w);
-  blit_framebuffer fbuf = {.width = 32, .height = 32};
-  
+  blit_framebuffer fbuf = {.width = 64, .height = 64}; 
+  var blit3d = blit3d_context_new();
+  var poly1 = blit3d_polygon_new();
+  float vertexes[] = {0,0, 0, 1,0,0, 0,1,0};
+  blit3d_polygon_load_data(poly1, vertexes, sizeof(vertexes));
+  blit3d_polygon_configure(poly1, 3);    
   blit_create_framebuffer(&fbuf);
   blit_use_framebuffer(&fbuf);
   blit_begin(BLIT_MODE_UNIT);
   blit(0,0,&duck_tex);
   blit_unuse_framebuffer(&fbuf);
-  for(int i = 0; i <30000 ;i++){
 
+  u8 checkered[] = {0, 255, 0, 255, 0,
+		 255, 0, 255, 0, 255,
+		 0, 255, 0, 255, 0,
+		 255, 0, 255,0 , 255,
+		 0, 255, 0, 255, 0};
+  var checkered_image = image_from_bitmap(checkered, 5, 5, 1);
+  //checkered_image.mode = GRAY_AS_ALPHA;
+ 
+  var checkered_texture = texture_from_image2(&checkered_image, TEXTURE_INTERPOLATION_NEAREST);
+  for(int i = 0; i <30000 ;i++){
+    gl_window_make_current(w);
 
     blit_begin(BLIT_MODE_UNIT);
-    blit_rectangle(-0.5,-0.5,1,1, 1,1,1,1);
+    blit_rectangle(-1,-1,2,2, 1,1,1,1);
+    
     blit_blit_framebuffer(&fbuf);
-    //blit_begin(BLIT_MODE_PIXEL);
+    /*//blit_begin(BLIT_MODE_PIXEL);
     blit(0,0,&duck_tex);
     
     //blit(-15,0,&duck_tex);
@@ -470,8 +485,35 @@ int main(){
 	printf("%s\n", clipboard);
       iron_usleep(1000000);
       TEST(test_process);
+      }*/
+    blit3d_context_load(blit3d);
+    
+    blit3d_view(blit3d, mat4_rotate(mat4_identity(),0,0,1,0.1f * i));
+    blit3d_color(blit3d, vec4_new(1, 1, 0,1));
+    blit3d_polygon_blit(blit3d, poly1);
+    blit_begin(BLIT_MODE_UNIT);
+    blit_scale(0.01, 0.01);
+    blit_color(0.2,0.9,0.2,1.0);
+    char * lines[] = {"It's a", "  DUCK!"};//, "", "I Dont give ", "  a duck!"};
+    float offsety = 0;
+    blit_translate(-10, 20);
+    for(int i = 0; i < array_count(lines); i++){
+      if(i > 2){
+	blit_color(0.0,0.0,0.0,1.0);
+      }
+      blit_translate(0, -offsety);
+      blit_text(lines[i]);
+      blit_translate(0, offsety);
+      offsety += measure_text(lines[i], strlen(lines[i])).y + 10;
     }
 
+    
+    //blit_bind_texture(font_tex);
+    //blit_bind_texture(&checkered_texture);
+    //blit_quad();
+    //vec2 meas_text = measure_text("Test", 4);
+    //vec2_print(meas_text); logd("\n%i\n", glGetError());
+    
     gl_window_poll_events();
     gl_window_swap(w);
     iron_usleep(100000/3);

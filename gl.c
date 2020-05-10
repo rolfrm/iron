@@ -192,30 +192,26 @@ struct _image_source{
   void * data;
 };
 
+image image_from_bitmap(void * bitmap, int width, int height, int channels){
+  image_source src;
+  src.kind = IMAGE_SOURCE_MEMORY;
+  src.data = iron_clone(bitmap, width * height * channels);
+  
+  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src)};
+  return img;  
+}
+
 image image_from_file(const char * path){
   int _x = 0, _y = 0, _c = 0;
   void * imgdata = stbi_load(path, &_x, &_y, &_c, 4);
-  logd("LOADED: %i\n", _x);
-  image_source src;
-  src.kind = IMAGE_SOURCE_MEMORY;
-  src.data = imgdata;
-
-  image img = {.width = _x, .height = _y, .channels = _c, .source = IRON_CLONE(src)};
-  return img;
+  return image_from_bitmap(imgdata, _x, _y, _c);
 }
-
 
 image image_from_data(void * data, int len){
   int _x = 0, _y = 0, _c = 0;
   void * imgdata = stbi_load_from_memory(data, len, &_x, &_y, &_c, 4);
-  image_source src;
-  src.kind = IMAGE_SOURCE_MEMORY;
-  src.data = imgdata;
-
-  image img = {.width = _x, .height = _y, .channels = _c, .source = IRON_CLONE(src)};
-  return img;
+  return image_from_bitmap(imgdata, _x, _y, _c);
 }
-
 
 void * image_data(image * image){
   if(image->source == NULL)
@@ -245,8 +241,10 @@ struct _texture_handle {
   GLuint tex;
 };
 
-u32 gl_tex_interp(TEXTURE_INTERPOLATION interp){
+static u32 gl_tex_interp(TEXTURE_INTERPOLATION interp, bool ismag){
   if(interp == TEXTURE_INTERPOLATION_BILINEAR){
+    if(ismag)
+      return GL_LINEAR;
     return GL_LINEAR_MIPMAP_LINEAR;
   }else if(interp == TEXTURE_INTERPOLATION_LINEAR){
     return GL_LINEAR;
@@ -261,8 +259,8 @@ texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION supe
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);  
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp, false));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp, true));
 
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -275,15 +273,37 @@ texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION supe
 
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
-  int chn[] = {GL_R, GL_RG, GL_RGB, GL_RGBA};
-  void * data = image_data(image);
+  int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  int int_format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  u8 * data = image_data(image);
+  bool delete_data = false;
+  if(image->mode == GRAY_AS_ALPHA && image->channels == 1){
+    chn[0] = GL_LUMINANCE_ALPHA;
+    int_format[0] = GL_LUMINANCE_ALPHA;
+    // cannot do swizzle as it is not supported in webgl.
+    // instead provide a temporary LUMIANCE_ALPHA texture.
+    if(data != NULL){
+      int pixels = image->width * image->height;
+      u8 * newdata = alloc0(2 * pixels);
+      for(u32 i = 0; i < pixels; i++){
+	newdata[i * 2] = 0xFF;
+	newdata[i * 2 + 1] = data[i];
+      }
+      data = newdata;
+      delete_data = true;
+    }
+  }
+  
   if(data == NULL){
-    glTexImage2D(GL_TEXTURE_2D, 0, chn[image->channels - 1], image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
+		 image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, NULL);
   }else{
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
+		 image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
   }
   texture->width = image->width;
   texture->height = image->height;
+  dealloc(data);
 }
 
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
@@ -365,8 +385,8 @@ u32 create_shader_from_files(const char * vs_path, const char * fs_path){
   dealloc(fscode);
   return prog;
 }
-/*
-void GLAPIENTRY
+
+static void GLAPIENTRY
 MessageCallback( GLenum source,
                  GLenum type,
                  GLuint id,
@@ -375,10 +395,10 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
-  //if(type == GL_DEBUG_TYPE_ERROR)
-    ERROR("GL ERROR: %s", message);
+  if(type == GL_DEBUG_TYPE_ERROR)
+    ERROR("GL ERROR: %i %i %s\n", severity, type, message);
   
-    }*/
+}
 
 typedef struct _textured_shader{
   int vertex_transform_loc, uv_transform_loc, texture_loc, textured_loc, color_loc;
@@ -390,13 +410,16 @@ typedef struct _textured_shader{
 static u32 quadbuffer;
 static u32 quadbuffer_uvs;
 static textured_shader shader;
+
 static mat3 blit_transform;
+static mat3 blit_uv_transform;
 static BLIT_MODE blit_mode;
 static texture * blit_current_texture = NULL;
-
+static vec4 _blit_color;
 
 struct{
   mat3 blit_transform;
+  mat3 uv_transform;
   BLIT_MODE blit_mode;
 
 }blit_stack[10];
@@ -408,6 +431,7 @@ void blit_push(){
   current += 1;
   blit_stack[current].blit_transform = blit_transform;
   blit_stack[current].blit_mode = blit_mode;
+  blit_stack[current].uv_transform = blit_uv_transform;
 }
 
 
@@ -416,6 +440,7 @@ void blit_pop(){
   //blit_begin(blit_mode);
   blit_transform = blit_stack[current].blit_transform;
   blit_mode = blit_stack[current].blit_mode;
+  blit_uv_transform = blit_stack[current].uv_transform;  
   current -= 1;
 }
 
@@ -428,20 +453,16 @@ vec2 blit_translate_point(vec2 p){
 
 }
 void blit_bind_texture(texture * tex){
-  if(true || blit_current_texture != tex){
-    blit_current_texture = tex;
-    if(tex == NULL){
-      glBindTexture(GL_TEXTURE_2D, 0);
-      glUniform1i(shader.textured_loc, 0);
-    }else{
-      gl_texture_bind(*tex);
-      //glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
-      glUniform1i(shader.textured_loc, 1);
-
-    }
-
-    }
-  
+  blit_current_texture = tex;
+  if(tex == NULL){
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(shader.textured_loc, 0);
+  }else{
+    gl_texture_bind(*tex);
+    //glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+    glUniform1i(shader.textured_loc, 1);
+    
+  }  
 }
 void blit_begin(BLIT_MODE _blit_mode){
   //return;
@@ -461,16 +482,17 @@ void blit_begin(BLIT_MODE _blit_mode){
 
     glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_uvs), quad_uvs, GL_STATIC_DRAW);
+
     
-    //glEnable( GL_DEBUG_OUTPUT );
-    /*glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
+    glEnable( GL_DEBUG_OUTPUT );
+    glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
                               GL_DONT_CARE,
                               GL_DONT_CARE,
                               0,
                               NULL,
                               GL_TRUE);
     //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
-    glDebugMessageCallback( MessageCallback, 0 );*/
+    glDebugMessageCallback( MessageCallback, 0 );
     shader.blit_shader = gl_shader_compile2((char *)texture_shader_vs,texture_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
 
     shader.pos_attr = 0;
@@ -492,8 +514,6 @@ void blit_begin(BLIT_MODE _blit_mode){
   mat3 identity = mat3_identity();
   blit_transform = identity;
   blit_bind_texture(NULL);
-  //blit_translate(1,1);
-  //blit_scale(0.5,0.5);
   int w,h;
   if(blit_mode == BLIT_MODE_PIXEL){
     gl_window_get_size(current_window, &w, &h);
@@ -522,13 +542,25 @@ texture * get_default_tex(){
 		 
 }
 
+void blit_uv_matrix(mat3 uv){
+  blit_uv_transform = uv;
+  glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &blit_uv_transform.m00);
+}
+
+void blit_color(f32 r, f32 g, f32 b ,f32 a){
+  _blit_color = vec4_new(r,g,b,a);
+  glUniform4f(shader.color_loc, r, g, b, a);
+}
+
+void blit_quad(){
+  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
+  glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+}
 
 void blit2(texture * tex){
   glUniform4f(shader.color_loc, 1,1,1,1);
-  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
   blit_bind_texture(tex);
-
-  glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+  blit_quad();
 }
 
 

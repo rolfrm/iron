@@ -26,3 +26,4 @@ extern int iron_default_permissions;
 // touch a file. (like linux touch command).
 void iron_touch(const char * path);
 bool file_exists(const char * path);
+u64 file_modification_date(const char * path);

@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdint.h>
+#include <sys/stat.h>
 #include <unistd.h> //fsync
 #include "log.h"
 #include "mem.h"
+#include "types.h"
 #include "fileio.h"
 static __thread FILE * outfile = NULL;
 
@@ -209,4 +212,10 @@ void ensure_directory(const char * path){
 
 bool file_exists(const char * path){
   return access(path, F_OK ) != -1;
+}
+
+u64 file_modification_date(const char * path){
+  struct stat attrib;
+  stat(path, &attrib);
+  return ((u64)attrib.st_mtim.tv_sec) * 1000000000 + attrib.st_mtim.tv_nsec;
 }

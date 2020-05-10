@@ -121,8 +121,10 @@ enum{
   KEY_ESC =  256,
   KEY_ENTER = 257,
   KEY_BACKSPACE = 259,
-  KEY_CTRL = 341,
+
   KEY_SHIFT = 340,
+  KEY_CTRL = 341,
+  KEY_ALT = 342,
   KEY_F1 = 290,
   KEY_F2 = 291,
   KEY_F3 = 292,
@@ -135,6 +137,17 @@ enum{
   KEY_F10 = 299,
   KEY_F11 = 300,
   KEY_F12 = 301,
+  KEY_SPACE = 32,
+  KEY_0 = 48,
+  KEY_1 = 49,
+  KEY_2 = 50,
+  KEY_3 = 51,
+  KEY_4 = 52,
+  KEY_5 = 53,
+  KEY_6 = 54,
+  KEY_7 = 55,
+  KEY_8 = 56,
+  KEY_9 = 57,  
   KEY_A = 65,
   KEY_B = 66,
   KEY_C = 67,
@@ -166,16 +179,25 @@ enum{
 void register_evt(void * win, gl_window_event * _evt, gl_event_known_event_types type);
 
 // images
+
+typedef enum{
+  NONE = 0,
+  GRAY_AS_ALPHA = 1
+  
+}image_mode;
+
 typedef struct _image_source image_source;
 
 typedef struct{
   image_source * source;
   int width, height, channels;
+  image_mode mode;
 }image;
 
 void * image_data(image * image);
 image image_from_file(const char * path);
 image image_from_data(void * data, int len);
+image image_from_bitmap(void * bitmap, int width, int height, int channels);
 image image_new(int width, int height, int channels);
 void image_delete(image * image);
 
@@ -213,9 +235,14 @@ void blit(float x, float y, texture * texture);
 void blit2(texture * texture);
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);
 void blit_rectangle2(float r, float g, float b, float a);
+void blit_text(const char * text);
+vec2 measure_text(const char * text, size_t len);
+void blit_uv_matrix(mat3 uv);
 void blit_push();
 void blit_pop();
-
+void blit_bind_texture(texture * tex);
+void blit_quad();
+void blit_color(f32 r, f32 g, f32 b ,f32 a);
 mat3 blit_get_view_transform();
 vec2 blit_translate_point(vec2 p);
 typedef struct{
@@ -233,3 +260,19 @@ void blit_unuse_framebuffer();
 void blit_blit_framebuffer(blit_framebuffer * buf);
 void blit_delete_framebuffer(blit_framebuffer * buf);
 texture blit_framebuffer_as_texture(blit_framebuffer * buf);
+
+typedef struct _blit3d_context blit3d_context;
+blit3d_context * blit3d_context_new();
+void blit3d_context_load(blit3d_context * ctx);
+
+typedef struct _blit3d_polygon blit3d_polygon;
+
+blit3d_polygon * blit3d_polygon_new();
+void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size);
+void blit3d_polygon_configure(blit3d_polygon * polygon, int dimensions);
+
+void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);
+
+
+void blit3d_color(blit3d_context * ctx, vec4 color);
+void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);

@@ -1,4 +1,4 @@
-OPT = -g1 -O3
+OPT = -g3 -Og
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c , $(SOURCES))
 CC = gcc
@@ -16,8 +16,9 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@ -MMD -MF $@.depends
 gl.o: texture.shader.c
 test: duck_img.png.c
-texture.shader.c: texture.shader.fs texture.shader.vs
+texture.shader.c: texture.shader.fs texture.shader.vs texture.3d.shader.vs
 	xxd -i texture.shader.vs > texture.shader.c
+	xxd -i texture.3d.shader.vs >> texture.shader.c
 	xxd -i texture.shader.fs >> texture.shader.c
 
 duck_img.png.c: duck.png
