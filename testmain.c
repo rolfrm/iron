@@ -467,6 +467,9 @@ int main(){
   //checkered_image.mode = GRAY_AS_ALPHA;
  
   var checkered_texture = texture_from_image2(&checkered_image, TEXTURE_INTERPOLATION_NEAREST);
+  const char * fontfile = "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"; //DejaVuSansMono
+  var fnt = blit_load_font_file(fontfile);
+
   for(int i = 0; i <30000 ;i++){
     gl_window_make_current(w);
 
@@ -497,6 +500,7 @@ int main(){
     char * lines[] = {"It's a", "  DUCK!"};//, "", "I Dont give ", "  a duck!"};
     float offsety = 0;
     blit_translate(-10, 20);
+    blit_set_current_font(NULL);
     for(int i = 0; i < array_count(lines); i++){
       if(i > 2){
 	blit_color(0.0,0.0,0.0,1.0);
@@ -505,6 +509,7 @@ int main(){
       blit_text(lines[i]);
       blit_translate(0, offsety);
       offsety += measure_text(lines[i], strlen(lines[i])).y + 10;
+      blit_set_current_font(fnt);
     }
 
     

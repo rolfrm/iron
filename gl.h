@@ -220,6 +220,13 @@ texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp);
 void texture_load_image(texture * texture, image * image);
 void gl_texture_bind(texture tex);
+
+// font
+typedef struct _font font;
+font * blit_load_font_from_buffer(void * data, size_t size);
+font * blit_load_font_file(const char * fontfile);
+void blit_set_current_font(font * fnt);
+
 // blitting
 typedef enum{
   BLIT_MODE_PIXEL,
