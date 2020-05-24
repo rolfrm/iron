@@ -223,9 +223,10 @@ void gl_texture_bind(texture tex);
 
 // font
 typedef struct _font font;
-font * blit_load_font_from_buffer(void * data, size_t size, float font_size);
+font * blit_load_font_from_buffer(void * data, float font_size);
 font * blit_load_font_file(const char * fontfile, float font_size);
 void blit_set_current_font(font * fnt);
+vec2 blit_measure_text(const char * text);
 
 // blitting
 typedef enum{
@@ -247,7 +248,7 @@ void blit2(texture * texture);
 void blit_rectangle(float x, float y, float w, float h, float r, float g, float b, float a);
 void blit_rectangle2(float r, float g, float b, float a);
 void blit_text(const char * text);
-vec2 measure_text(const char * text, size_t len);
+
 void blit_uv_matrix(mat3 uv);
 void blit_push();
 void blit_pop();

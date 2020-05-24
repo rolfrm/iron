@@ -303,7 +303,8 @@ void texture_load_image(texture * texture, image * image){
   }
   texture->width = image->width;
   texture->height = image->height;
-  dealloc(data);
+  if(delete_data)
+    dealloc(data);
 }
 
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
@@ -487,7 +488,7 @@ void blit_begin(BLIT_MODE _blit_mode){
     glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_uvs), quad_uvs, GL_STATIC_DRAW);
 
-    
+    #ifndef __EMSCRIPTEN__
     glEnable( GL_DEBUG_OUTPUT );
     glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
                               GL_DONT_CARE,
@@ -497,6 +498,7 @@ void blit_begin(BLIT_MODE _blit_mode){
                               GL_TRUE);
     //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
     glDebugMessageCallback( MessageCallback, 0 );
+    #endif
     shader.blit_shader = gl_shader_compile2((char *)texture_shader_vs,texture_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
 
     shader.pos_attr = 0;

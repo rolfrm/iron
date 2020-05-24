@@ -441,7 +441,7 @@ int main(){
   image img = image_from_data(duck_png, duck_png_len);
   printf("duck: %i %i %i\n", img.width, img.height, img.channels);
   image img2 = image_from_file("duck.png");
-  logd("load? texture: %i\n", glGetError());   
+
   printf("duck: %i %i %i\n", img2.width, img2.height, img2.channels);
   texture duck_tex = texture_from_image(&img);
 
@@ -467,6 +467,10 @@ int main(){
   //checkered_image.mode = GRAY_AS_ALPHA;
  
   var checkered_texture = texture_from_image2(&checkered_image, TEXTURE_INTERPOLATION_NEAREST);
+
+  const char * fontfile_init = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"; //DejaVuSansMono
+  var fnt0 =  blit_load_font_file(fontfile_init,  20);
+  blit_set_current_font(fnt0);
   const char * fontfile = "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"; //DejaVuSansMono
   var fnt = blit_load_font_file(fontfile, 32);
 
@@ -510,7 +514,7 @@ int main(){
       blit_translate(0, offsety);
       blit_text(lines[i]);
       blit_pop();
-      offsety += measure_text(lines[i], strlen(lines[i])).y;
+      offsety += blit_measure_text(lines[i]).y;
 
     }
 
@@ -519,7 +523,6 @@ int main(){
     //blit_bind_texture(&checkered_texture);
     //blit_quad();
     //vec2 meas_text = measure_text("Test", 4);
-    //vec2_print(meas_text); logd("\n%i\n", glGetError());
     
     gl_window_poll_events();
     gl_window_swap(w);

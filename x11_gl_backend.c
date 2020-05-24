@@ -282,7 +282,7 @@ void x11_set_window_size(void * handle, int w, int h){
   XGetWindowAttributes(display, _h->win, &gwa);
   gwa.width = w;
   gwa.height = h;
-  XChangeWindowAttributes(display, _h->win, 0, &gwa);
+  XChangeWindowAttributes(display, _h->win, 0, (XSetWindowAttributes *)&gwa);
 }
 
 void x11_get_cursor_position(void * handle, int * x, int * y){
