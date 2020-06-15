@@ -219,6 +219,7 @@ texture texture_from_image(image * image);
 texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp);
 void texture_load_image(texture * texture, image * image);
+void texture_download_image(texture * texture, image * image);
 void gl_texture_bind(texture tex);
 
 // font
@@ -259,7 +260,8 @@ mat3 blit_get_view_transform();
 vec2 blit_translate_point(vec2 p);
 typedef struct{
   u32 id;
-  
+  image_mode mode;
+  u32 channels;
   int width, height;
 
   // -- INTERNALS --
@@ -268,7 +270,7 @@ typedef struct{
 
 void blit_create_framebuffer(blit_framebuffer * buf);
 void blit_use_framebuffer(blit_framebuffer * buf);
-void blit_unuse_framebuffer();
+void blit_unuse_framebuffer(blit_framebuffer * buf);
 void blit_blit_framebuffer(blit_framebuffer * buf);
 void blit_delete_framebuffer(blit_framebuffer * buf);
 texture blit_framebuffer_as_texture(blit_framebuffer * buf);
@@ -277,8 +279,13 @@ typedef struct _blit3d_context blit3d_context;
 blit3d_context * blit3d_context_new();
 void blit3d_context_load(blit3d_context * ctx);
 
-typedef struct _blit3d_polygon blit3d_polygon;
+typedef enum{
+  VERTEX_BUFFER_ARRAY = 1,
+  VERTEX_BUFFER_ELEMENTS = 2
+}vertex_buffer_type;
 
+typedef struct _blit3d_polygon blit3d_polygon;
+typedef blit3d_polygon vertex_buffer;
 blit3d_polygon * blit3d_polygon_new();
 void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size);
 void blit3d_polygon_configure(blit3d_polygon * polygon, int dimensions);
@@ -287,4 +294,6 @@ void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);
 
 
 void blit3d_color(blit3d_context * ctx, vec4 color);
+void blit3d_bind_texture(blit3d_context * ctx, texture * tex);
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);
+void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count);

@@ -522,8 +522,9 @@ void blit_begin(BLIT_MODE _blit_mode){
   blit_bind_texture(NULL);
   int w,h;
   if(blit_mode & BLIT_MODE_PIXEL){
-    gl_window_get_size(current_window, &w, &h);
-    blit_scale(1.0f / (float)w, -1.0f/ (float)h);
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+    blit_scale(1.0f / (float)viewport[2], -1.0f/ (float)viewport[3]);
     if(blit_mode & BLIT_MODE_SCREEN_BIT){
 
       blit_translate(-w,-h);
@@ -624,10 +625,12 @@ void blit_scale(float x, float y){
 static blit_framebuffer * current_frame_buffer = {0};
 
 void blit_create_framebuffer(blit_framebuffer * buf){
+  if(buf->channels == 0) buf->channels = 3;
+
   blit_bind_texture(NULL);
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
-  image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 3};
+  image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = buf->channels, .mode = buf->mode};
   texture tex = texture_from_image3(&img, TEXTURE_INTERPOLATION_LINEAR, TEXTURE_INTERPOLATION_NEAREST);
 
   glGenFramebuffers(1, &buf->id);

@@ -23,6 +23,7 @@ struct _blit3d_context{
   bool initialized;
   mat4 matrix;  
   vec4 color;
+  texture * current_texture;
 };
 
 blit3d_context * blit3d_context_new(){
@@ -44,7 +45,8 @@ void blit3d_context_initialize(blit3d_context * ctx){
   shader.color_loc = glGetUniformLocation(shader.blit_shader, "color");
   shader.textured_loc = glGetUniformLocation(shader.blit_shader, "textured");
   glUseProgram(shader.blit_shader);
-  
+  glEnableVertexAttribArray(shader.pos_attr);
+  glEnableVertexAttribArray(shader.tex_coord_attr);
   ctx->shader = shader;
   
 }
@@ -64,18 +66,20 @@ void blit3d_view(blit3d_context * ctx, mat4 viewmatrix){
   ctx->matrix = viewmatrix;
 }
 
+
+
 struct _blit3d_polygon{
   void * data;
   size_t length;
-
   u32 dimensions;
   u32 buffer;
-  u32 element_buffer;
   bool changed;
+  vertex_buffer_type type;
 };
 
 blit3d_polygon * blit3d_polygon_new(){
   blit3d_polygon * pol = alloc0(sizeof(pol[0]));
+  pol->type = VERTEX_BUFFER_ARRAY;
   return pol;
 }
 
@@ -94,27 +98,24 @@ void blit3d_polygon_update(blit3d_polygon * polygon){
     polygon->changed = false;
     if(polygon->buffer == 0){
       glGenBuffers(1, &polygon->buffer);
-      glGenBuffers(1, &polygon->element_buffer);
-
+     }
+    if(polygon->type == VERTEX_BUFFER_ARRAY){
+      glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
+      glBufferData(GL_ARRAY_BUFFER, polygon->length, polygon->data, GL_STATIC_DRAW);
     }
-
-    glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
-    glBufferData(GL_ARRAY_BUFFER, polygon->length, polygon->data, GL_STATIC_DRAW);
-
-    u8 * elements = alloc0(polygon->length);
-    for(u8 i = 0; i < polygon->length / 12; i++)
-      elements[i] = i;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygon->element_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, polygon->length / 12,elements, GL_STATIC_DRAW);    
-
+    else if(polygon->type == VERTEX_BUFFER_ELEMENTS){
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygon->buffer);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, polygon->length, polygon->data, GL_STATIC_DRAW);
+    }
     free(polygon->data);
-    free(elements);
+    polygon->data = NULL;
   }
 }
 struct _texture_handle {
   GLuint tex;
 };
 texture * get_default_tex();
+
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   //  return;
 
@@ -124,7 +125,7 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   blit3d_polygon_update(polygon);
 
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygon->element_buffer);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygon->element_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
   var shader = ctx->shader;
   var c = ctx->color;
@@ -135,11 +136,61 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   //glVertexAttribPointer(shader.tex_coord_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
   //printf("eRR1: %i %i %i %i\n", glGetError(), polygon->length, polygon->dimensions, polygon->length / polygon->dimensions / 4);
-  glDrawElements(GL_TRIANGLE_STRIP,polygon->length / (polygon->dimensions * 4), GL_UNSIGNED_BYTE, 0);
+  glDrawArrays(GL_TRIANGLE_STRIP,0, polygon->length / (polygon->dimensions * 4));
   //printf("eRR2: %i\n", glGetError());
   
 }
 
+void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
+  if(count == 0)
+    return;
+
+  var tex = ctx->current_texture != NULL ? ctx->current_texture : get_default_tex();
+  //var tex = get_default_tex();
+  glUniform1i(ctx->shader.textured_loc, 1);
+  glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+  int elements_index = -1;
+  for(u32 i = 0; i < count; i++){
+    blit3d_polygon_update(polygons[i]);
+    if(polygons[i]->type == VERTEX_BUFFER_ELEMENTS){
+      elements_index = (int)i; 
+    }
+  }
+
+  if(elements_index != -1)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygons[elements_index]->buffer);
+  
+  u32 j = 0;
+  for(u32 i = 0; i < count; i++){
+    if((int)i == elements_index)
+      continue;
+
+    glBindBuffer(GL_ARRAY_BUFFER, polygons[j]->buffer);
+    glVertexAttribPointer(j, polygons[j]->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
+    j += 1;    
+  }
+
+  var shader = ctx->shader;
+  var c = ctx->color;
+  glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
+  glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
+  if(elements_index != -1){
+    glDrawElements(GL_TRIANGLE_STRIP, polygons[elements_index]->length / (polygons[elements_index]->dimensions * 4), GL_UNSIGNED_BYTE, 0);
+
+    // draw elements here
+  }else{
+    glDrawArrays(GL_TRIANGLE_STRIP,0, polygons[0]->length / (polygons[0]->dimensions * 4));
+  }
+  int err =  glGetError();
+  if(err != 0)
+    printf("eRR2: %i\n", err);
+}
+
+
 void blit3d_color(blit3d_context * ctx, vec4 color){
   ctx->color = color;
+}
+
+void blit3d_bind_texture(blit3d_context * ctx, texture * tex){
+  ctx->current_texture = tex;
 }
