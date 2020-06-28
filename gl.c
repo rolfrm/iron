@@ -203,8 +203,12 @@ image image_from_bitmap(void * bitmap, int width, int height, int channels){
 
 image image_from_file(const char * path){
   int _x = 0, _y = 0, _c = 0;
+  // note, if there are 3 channels or less, only power-of-2 textures are supported.
+  // So images needs to be prepared for rendering otherwise.
+  // this is why, for now, I just force it to be 4 channels always.
+  // for performance another choice should be selected.
   void * imgdata = stbi_load(path, &_x, &_y, &_c, 4);
-  return image_from_bitmap(imgdata, _x, _y, _c);
+  return image_from_bitmap(imgdata, _x, _y, 4);
 }
 
 image image_from_data(void * data, int len){
