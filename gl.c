@@ -525,8 +525,9 @@ void blit_begin(BLIT_MODE _blit_mode){
     GLint viewport[4];
     glGetIntegerv( GL_VIEWPORT, viewport );
     blit_scale(1.0f / (float)viewport[2], -1.0f/ (float)viewport[3]);
+    w = viewport[2];
+    h = viewport[3];
     if(blit_mode & BLIT_MODE_SCREEN_BIT){
-
       blit_translate(-w,-h);
       blit_scale(2,2);
     }
@@ -627,6 +628,7 @@ static blit_framebuffer * current_frame_buffer = {0};
 void blit_create_framebuffer(blit_framebuffer * buf){
   if(buf->channels == 0) buf->channels = 3;
 
+  
   blit_bind_texture(NULL);
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
