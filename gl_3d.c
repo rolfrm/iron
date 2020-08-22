@@ -30,7 +30,6 @@ blit3d_context * blit3d_context_new(){
   blit3d_context * ctx = alloc0(sizeof(ctx[0]));
   blit3d_view(ctx, mat4_identity());
   return ctx;
-
 }
 
 void blit3d_context_initialize(blit3d_context * ctx){
@@ -47,8 +46,7 @@ void blit3d_context_initialize(blit3d_context * ctx){
   glUseProgram(shader.blit_shader);
   glEnableVertexAttribArray(shader.pos_attr);
   glEnableVertexAttribArray(shader.tex_coord_attr);
-  ctx->shader = shader;
-  
+  ctx->shader = shader;  
 }
 
 void blit3d_context_load(blit3d_context * ctx)
@@ -58,15 +56,12 @@ void blit3d_context_load(blit3d_context * ctx)
 
   glUseProgram(ctx->shader.blit_shader);
   glEnableVertexAttribArray(0);
-  //mglEnableVertexAttribArray(1);
 }
 
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix){
 
   ctx->matrix = viewmatrix;
 }
-
-
 
 struct _blit3d_polygon{
   void * data;
@@ -117,15 +112,11 @@ struct _texture_handle {
 texture * get_default_tex();
 
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
-  //  return;
-
   var tex = get_default_tex();
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
 
   blit3d_polygon_update(polygon);
 
-
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygon->element_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
   var shader = ctx->shader;
   var c = ctx->color;
@@ -133,12 +124,8 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   
   glVertexAttribPointer(shader.pos_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
   
-  //glVertexAttribPointer(shader.tex_coord_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
-  //printf("eRR1: %i %i %i %i\n", glGetError(), polygon->length, polygon->dimensions, polygon->length / polygon->dimensions / 4);
   glDrawArrays(GL_TRIANGLE_STRIP,0, polygon->length / (polygon->dimensions * 4));
-  //printf("eRR2: %i\n", glGetError());
-  
 }
 
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
@@ -146,7 +133,6 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     return;
 
   var tex = ctx->current_texture != NULL ? ctx->current_texture : get_default_tex();
-  //var tex = get_default_tex();
   glUniform1i(ctx->shader.textured_loc, 1);
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
   int elements_index = -1;
