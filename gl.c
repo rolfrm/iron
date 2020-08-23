@@ -402,7 +402,7 @@ void gl_texture_image_bind(texture tex, int channel, texture_bind_options option
     access = GL_WRITE_ONLY;
   }
 
-  glBindImageTexture(channel, tex.handle->tex, 0, GL_FALSE, 0, access, tex.handle->format);
+  glBindImageTexture(channel, tex.handle->tex, 0, GL_FALSE, 0, access, GL_RGBA8);
 }
 
 u32 gl_texture_handle(texture tex){
@@ -604,7 +604,6 @@ void blit_begin(BLIT_MODE _blit_mode){
     glUseProgram(shader.blit_shader);
   }
   glUseProgram(shader.blit_shader);
-
   glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
   glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
@@ -633,7 +632,7 @@ void blit_begin(BLIT_MODE _blit_mode){
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  //glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 texture * get_default_tex(){

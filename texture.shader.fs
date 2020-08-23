@@ -11,4 +11,5 @@ void main()
      gl_FragColor = texture2D( _texture, v_tex_coord ) * color;   
    else
      gl_FragColor = color;
+     
 } 

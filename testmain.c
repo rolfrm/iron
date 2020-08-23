@@ -430,7 +430,7 @@ int main(){
   TEST(test_util_hash_table);
   TEST(bench_list_add_test);
   TEST(strtest);
-  TEST(test_mutex);
+  //TEST(test_mutex);
   TEST(test_datastream);
   TEST(test_process);
   //TEST(block_allocator_test);
