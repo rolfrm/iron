@@ -97,7 +97,7 @@ vec2 blit_measure_text(const char * text){
 font * blit_load_font_from_buffer(void * data, float font_size){
   int char_data_count = 100;
   var img = image_new(1024, 1024, 1);
-  img.mode = GRAY_AS_ALPHA;
+  img.mode = IMAGE_MODE_GRAY_AS_ALPHA;
   stbtt_bakedchar * cdata = alloc0(sizeof(cdata[0]) * char_data_count);
   stbtt_BakeFontBitmap(data, 0, font_size, image_data(&img), img.width,img.height, 32,char_data_count, cdata);
   texture tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_LINEAR);

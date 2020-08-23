@@ -197,7 +197,7 @@ image image_from_bitmap(void * bitmap, int width, int height, int channels){
   src.kind = IMAGE_SOURCE_MEMORY;
   src.data = iron_clone(bitmap, width * height * channels);
   
-  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src)};
+  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src), .mode = IMAGE_MODE_NONE};
   return img;  
 }
 
@@ -224,14 +224,23 @@ void * image_data(image * image){
 }
 
 image image_new(int width, int height, int channels){
+  return image_new2(width, height, channels, IMAGE_MODE_NONE);
+}
+image image_new2(int width, int height, int channels, image_mode mode){
 
   image_source src;
   src.kind = IMAGE_SOURCE_MEMORY;
-  src.data = alloc0(width * height * channels);
 
-  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src)};
+  size_t pixel_size = 1;
+  if(mode & IMAGE_MODE_F32)
+    pixel_size = 4;
+  
+  src.data = alloc0(width * height * channels * pixel_size);
+
+  image img = {.width = width, .height = height, .channels = channels, .source = IRON_CLONE(src), .mode = mode};
   return img;
 }
+
 
 void image_delete(image * img){
   if(img->source->data != NULL)
@@ -243,6 +252,7 @@ void image_delete(image * img){
 
 struct _texture_handle {
   GLuint tex;
+  int format;
 };
 
 static u32 gl_tex_interp(TEXTURE_INTERPOLATION interp, bool ismag){
@@ -275,13 +285,28 @@ texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION supe
   return texture;
 }
 
+static int to_f32_enum(int enum_in){
+  switch(enum_in){
+  case GL_RGBA: return GL_RGBA32F;
+  case GL_RGB: return GL_RGB32F;
+  case GL_LUMINANCE_ALPHA:
+  case GL_RG: return GL_RG32F;
+  case GL_LUMINANCE:
+  case GL_R: return GL_R32F;
+  default:
+    ERROR("Unsupported format!");
+    return 0;
+  }
+}
+
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
   int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   int int_format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  
   u8 * data = image_data(image);
   bool delete_data = false;
-  if(image->mode == GRAY_AS_ALPHA && image->channels == 1){
+  if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
     chn[0] = GL_LUMINANCE_ALPHA;
     int_format[0] = GL_LUMINANCE_ALPHA;
     // cannot do swizzle as it is not supported in webgl.
@@ -297,16 +322,22 @@ void texture_load_image(texture * texture, image * image){
       delete_data = true;
     }
   }
+  int type = GL_UNSIGNED_BYTE;
+  if(image->mode & IMAGE_MODE_F32){
+    int_format[image->channels - 1] = to_f32_enum(int_format[image->channels - 1]);
+    type = GL_FLOAT;
+  }
   
   if(data == NULL){
     glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
-		 image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, NULL);
+		 image->width, image->height, 0, chn[image->channels - 1], type, NULL);
   }else{
     glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
-		 image->width, image->height, 0, chn[image->channels - 1], GL_UNSIGNED_BYTE, data);
+		 image->width, image->height, 0, chn[image->channels - 1], type, data);
   }
   texture->width = image->width;
   texture->height = image->height;
+  texture->handle->format = int_format[image->channels - 1];
   if(delete_data)
     dealloc(data);
 }
@@ -327,8 +358,55 @@ texture texture_from_image(image * image){
   return texture_from_image2(image, TEXTURE_INTERPOLATION_BILINEAR);
 }
 
+void texture_to_image(texture * tex, image * image){
+  if(image->height != tex->height || image->width != tex->width){
+    ERROR("Texture and image formats does not match");
+    return;
+  }
+  u8 * data = image_data(image);
+  if(data == NULL){
+    ERROR("Image data not allocated");
+    return;
+  }
+  
+  int format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  
+
+  bool delete_data = false;
+  if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
+    format[0] = GL_LUMINANCE_ALPHA;
+  }
+  int typesize = 1;
+  int type = GL_UNSIGNED_BYTE;
+  if(image->mode & IMAGE_MODE_F32){
+    //format[image->channels - 1] = to_f32_enum(format[image->channels - 1]);
+    type = GL_FLOAT;
+    typesize = 4;
+  }
+  int buffer_size = image->height * image->width * image->channels * typesize;
+  glGetTextureImage(tex->handle->tex, 0,  format[image->channels - 1], type, buffer_size, data);
+}
+
 void gl_texture_bind(texture tex){
   glBindTexture(GL_TEXTURE_2D, tex.handle->tex);
+}
+
+void gl_texture_image_bind(texture tex, int channel, texture_bind_options options){
+
+  int access = 0;
+  if(options == TEXTURE_BIND_READ_WRITE){
+    access = GL_READ_WRITE;
+  }else if(options == TEXTURE_BIND_READ){
+    access = GL_READ_ONLY;
+  }else if(options == TEXTURE_BIND_WRITE){
+    access = GL_WRITE_ONLY;
+  }
+
+  glBindImageTexture(channel, tex.handle->tex, 0, GL_FALSE, 0, access, tex.handle->format);
+}
+
+u32 gl_texture_handle(texture tex){
+  return tex.handle->tex;
 }
 
 
@@ -380,6 +458,17 @@ u32 gl_shader_compile2(const char * vsc, int vlen, const char * fsc, int flen){
   dealloc(buffer1);
   dealloc(buffer2);
   return result;
+}
+
+u32 gl_compile_compute_shader(const char * compute_shader, int compute_shader_len){
+  void * buffer = alloc0(compute_shader_len + 1);
+  memcpy(buffer, compute_shader, compute_shader_len);
+  u32 program = glCreateProgram();
+  u32 vs = compile_shader(GL_COMPUTE_SHADER, buffer);
+  glAttachShader(program, vs);
+  glLinkProgram(program);
+  dealloc(buffer);
+  return program;
 }
 
 u32 create_shader_from_files(const char * vs_path, const char * fs_path){
