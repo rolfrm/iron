@@ -110,6 +110,7 @@ size_t gl_get_events(gl_window_event * event_buffer, size_t max_read);
 
 u32 gl_shader_compile(const char * vertex_src, const char * fragment_src);
 u32 gl_shader_compile2(const char * vertex_src, int vertex_src_len, const char * fragment_src, int fragment_len);
+u32 gl_compile_compute_shader(const char * compute_shader, int compute_shader_len);
 
 
 void get_mouse_position(gl_window * win, int * x, int * y);
@@ -182,8 +183,9 @@ void register_evt(void * win, gl_window_event * _evt, gl_event_known_event_types
 // images
 
 typedef enum{
-  NONE = 0,
-  GRAY_AS_ALPHA = 1
+  IMAGE_MODE_NONE = 0,
+  IMAGE_MODE_GRAY_AS_ALPHA = 1,
+  IMAGE_MODE_F32 = 2
   
 }image_mode;
 
@@ -200,6 +202,7 @@ image image_from_file(const char * path);
 image image_from_data(void * data, int len);
 image image_from_bitmap(void * bitmap, int width, int height, int channels);
 image image_new(int width, int height, int channels);
+image image_new2(int width, int height, int channels, image_mode mode);
 void image_delete(image * image);
 
 // textures
@@ -216,13 +219,21 @@ typedef enum{
   
 }TEXTURE_INTERPOLATION;
 
+typedef enum{
+  TEXTURE_BIND_WRITE = 1,
+  TEXTURE_BIND_READ = 2,
+  TEXTURE_BIND_READ_WRITE = 3,
+  
+}texture_bind_options;
+
 texture texture_from_image(image * image);
 texture texture_from_image2(image * image, TEXTURE_INTERPOLATION interp);
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp);
 void texture_load_image(texture * texture, image * image);
-void texture_download_image(texture * texture, image * image);
+void texture_to_image(texture * tex, image * image);
 void gl_texture_bind(texture tex);
-
+void gl_texture_image_bind(texture tex, int channel, texture_bind_options options);
+u32 gl_texture_handle(texture tex);
 // font
 typedef struct _font font;
 font * blit_load_font_from_buffer(void * data, float font_size);
@@ -236,7 +247,6 @@ typedef enum{
   BLIT_MODE_UNIT = 2,
   BLIT_MODE_SCREEN_BIT = 4,
   BLIT_MODE_PIXEL_SCREEN = 1|BLIT_MODE_SCREEN_BIT,
-  
 }BLIT_MODE;
 
 BLIT_MODE blit_mode_get();

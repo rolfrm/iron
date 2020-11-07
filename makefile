@@ -1,12 +1,14 @@
-OPT = -g1 -O3
+OPT = -g3 -O0
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c , $(SOURCES))
 CC = gcc
 TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L. -L../libconcurrency-read-only/  $(OPT) -Wextra -shared -L/usr/lib/nvidia-384/ -fPIC #setrlimit on linux 
-LIBS= -ldl -lm -lpthread -lGL -lpng -lglfw -lX11
-CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0  -msse4.1 -D_GNU_SOURCE  -fdiagnostics-color -shared -fPIC
+LIBS= -ldl -lm -lpthread -lGL -lpng -lglfw -lX11 
+CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declaration -Wformat=0  -msse4.1 -D_GNU_SOURCE  -fdiagnostics-color
+CFLAGS = $(CFLAGS_BASIC) -shared -fPIC
+
 all: test $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
@@ -26,7 +28,8 @@ duck_img.png.c: duck.png
 
 depend: h-depend
 clean:
-	rm $(OBJECTS) $(TARGET) *.o.depends
+	rm $(OBJECTS) $(TARGET) *.o.depends test libiron.a
+
 -include $(OBJECTS:.o=.o.depends)
 
 test: $(OBJECTS) testmain.c

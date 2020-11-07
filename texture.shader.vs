@@ -10,5 +10,5 @@ void main()
 {
     gl_Position = vec4(vertex_transform * vec3(pos, 1), 1);
     vec3 t = uv_transform * vec3(tex_coord, 1);
-    v_tex_coord = t.xy / t.z;    
+    v_tex_coord = t.xy;// / t.z;    
 }
