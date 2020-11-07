@@ -182,6 +182,7 @@ mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle);
 mat4 mat4_rotate_X(mat4 M, float angle);
 mat4 mat4_rotate_Y(mat4 M, float angle);
 mat4 mat4_rotate_Z(mat4 M, float angle);
+mat4 mat4_rotate_3d_transform(float x, float y, float z, float rx, float ry, float rz)
 mat4 mat4_invert(mat4 M);
 vec3 mat4_orthonormalize(mat4 M);
 mat4 mat4_frustum(float l, float r, float b, float t, float n, float f);
