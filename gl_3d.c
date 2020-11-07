@@ -33,6 +33,14 @@ blit3d_context * blit3d_context_new(){
 
 }
 
+char * blit3d_fragment_shader(){
+  return (char *) texture_3d_shader_vs;
+}
+
+void blit3d_create_program(){
+  glCreateProgram();
+}
+
 void blit3d_context_initialize(blit3d_context * ctx){
   ctx->initialized = true;
   shader_3d shader;

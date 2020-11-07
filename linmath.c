@@ -827,6 +827,17 @@ mat4 mat4_look_at(vec3 eye, vec3 center, vec3 up)
   return mat4_translate_in_place(m, -eye.data[0], -eye.data[1], -eye.data[2]);
 }
 
+mat4 mat4_rotate_3d_transform(float x, float y, float z, float rx, float ry, float rz){
+  var m = mat4_identity();
+  m.data[3][0] = x;
+  m.data[3][1] = y;
+  m.data[3][2] = z;
+  m = mat4_rotate_X(m, rx);
+  m = mat4_rotate_Y(m, ry);
+  m = mat4_rotate_Z(m, rz);
+  return m;
+}
+
 quat quat_identity(){
   return (quat) {.x = 0.f, .y = 0.f, .z = 0.f, .w = 1.f};
 }

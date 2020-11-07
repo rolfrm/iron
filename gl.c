@@ -474,7 +474,7 @@ void blit_bind_texture(texture * tex){
   }  
 }
 void blit_begin(BLIT_MODE _blit_mode){
-  //return;
+
   blit_mode = _blit_mode;
   if(shader.blit_shader == 0){
     glGenBuffers(1, &quadbuffer);
@@ -682,3 +682,6 @@ void blit_blit_framebuffer(blit_framebuffer * buf){
   blit(0, 0, &tex);
 }
 
+void blit_clear(){
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+}

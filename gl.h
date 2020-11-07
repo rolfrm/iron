@@ -51,6 +51,7 @@ bool gl_window_get_btn_state(gl_window * win, int btn);
 bool gl_window_get_key_state(gl_window * win, int key);
 const char * gl_window_get_clipboard(gl_window * win);
 void gl_window_set_title(gl_window * win, const char * title);
+void gl_terminate();
 typedef enum{
   EVT_MOUSE_MOVE,
   EVT_MOUSE_LEAVE,
@@ -239,7 +240,7 @@ typedef enum{
 }BLIT_MODE;
 
 BLIT_MODE blit_mode_get();
-
+void blit_clear();
 void blit_begin(BLIT_MODE blit_mode);
 void blit_end();
 void blit_translate(float x, float y);
