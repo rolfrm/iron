@@ -473,9 +473,18 @@ int main(){
   blit_set_current_font(fnt0);
   const char * fontfile = "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"; //DejaVuSansMono
   var fnt = blit_load_font_file(fontfile, 32);
-
+  gl_window_event events[10];
   for(int i = 0; i <30000 ;i++){
     gl_window_make_current(w);
+    size_t event_count = gl_get_events(events, array_count(events));
+    for(size_t i = 0; i < event_count; i++){
+      printf("evt: %i\n", events[i].type);
+      switch(events[i].type){
+      case EVT_KEY_DOWN:
+	printf("Key: %i\n", events[i].key.scancode);
+	break;
+      }
+    }
 
     blit_begin(BLIT_MODE_UNIT);
     blit_rectangle(-1,-1,2,2, 1,1,1,1);
@@ -501,12 +510,21 @@ int main(){
     blit_begin(BLIT_MODE_PIXEL_SCREEN);
     
     blit_color(0.2,0.9,0.2,1.0);
-    char * lines[] = {"It's a", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!"};//, "", "I Dont give ", "  a duck!"};
+    char * lines1[] = {"It's a", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!", "  DUCK!", 0};//, "", "I Dont give ", "  a duck!"};
+    char * lines2[] =  {"It's a", "  DUCK!", "  DUCK!", "  DUCK!", "I Dont give ", "  a duck!", 0};
+    char ** lines = lines1;
+    
+    bool a = gl_window_get_key_state(w, KEY_LEFT);
+    if(a){
+      lines = lines2;
+    }
+
+
     float offsety = 0;
     blit_set_current_font(NULL);
     blit_set_current_font(fnt);
-    for(int i = 0; i < array_count(lines); i++){
-      
+    for(int i = 0; i < 100; i++){
+      if(lines[i] == 0) break;
       if(i > 2){
 	blit_color(0.0,0.0,0.0,1.0);
       }
@@ -515,7 +533,6 @@ int main(){
       blit_text(lines[i]);
       blit_pop();
       offsety += blit_measure_text(lines[i]).y;
-
     }
 
     
@@ -523,7 +540,7 @@ int main(){
     //blit_bind_texture(&checkered_texture);
     //blit_quad();
     //vec2 meas_text = measure_text("Test", 4);
-    
+
     gl_window_poll_events();
     gl_window_swap(w);
     iron_usleep(100000/3);

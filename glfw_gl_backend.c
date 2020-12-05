@@ -5,7 +5,7 @@
 
 void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
-  gl_window_event evt = {.key = {.key = key , .ischar = false}};
+  gl_window_event evt = {.key = {.key = key ,.scancode = scancode, .ischar = false}};
 
   int keytype;
   switch(action){
