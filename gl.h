@@ -300,6 +300,8 @@ typedef struct _blit3d_polygon blit3d_polygon;
 typedef blit3d_polygon vertex_buffer;
 blit3d_polygon * blit3d_polygon_new();
 void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size);
+void blit3d_polygon_destroy(blit3d_polygon ** polygon);
+  
 void blit3d_polygon_configure(blit3d_polygon * polygon, int dimensions);
 
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);

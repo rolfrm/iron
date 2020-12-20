@@ -451,7 +451,17 @@ int main(){
   var poly1 = blit3d_polygon_new();
   float vertexes[] = {0,0, 0, 1,0,0, 0,1,0};
   blit3d_polygon_load_data(poly1, vertexes, sizeof(vertexes));
-  blit3d_polygon_configure(poly1, 3);    
+  blit3d_polygon_configure(poly1, 3);
+
+  {
+    var poly1 = blit3d_polygon_new();
+    float vertexes[] = {0,0, 0, 1,0,0, 0,1,0};
+    blit3d_polygon_load_data(poly1, vertexes, sizeof(vertexes));
+    blit3d_polygon_configure(poly1, 3);
+    blit3d_polygon_destroy(&poly1);
+  }
+
+  
   blit_create_framebuffer(&fbuf);
   blit_use_framebuffer(&fbuf);
   blit_begin(BLIT_MODE_UNIT);

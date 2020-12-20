@@ -86,10 +86,22 @@ blit3d_polygon * blit3d_polygon_new(){
   return pol;
 }
 
+void blit3d_polygon_destroy(blit3d_polygon ** polygon){
+  var p = *polygon;
+  if(p->data != NULL)
+    free(p->data);
+  if(p->buffer != 0)
+    glDeleteBuffers(1, &p->buffer);
+  free(p);
+  *polygon = NULL;
+}
+
+
 void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size){
   polygon->data = iron_clone(data, size);
   polygon->length = size;
   polygon->changed = true;
+ 
 }
 
 void blit3d_polygon_configure(blit3d_polygon * polygon, int dimensions){
