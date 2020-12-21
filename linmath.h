@@ -148,7 +148,14 @@ LINMATH_H_DEFINE_VECI(2)
 LINMATH_H_DEFINE_VECI(3)
 LINMATH_H_DEFINE_VECI(4)
 
+extern const vec2i vec2i_zero;
+extern const vec2i vec2i_one;
+extern const vec3i vec3i_zero;
+extern const vec3i vec3i_one;
+extern const vec4i vec4i_zero;
+extern const vec4i vec4i_one;
 
+// matrices
 
 
 typedef struct{

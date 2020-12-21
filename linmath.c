@@ -296,6 +296,15 @@ _LINMATH_H_DEFINE_VECI(3)
 _LINMATH_H_DEFINE_VECI(4)
 
 
+const vec2i vec2i_zero = {0};
+const vec2i vec2i_one = {.x = 1, .y = 1};
+const vec3i vec3i_zero = {0};
+const vec3i vec3i_one = {.x = 1, .y = 1, .z = 1};
+const vec4i vec4i_zero = {0};
+const vec4i vec4i_one = {.x = 1, .y = 1, .z = 1, .w = 1};
+
+
+
 // mat2
 
 mat2 mat2_identity(){
