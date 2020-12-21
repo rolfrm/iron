@@ -7,6 +7,9 @@
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include <stdint.h>
+
+#include "types.h"
 #include "linmath.h"
 #include <stdint.h>
 #include "types.h"
@@ -252,6 +255,46 @@ const vec4 vec4_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f
 const vec4 vec4_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 0.0f};
 const vec4 vec4_half = {.x = 0.5f, .y = 0.5f, .z = 0.5f, .w = 0.5f};
 const vec4 vec4_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f, .w = 1.0f};
+
+//integer vecs
+
+#define _LINMATH_H_OPI(n,name, op)					\
+  prefix vec##n##i vec##n##i_##name (vec##n##i a, vec##n##i const b){	\
+    for(int i = 0; i < n; i++) a.data[i] = a.data[i] op b.data[i];	\
+  return a;								\
+}
+
+#define _LINMATH_H_DEFINE_VECI(n)					\
+  _LINMATH_H_OPI(n,add,+)						\
+  _LINMATH_H_OPI(n,sub,-)						\
+  _LINMATH_H_OPI(n,mul,*)						\
+  _LINMATH_H_OPI(n,div,/)						\
+  prefix vec##n##i vec##n##i_scale(vec##n##i v, i32 s)			\
+  {									\
+  for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \
+    return v;								\
+  }									\
+prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)			\
+  {									\
+    float p = 0.0f;							\
+    for(int i=0; i<n; i++)						\
+      p += b.data[i]*a.data[i];						\
+    return p;								\
+  }									\
+  prefix i32 vec##n##i_sqlen(vec##n##i v)					\
+  {									\
+    return vec##n##i_mul_inner(v,v);					\
+  }									\
+  									\
+  prefix bool vec##n##i_compare(vec##n##i v1, vec##n##i v2){		\
+    for(int i = 0; i < n; i++) if(v1.data[i] != v2 .data[i]) return false; \
+    return true;							\
+  }  									
+
+_LINMATH_H_DEFINE_VECI(2)
+_LINMATH_H_DEFINE_VECI(3)
+_LINMATH_H_DEFINE_VECI(4)
+
 
 // mat2
 
@@ -1020,6 +1063,7 @@ void vec2_print(vec2 v){
 #include "test.h"
 #include "log.h"
 bool linmath_test(){
+  logd("LINMATH TEST\n");
   { // Test initializers
     vec4 tst = {.xyz = {.x = 1, .y = 2, .z = 3}};
     for(int i = 0; i < 3; i++)
@@ -1033,6 +1077,14 @@ bool linmath_test(){
 	TEST_ASSERT(tst.data[i] == i + 1);
     }
   }
+
+  vec4i a = {.x = 1, .y = 2, .z = 3, .w = 4};
+  vec4i b = {.x = 2, .y =2, .z = 2, .w = 2};
+  vec4i c = vec4i_add(a, b);
+  vec4i d = {.x = 4, .y = 5, .z = 6, .w = 7};
+  vec4i e = vec4i_sub(c, d);
+  ASSERT(e.x == -1);
+  ASSERT(vec4i_compare(e, (vec4i){.x = -1, .y = -1, .z = -1, .w = -1}));
   //logd("TAN: %f\n", 1.0f / tanf(3.14 * 0.5 * 0.5));
   //return TEST_FAIL;
   return TEST_SUCCESS;

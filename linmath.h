@@ -23,7 +23,6 @@ typedef struct{
     float data[3];
     vec2 xy;
   };
-
 }vec3;
 
 typedef struct{
@@ -99,6 +98,58 @@ extern const vec4 vec4_one;
 bool vec3_eq(vec3 a, vec3 b);
 vec4 vec4_mul_cross(vec4 a, vec4 b);
 vec4 vec4_reflect(vec4 v, vec4 n);
+
+typedef struct{
+  union {
+    struct{
+      i32 x, y;
+    };
+    i32 data[2];
+  };
+}vec2i;
+
+typedef struct{
+  union {
+    struct{
+      i32 x, y, z;
+    };
+    i32 data[3];
+    vec2i xy;
+  };
+}vec3i;
+
+typedef struct{
+  union {
+    struct{
+      i32 x, y, z, w;
+    };
+    i32 data[4];
+    vec3i xyz;
+    vec2i xy;
+  };
+}vec4i;
+
+#define LINMATH_H_OPI(n,name, op)			\
+  vec##n##i vec##n##i_##name (vec##n##i a, vec##n##i const b);
+
+#define LINMATH_H_DEFINE_VECI(n)					\
+  LINMATH_H_OPI(n,add,+)						\
+  LINMATH_H_OPI(n,sub,-)						\
+  LINMATH_H_OPI(n,mul,*)						\
+  LINMATH_H_OPI(n,div,/)						\
+  vec##n##i vec##n##i_scale(vec##n##i v, i32 s);			\
+  i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b);			\
+  i32 vec##n##i_sqlen(vec##n##i v);				\
+  float vec##n##i_len(vec##n##i v);					\
+  vec##n vec##n##i_normalize(vec##n##i v);				\
+  bool vec##n##i_compare(vec##n##i v1, vec##n##i v2);	\
+  
+LINMATH_H_DEFINE_VECI(2)
+LINMATH_H_DEFINE_VECI(3)
+LINMATH_H_DEFINE_VECI(4)
+
+
+
 
 typedef struct{
   union{
@@ -213,4 +264,8 @@ void vec4_print(vec4 v);
 void vec3_print(vec3 v);
 void vec2_print(vec2 v);
 
+
+
+
 bool linmath_test();
+

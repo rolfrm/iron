@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "linmath.h"
 #include "types.h"
+#include "linmath.h"
 #include "math.h"
 #include "hashtable.h"
 #include "utils.h"

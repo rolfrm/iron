@@ -433,6 +433,7 @@ int main(){
   //TEST(test_mutex);
   TEST(test_datastream);
   TEST(test_process);
+  TEST(linmath_test);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 
