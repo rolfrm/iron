@@ -155,6 +155,13 @@ extern const vec3i vec3i_one;
 extern const vec4i vec4i_zero;
 extern const vec4i vec4i_one;
 
+vec2i vec2i_new(i32 x, i32 y);
+vec3i vec3i_new(i32 x, i32 y, i32 z);
+vec4i vec4i_new(i32 x, i32 y, i32 z, i32 w);
+vec2i vec2i_new1(i32 x);
+vec3i vec3i_new1(i32 x);
+vec4i vec4i_new1(i32 x);
+
 // matrices
 
 

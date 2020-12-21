@@ -304,6 +304,26 @@ const vec4i vec4i_zero = {0};
 const vec4i vec4i_one = {.x = 1, .y = 1, .z = 1, .w = 1};
 
 
+vec2i vec2i_new(i32 x, i32 y){
+  return (vec2i){.x = x, .y = y};
+}
+vec3i vec3i_new(i32 x, i32 y, i32 z){
+  return (vec3i){.x = x, .y = y, .z = z};
+}
+vec4i vec4i_new(i32 x, i32 y, i32 z, i32 w){
+  return (vec4i){.x = x, .y = y, .z = z, .w = w};
+}
+vec2i vec2i_new1(i32 x){
+  return (vec2i){.x = x, .y = x};
+}
+vec3i vec3i_new1(i32 x){
+  return (vec3i){.x = x, .y = x, .z = x};
+}
+vec4i vec4i_new1(i32 x){
+  return (vec4i){.x = x, .y = x, .z = x, .w = x};
+}
+
+
 
 // mat2
 
