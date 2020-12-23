@@ -20,6 +20,9 @@
 #define let __auto_type const
 
 #define WARN_UNUSED __attribute__((warn_unused_result))
+#define FALLTHROUGH  __attribute__ ((fallthrough));
+    
+      
 
 #define MAX(a,b) \
    ({ auto _a = (a); \

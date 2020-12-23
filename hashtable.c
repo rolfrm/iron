@@ -5,209 +5,219 @@
 
 #include "utils.h"
 #include "types.h"
+#include "mem.h"
 #include "hashtable.h"
+#include "log.h"
 
-u32 djb2_hash(void  * _str)
+u32 djb2_hash(char  * str, size_t count)
 {
-  char * str = _str;
   u32 hash = 5381;
-  int c;
-  while ((c = *str++))
+  for(size_t i = 0; i < count; i++){
+    let c = str[i];
     hash = ((hash << 5) + hash) + c;
+  }
   return hash;
 }
 
-//A Fast, Minimal Memory, Consistent Hash Algorithm
-// John Lamping, Eric Veach
-i32 jump_consistent_hash(u64 key, i32 num_buckets){
-  i64 b = -1, j = 0;
-  while(j < num_buckets){
-    b = j;      
-    key = key * 2862933555777941757ULL + 1;
-    double v1 = 1LL << 31;
-    double v2 = (key >> 33) + 1;
-    j = (b + 1) * v1 / (v2 );
-  }
-  return b;
-}
+typedef enum {
+	      HT_FREE = 0,
+	      HT_OCCUPIED = 1,
+	      HT_FREED = 2
+}ht_state;
 
-i32 jump_consistent_hash_raw(void * data, size_t length, i32 num_buckets){
-  i32 hash = 0;
-  u64 * keys = (u64 *) data;
-  while(length > sizeof(u64))
-    {
-      hash ^= jump_consistent_hash(*keys,num_buckets);
-      keys++;
-      length -=8;
-    }
-  u64 val = 0;
-  memcpy(&val,keys,length);
-  hash ^= jump_consistent_hash(val,num_buckets);
-  return hash;  
-}
- 
-i32 jump_consistent_hash_str(char * str, i32 num_buckets){
-  return jump_consistent_hash_raw(str,strlen(str),num_buckets);
-}
-
-
-
+typedef struct _hash_table hash_table;
 struct _hash_table{
-  i32 (* hf )(void * key_data, void * userdata);
+  // this is allowed to be null
+  i32 (* hf )(void * key_data, size_t len, void * userdata);
+  // this is allowed to be null
   void * userdata;
-  bool (* compare ) (void * k1, void * k2, void * userdata);
-  //an array of arrays
-  void ** key_buckets;
-  void ** elem_buckets;
-  //the number of elems in each bucket
-  u32 * bucket_size;
-  u32 buckets;
+  // this is allowed to be null
+  bool (* compare ) (void * k1, void * k2, size_t size, void * userdata);
+  
+  void * keys;
+  void * elems;
+  // todo: test performance of having this.
+  // alt: have just 8bits of hash value
+  // other alt: just do comparison
+  
+  int * hashes;
+  ht_state * occupied;
+  u32 capacity;
+  u32 count;
   u32 key_size;
   u32 elem_size;
 };
 
-i32 default_hash(void * keydata, hash_table * ht){
-  return jump_consistent_hash_raw(keydata, ht->key_size, ht->buckets);
+i32 default_hash(void * data, size_t size, void * userdata){
+  UNUSED(userdata);
+  return (i32) djb2_hash(data, size);
 }
 
-bool default_compare(void * key_a, void * key_b, hash_table * ht){
-  return 0 == memcmp(key_a, key_b, ht->key_size);
+bool default_compare(void * key_a, void * key_b, size_t size, void * userdata){
+  UNUSED(userdata);
+  return 0 == memcmp(key_a, key_b, size);
 }
 
-// a simple but not super efficient hash table implementation.
-hash_table * ht_create(u32 buckets, u32 key_size, u32 elem_size){
-  hash_table * ht = malloc(sizeof(hash_table));
-  memset(ht, 0, sizeof(hash_table));
-  ht->buckets = buckets;
+hash_table * ht_create(u32 capacity, u32 key_size, u32 elem_size){
+  hash_table * ht = alloc0(sizeof(*ht));
+  ht->capacity = capacity;
   ht->key_size = key_size;
   ht->elem_size = elem_size;
-  ht->hf = (i32 (*)(void* ,void*))default_hash;
-  ht->compare = (bool (*)(void*, void*, void*))default_compare;
   ht->userdata = ht;
-  ht->key_buckets = malloc(ht->buckets * sizeof(void *));
-  ht->elem_buckets = malloc(ht->buckets * sizeof(void *));
-  ht->bucket_size = malloc(ht->buckets * sizeof(u32));
-  memset(ht->key_buckets,0,ht->buckets * sizeof(void *));
-  memset(ht->elem_buckets,0,ht->buckets * sizeof(void *));
-  memset(ht->bucket_size,0,ht->buckets * sizeof(u32));
+  ht->keys = alloc(capacity * key_size);
+  ht->elems = alloc(capacity * elem_size);
+  ht->occupied = alloc0(capacity * sizeof(ht_state));
+  ht->hashes = alloc(capacity * sizeof(int));
   return ht;
 }
 
-void ht_set_hash_fcn(hash_table * ht,
-		     i32 (* hf)(void * key_data, void * userdata),
-		     bool (* key_compare)(void * key_a, void * key_b, void * userdata), 
-		     void * userdata){
-  ht->hf = hf;
-  ht->compare = key_compare;
-  ht->userdata = userdata;
+void ht_free(hash_table *ht){
+
+  free(ht->keys);
+  free(ht->elems);
+  free(ht->occupied);
+  free(ht->hashes);
+  memset(ht, 0, sizeof(ht[0]));
+  free(ht);
 }
 
-void * ht_lookup(hash_table * ht, void * key){
-  i32 hash = ht->hf(key,ht->userdata);
-  u32 elem_size = ht->elem_size;
-  u32 key_size = ht->key_size;
-  void * keys = ht->key_buckets[hash];
-  void * elem = ht->elem_buckets[hash];
-  int aloc = ht->bucket_size[hash];
-  for(int i = 0; i < aloc;i++){
-    if(ht->compare(keys + key_size * i, key, ht->userdata)){
-      return elem + i * elem_size;
+bool ht_insert(hash_table * ht, void * key, void * nelem);
+void ht_grow(hash_table * ht){
+  hash_table * ht2 = ht_create(ht->capacity * 2, ht->key_size, ht->elem_size);
+
+  for(u32 i = 0; i < ht->capacity; i++){
+    if(ht->occupied[i] == HT_OCCUPIED){
+      ht_insert(ht2, ht->keys + i * ht->key_size, ht->elems + i * ht->elem_size);
     }
   }
-  return NULL;
+  SWAP(*ht2, *ht);
+  ht_free(ht2);
 }
-#include <stdio.h>
-void ht_insert(hash_table * ht, void * key, void * nelem){
-  i32 hash = ht->hf(key,ht->userdata);
-  u32 elem_size = ht->elem_size;
-  u32 key_size = ht->key_size;
-  void * keys = ht->key_buckets[hash];
-  void * elem = ht->elem_buckets[hash];
-  int aloc = ht->bucket_size[hash];
 
-  for(int i = 0; i < aloc; i++){
-    if(ht->compare(keys + key_size * i,key,ht->userdata)){
-      memcpy(elem + elem_size * i, nelem,elem_size);
-      return;
+i64 ht_find_free(hash_table * ht, void * key, i64 * freed){
+  let key_size = ht->key_size;
+  let hash = ht->hf == NULL ? (i32)djb2_hash(key, key_size) : ht->hf(key, key_size, ht->userdata); 
+  let h2 = hash % ht->capacity;
+  let capacity = ht->capacity;
+  let compare = ht->compare;
+
+  // find a free slot using linear probing.
+  for(i64 _i = 0, i = h2; _i < capacity; _i++, i++){
+    if(i >= capacity) i = 0;
+
+    switch(ht->occupied[i]){
+    case HT_FREE:
+      return i;
+    case HT_FREED:
+      if(freed != NULL){
+	*freed = i;
+	freed = NULL;
+      }
+      FALLTHROUGH;
+    case HT_OCCUPIED:
+      {
+	let thiskey = ht->keys + i * key_size;
+	if(ht->hashes[i] == hash){
+	  if(compare != NULL && compare(key, thiskey, key_size, ht->userdata)){
+	    return i;
+	  }else if(memcmp(thiskey, key, key_size) == 0){
+	    return i;
+	  }
+	}
+      }
     }
   }
-  //alloc new room
-  keys = realloc(keys, (aloc + 1) * key_size);
-  elem = realloc(elem, (aloc + 1) * elem_size);
-  memcpy(elem + elem_size * aloc, nelem,elem_size);
-  memcpy(keys + key_size * aloc, key,key_size);
-  ht->bucket_size[hash] = aloc + 1;
-  ht->key_buckets[hash] = keys;
-  ht->elem_buckets[hash] = elem;
+  return -1;	 
 }
 
-void ht_remove(hash_table * ht, void * key){
-  i32 hash = ht->hf(key,ht->userdata);
-  u32 elem_size = ht->elem_size;
-  u32 key_size = ht->key_size;
-  void * keys = ht->key_buckets[hash];
-  void * elem = ht->elem_buckets[hash];
-  int aloc = ht->bucket_size[hash];  
-  for(int i = 0; i < aloc; i++){
-    if(ht->compare(keys + key_size * i,key,ht->userdata)){
-      memmove(elem + elem_size * i, elem + elem_size * (i + 1), elem_size * MAX(0, aloc - i - 1));
-      memmove(keys + key_size * i, keys + key_size * (i + 1), key_size * MAX(0, aloc - i - 1));
-      keys = realloc(keys, (aloc - 1) * key_size);
-      elem = realloc(elem, (aloc - 1) * elem_size);
-      aloc -= 1;
-      
-      ht->key_buckets[hash] = keys;
-      ht->elem_buckets[hash] = elem;
-      ht->bucket_size[hash] = aloc;
-      return;
-    }
-  }
-}
-
-/*typedef struct {
-  u64 * keys;
-  u64 * values;
-  u64 cnt;
-}dod_hash_cell;
-
-struct _dod_hash_table{
-  dod_hash_cell * cells;
-  size_t n_cells;
-  size_t elem_size;
-  size_t key_size;
-};
-const size_t hash_size = sizeof(i32);
-i32 calc_hash(void * item, size_t item_size){
-  UNUSED(item);
-  UNUSED(item_size);
-  return 0;
-}
-static void calc_hashes(void * items_to_hash, void * out_buffer, size_t cnt, size_t key_size){
-  for(int i = 0; i < cnt; i++){
-    void * item_ptr = items_to_hash + key_size * i;
-    i32 * out_ptr = out_buffer + i * hash_size;
-    *out_ptr = calc_hash(item_ptr, key_size);
-  }
-}
-
-dod_hash_table * dod_ht_create(size_t n_cells, size_t key_size, size_t elem_size){
-  dod_hash_table t;
-  t.cells = alloc0(n_cells * sizeof(dod_hash_cell));
-  t.n_cells = n_cells;
-  t.elem_size = elem_size;
-  t.key_size = key_size;
-  return clone(&t, sizeof(dod_hash_table));
-}
-
-void dod_ht_insert(dod_hash_table * t, void * k, void * v, size_t cnt){
-  __thread__ static void * key_buffer = NULL;
-  __thread__ static size_t key_buffer_length = 0;
-  if(key_buffer_length < cnt){
-    key_buffer = realloc(key_buffer, cnt * t->key_size);
-    key_buffer_length = cnt;
-  }
-  calc_hashes(k, key_buffer, cnt, t->key_size);
-  // now i need to sort 'k' 'v' and key_buffer by key_buffer;
+bool ht_insert(hash_table * ht, void * key, void * nelem){
   
+  if(ht->count * 2 > ht->capacity)
+    ht_grow(ht);
+  i64 freed = -1;
+  i64 index = ht_find_free(ht, key, &freed);
+  let elem_size = ht->elem_size;
+  let key_size = ht->key_size;
+
+  let hash = ht->hf == NULL ? (i32)djb2_hash(key, key_size) : ht->hf(key, key_size, ht->userdata); 
+
+  // an unoccupied index was found.
+  memmove(ht->elems + index * elem_size, nelem, elem_size);
+  if(ht->occupied[index] == HT_FREE || freed != -1){
+    if(freed != -1)
+      index = freed; // reuse a freed bucket
+    else
+      ht->count += 1;
+    memmove(ht->keys + index * key_size, key, key_size);
+    ht->occupied[index] = HT_OCCUPIED;
+    ht->hashes[index] = hash;
+    return true;
+  }
+  return false;
 }
-*/
+
+bool ht_lookup(hash_table * ht, void *key, void * out_elem){
+  i64 index = ht_find_free(ht, key, NULL);
+  let elem_size = ht->elem_size;
+  if(ht->occupied[index] == HT_OCCUPIED){
+    if(out_elem != NULL)
+      memcpy(out_elem, ht->elems + index * elem_size, elem_size);
+    return true;
+  }
+  return false;
+}
+
+bool ht_remove(hash_table * ht, void * key){
+  i64 index = ht_find_free(ht, key, NULL);
+  if(ht->occupied[index] == HT_OCCUPIED){
+    ht->occupied[index] = HT_FREED;
+    return true;
+  }
+  return false;
+}
+
+bool ht2_test(){
+
+
+  hash_table * ht2 = ht_create(8, 4, 4);
+  int values[] = {1,2,3,1230,32,55,44,33,22,11,111,112,113,114};
+  u32 i2 = 2;
+  ASSERT(ht_insert(ht2, &values[0], &i2));
+  i2 = 0;
+  ASSERT(ht_lookup(ht2, &values[0], &i2));
+  ASSERT(i2 == 2);
+  
+  for(u32 i = 0; i < array_count(values); i++){
+    ht_insert(ht2, &values[i], &i);
+    u32 i2 = 0;
+    bool found = ht_lookup(ht2, &values[i], &i2);
+    ASSERT(found);
+    ASSERT(i2 == i)
+      }
+  for(u32 i = 0; i < array_count(values); i++){
+    u32 i2 = 0;
+    bool found = ht_lookup(ht2, &values[i], &i2);
+    ASSERT(found);
+    ASSERT(i2 == i);
+  }
+
+  for(u32 i = 0; i < array_count(values); i+= 2){
+    ASSERT(ht_remove(ht2, &values[i]));
+  }
+  for(u32 i = 0; i < array_count(values); i++){
+    bool found = ht_lookup(ht2, &values[i], NULL);
+    if((i % 2) == 0){
+      ASSERT(!found);
+    }else{
+      ASSERT(found);
+    }
+  }
+  let count1 = ht2->count;
+  for(u32 i = 0; i < array_count(values); i+= 2){
+    ASSERT(ht_insert(ht2, &values[i], &i));
+  }
+  ASSERT(count1 == ht2->count);
+  ASSERT(ht2->count == array_count(values));
+
+  return true;
+}

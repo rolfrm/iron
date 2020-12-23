@@ -18,30 +18,22 @@ bool test_util_hash_table(){
     for(u64 i = 0; i < cnt;i++){
       u64 v = i * 20;
       u64 _i = i;
-      u64 v2 = *(u64 *)ht_lookup(ht,&_i);
+      u64 v2;
+      ASSERT(ht_lookup(ht,&_i, &v2));
       ok &= v == v2; 
     }
 
     for(u64 i = 0; i < cnt;i++){
       ht_remove(ht,&i);
     }
-
   
     for(u64 i = 0; i < cnt;i++){
-      void * k = ht_lookup(ht,&i);
+      void * k = NULL;
+      ASSERT(ht_lookup(ht,&i, &k) == false);
       ok &= k == NULL;
     }
   }
   return ok;
-}
-
-bool test_jump_consistent_hash(){
-  i32 k = jump_consistent_hash(132132, 57);
-  i32 k2 = jump_consistent_hash_str("hello world!!!", 128);
-  u64 d1 = -1;
-  i32 k3 = jump_consistent_hash_raw(&d1,sizeof(d1),128);
-  log("%i %i %i\n",k, k2,k3);
-  return true;
 }
 
 bool test_math_utils(){
@@ -94,7 +86,7 @@ bool test_utils(){
   logd("bigvalue hibig: %i %llu\n", hibit(bigvalue), bigvalue);
   ok &= hibit(1) == 1 && hibit(bigvalue) == 41;
 
-  TEST(test_jump_consistent_hash);
+  //TEST(test_jump_consistent_hash);
   return true;
 }
 
@@ -418,8 +410,10 @@ bool test_process(){
 }
 extern texture * font_tex;
 #include "duck_img.png.c"
+bool ht2_test();
 int main(){
-
+  TEST(ht2_test);
+  
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
@@ -489,7 +483,7 @@ int main(){
     gl_window_make_current(w);
     size_t event_count = gl_get_events(events, array_count(events));
     for(size_t i = 0; i < event_count; i++){
-      printf("evt: %i\n", events[i].type);
+      printf("evt: %luu\n", events[i].type);
       switch(events[i].type){
       case EVT_KEY_DOWN:
 	printf("Key: %i\n", events[i].key.scancode);
