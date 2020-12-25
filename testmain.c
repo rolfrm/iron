@@ -412,6 +412,7 @@ extern texture * font_tex;
 #include "duck_img.png.c"
 bool ht2_test();
 bool ht2_string_test();
+void ht_bench();
 int main(){
   TEST(ht2_test);
   TEST(ht2_string_test);

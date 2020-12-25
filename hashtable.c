@@ -9,7 +9,7 @@
 #include "hashtable.h"
 #include "log.h"
 
-u32 djb2_hash(char  * str, size_t count)
+u32 djb2_hash(const char  * str, size_t count)
 {
   u32 hash = 5381;
   for(size_t i = 0; i < count; i++){
@@ -17,6 +17,26 @@ u32 djb2_hash(char  * str, size_t count)
     hash = ((hash << 5) + hash) + c;
   }
   return hash;
+}
+
+u64 fnv1a_hash(const char * data, size_t count){
+  u64 bias = 0xcbf29ce484222325L;
+  u64 prime = 0x100000001b3;
+  var hash = bias;
+  for(size_t i = 0; i < count; i++){
+    hash = hash ^ data[i];
+    hash = hash * prime;
+  }
+  return hash;
+}
+
+u32 fnv1a_hash2(const char * data, size_t count){
+  return (u32)fnv1a_hash(data, count);
+}
+
+u32 hash1(const char * data, size_t count){
+  return fnv1a_hash2(data, count);
+  //return djb2_hash(data, count);
 }
 
 typedef enum {
@@ -28,19 +48,15 @@ typedef enum {
 typedef struct _hash_table hash_table;
 struct _hash_table{
   // this is allowed to be null
-  i32 (* hf )(void * key_data, void * userdata);
+  i32 (* hf )(const void * key_data, void * userdata);
   // this is allowed to be null
   void * userdata;
   // this is allowed to be null
-  bool (* compare ) (void * k1, void * k2, void * userdata);
+  bool (* compare ) (const void * k1, const void * k2, void * userdata);
   
   void * keys;
   void * elems;
-  // todo: test performance of having this.
-  // alt: have just 8bits of hash value
-  // other alt: just do comparison
-  
-  int * hashes;
+
   ht_state * occupied;
   size_t capacity;
   size_t count;
@@ -48,20 +64,20 @@ struct _hash_table{
   size_t elem_size;
 };
 
-void ht_set_hash(hash_table * ht, i32 (* hash)(void * key,  void * userdata)){
+void ht_set_hash(hash_table * ht, i32 (* hash)(const void * key,  void * userdata)){
   ht->hf = hash;
 }
 
-void ht_set_compare(hash_table * ht, bool (* compare)(void * k1, void * k2, void * userdata)){
+void ht_set_compare(hash_table * ht, bool (* compare)(const void * k1, const void * k2, void * userdata)){
   ht->compare = compare;
 }
 
-i32 default_hash(void * data, size_t size, void * userdata){
+i32 default_hash(const void * data, size_t size, void * userdata){
   UNUSED(userdata);
-  return (i32) djb2_hash(data, size);
+  return (i32) hash1(data, size);
 }
 
-bool default_compare(void * key_a, void * key_b, size_t size, void * userdata){
+bool default_compare(const void * key_a, const void * key_b, size_t size, void * userdata){
   UNUSED(userdata);
   return 0 == memcmp(key_a, key_b, size);
 }
@@ -75,7 +91,6 @@ hash_table * ht_create2(size_t capacity, size_t key_size, size_t elem_size){
   ht->keys = alloc(capacity * key_size);
   ht->elems = alloc(capacity * elem_size);
   ht->occupied = alloc0(capacity * sizeof(ht_state));
-  ht->hashes = alloc(capacity * sizeof(int));
   return ht;
 }
 
@@ -90,12 +105,11 @@ void ht_free(hash_table *ht){
   free(ht->keys);
   free(ht->elems);
   free(ht->occupied);
-  free(ht->hashes);
   memset(ht, 0, sizeof(ht[0]));
   free(ht);
 }
 
-bool ht_insert(hash_table * ht, void * key, void * nelem);
+bool ht_insert(hash_table * ht, const void * key, const void * nelem);
 
 void ht_grow(hash_table * ht){
   var ht2 = ht_create2(ht->capacity * 2, ht->key_size, ht->elem_size);
@@ -109,9 +123,9 @@ void ht_grow(hash_table * ht){
   ht_free(ht2);
 }
 
-i64 ht_find_free(hash_table * ht, void * key, i64 * freed){
+i64 ht_find_free(const hash_table * ht, const void * key, i64 * freed){
   let key_size = ht->key_size;
-  let hash = ht->hf == NULL ? (i32)djb2_hash(key, key_size) : ht->hf(key, ht->userdata); 
+  let hash = ht->hf == NULL ? (i32)hash1(key, key_size) : ht->hf(key, ht->userdata); 
   let h2 = hash % ht->capacity;
   let capacity = ht->capacity;
   let compare = ht->compare;
@@ -132,30 +146,26 @@ i64 ht_find_free(hash_table * ht, void * key, i64 * freed){
     case HT_OCCUPIED:
       {
 	let thiskey = ht->keys + i * key_size;
-	if(ht->hashes[i] == hash){
-	  if(compare != NULL && compare(key, thiskey, ht->userdata)){
-	    return i;
-	  }else if(memcmp(thiskey, key, key_size) == 0){
-	    return i;
-	  }
-	}
+	if(compare != NULL && compare(key, thiskey, ht->userdata)){
+	  return i;
+	}else if(memcmp(thiskey, key, key_size) == 0){
+	  return i;
+	}	
       }
     }
   }
   return -1;	 
 }
 
-bool ht_insert(hash_table * ht, void * key, void * nelem){
-  
+bool ht_insert(hash_table * ht, const void * key, const void * nelem){
+ 
   if(ht->count * 2 > ht->capacity)
     ht_grow(ht);
   i64 freed = -1;
   i64 index = ht_find_free(ht, key, &freed);
   let elem_size = ht->elem_size;
   let key_size = ht->key_size;
-
-  let hash = ht->hf == NULL ? (i32)djb2_hash(key, key_size) : ht->hf(key, ht->userdata); 
-
+  
   // an unoccupied index was found.
   memmove(ht->elems + index * elem_size, nelem, elem_size);
   if(ht->occupied[index] == HT_FREE || freed != -1){
@@ -165,13 +175,12 @@ bool ht_insert(hash_table * ht, void * key, void * nelem){
       ht->count += 1;
     memmove(ht->keys + index * key_size, key, key_size);
     ht->occupied[index] = HT_OCCUPIED;
-    ht->hashes[index] = hash;
     return true;
   }
   return false;
 }
 
-bool ht_lookup(hash_table * ht, void *key, void * out_elem){
+bool ht_lookup(hash_table * ht, const void *key, void * out_elem){
   i64 index = ht_find_free(ht, key, NULL);
   let elem_size = ht->elem_size;
   if(ht->occupied[index] == HT_OCCUPIED){
@@ -182,7 +191,7 @@ bool ht_lookup(hash_table * ht, void *key, void * out_elem){
   return false;
 }
 
-bool ht_remove(hash_table * ht, void * key){
+bool ht_remove(hash_table * ht, const void * key){
   i64 index = ht_find_free(ht, key, NULL);
   if(ht->occupied[index] == HT_OCCUPIED){
     ht->occupied[index] = HT_FREED;
@@ -249,12 +258,12 @@ bool ht2_test(){
   return true;
 }
 
-i32 string_hash(void * key, void * userdata){
+i32 string_hash(const void * key, void * userdata){
   UNUSED(userdata);
   return djb2_hash(key, strlen(key));
 }
 
-bool string_compare(void * key1, void * key2, void * userdata){
+bool string_compare(const void * key1, const void * key2, void * userdata){
   UNUSED(userdata);
   return strcmp(key1, key2) == 0;
 }
@@ -295,4 +304,16 @@ bool ht2_string_test(){
   ASSERT(idx == 0);
 
   return true;
+}
+
+void ht_bench(){
+  size_t x = 0xFFFFFFFFFF0;
+  hash_table * ht = ht_create(8, 8);
+  
+  for(size_t i = 0; i < 10000000; i++){
+    let x2 = i + x;
+    ht_insert(ht, &x2, &i);
+    
+  }
+  
 }
