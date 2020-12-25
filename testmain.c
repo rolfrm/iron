@@ -5,7 +5,7 @@
 #include "stdio.h"
 #include <unistd.h>
 bool test_util_hash_table(){
-  hash_table * ht = ht_create(128,sizeof(u64),sizeof(u64));
+  hash_table * ht = ht_create2(128,sizeof(u64),sizeof(u64));
   u64 cnt = 200;
   bool ok = true;
   for(int j = 0; j < 5; j++){ // a wash
@@ -411,9 +411,10 @@ bool test_process(){
 extern texture * font_tex;
 #include "duck_img.png.c"
 bool ht2_test();
+bool ht2_string_test();
 int main(){
   TEST(ht2_test);
-  
+  TEST(ht2_string_test);
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
