@@ -12,15 +12,15 @@ bool test_util_hash_table(){
 
     for(u64 i = 0; i < cnt;i++){
       u64 v = i * 20;
-      ht_insert(ht,&i,&v);
+      ht_set(ht,&i,&v);
     }
     
     for(u64 i = 0; i < cnt;i++){
       u64 v = i * 20;
       u64 _i = i;
-      u64 v2;
-      ASSERT(ht_lookup(ht,&_i, &v2));
-      ok &= v == v2; 
+      u64 v2 = 0;
+      ASSERT(ht_get(ht,&_i, &v2));
+      ASSERT(v == v2); 
     }
 
     for(u64 i = 0; i < cnt;i++){
@@ -29,11 +29,11 @@ bool test_util_hash_table(){
   
     for(u64 i = 0; i < cnt;i++){
       void * k = NULL;
-      ASSERT(ht_lookup(ht,&i, &k) == false);
-      ok &= k == NULL;
+      ASSERT(ht_get(ht,&i, &k) == false);
+      ASSERT(k == NULL);
     }
   }
-  return ok;
+  return true;
 }
 
 bool test_math_utils(){
@@ -412,10 +412,17 @@ extern texture * font_tex;
 #include "duck_img.png.c"
 bool ht2_test();
 bool ht2_string_test();
-void ht_bench();
+void hash_table_bench();
+void do_bench(){
+  BENCH(hash_table_bench);
+}
 int main(){
+  //do_bench();
+  //return 0;
   TEST(ht2_test);
   TEST(ht2_string_test);
+  return 0;
+  TEST(test_util_hash_table);
   TEST(test_hibit);
   TEST(test_list);
   TEST(test_reallocation);
@@ -423,7 +430,7 @@ int main(){
   TEST(test_math_utils);
   TEST(test_local_expressions);
   TEST(test_utils);
-  TEST(test_util_hash_table);
+  
   TEST(bench_list_add_test);
   TEST(strtest);
   //TEST(test_mutex);

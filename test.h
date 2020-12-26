@@ -10,6 +10,15 @@
 #define TEST_SUCCESS (true)
 #define TEST_FAIL (false)
 
+#define BENCH(fcn) {						\
+    log("Benchmarking '" #fcn "':");				\
+    u64 t1 = timestamp();					\
+    fcn();							\
+    u64 t2 = timestamp();					\
+    log("  %ius\n", t2 - t1);			\
+  }								\
+
+
 const char * get_test_opt(const char * name);
 void set_test_opt(const char ** args, int arg_cnt);
 
