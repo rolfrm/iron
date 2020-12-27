@@ -195,7 +195,7 @@ void x11_poll_events(){
     if(keytype){
       var h = get_handle_x11_win(win);
 
-      int sym = XKeycodeToKeysym(display, event.xkey.keycode, 0);
+      int sym = 0;//XKeycodeToKeysym(display, event.xkey.keycode, 0);
       
       gl_window_event evt = {.key = {.key = x11_to_glfw_key(sym) , .ischar = false} };
       register_evt(h, &evt, keytype);

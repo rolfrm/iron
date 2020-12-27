@@ -314,7 +314,7 @@ void texture_load_image(texture * texture, image * image){
     if(data != NULL){
       int pixels = image->width * image->height;
       u8 * newdata = alloc0(2 * pixels);
-      for(u32 i = 0; i < pixels; i++){
+      for(int i = 0; i < pixels; i++){
 	newdata[i * 2] = 0xFF;
 	newdata[i * 2 + 1] = data[i];
       }
@@ -372,7 +372,6 @@ void texture_to_image(texture * tex, image * image){
   int format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   
 
-  bool delete_data = false;
   if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
     format[0] = GL_LUMINANCE_ALPHA;
   }
@@ -489,6 +488,7 @@ MessageCallback( GLenum source,
                  const GLchar* message,
                  const void* userParam )
 {
+  UNUSED(source, type, id, length, userParam);
   if(type == GL_DEBUG_TYPE_ERROR)
     ERROR("GL ERROR: %i %i %s\n", severity, type, message);
   

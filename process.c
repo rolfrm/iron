@@ -24,7 +24,7 @@ int iron_process_run(const char * program, const char ** args, iron_process * ou
   // [0] is read
   // [1] is write
   int out = pipe2(pipe_in, O_CLOEXEC);
-  
+  UNUSED(out);
   int pid = fork();
   if(pid == 0){
     dup2(pipe_in[1], STDOUT_FILENO);

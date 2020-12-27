@@ -4,7 +4,14 @@
 #define array_element_size(array) sizeof(array[0])
 #define array_count(array) (sizeof(array)/array_element_size(array))
 
-#define UNUSED(x) (void)(x)
+
+#define UNUSED1(x) (void)(x)
+#define UNUSED2(x,y) UNUSED1(x);UNUSED1(y);
+#define UNUSED3(x,y,z) UNUSED2(x,y);UNUSED1(z);
+#define UNUSED4(x,y,z,w) UNUSED2(x,y);UNUSED2(z,w);
+#define UNUSED5(x,y,z,w,v) UNUSED2(x,y);UNUSED2(z,w);UNUSED1(v);
+#define GET_MACRO(_1, _2, _3, _4, _5, NAME,...) NAME
+#define UNUSED(...) GET_MACRO(__VA_ARGS__, UNUSED5, UNUSED4, UNUSED3, UNUSED2, UNUSED1, ...)(__VA_ARGS__)
 
 #ifdef USE_VALGRIND
 #include <valgrind/memcheck.h>
