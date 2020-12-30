@@ -417,11 +417,10 @@ void do_bench(){
   BENCH(hash_table_bench);
 }
 int main(){
-  //do_bench();
-  //return 0;
+  
   TEST(ht2_test);
   TEST(ht2_string_test);
-  return 0;
+  
   TEST(test_util_hash_table);
   TEST(test_hibit);
   TEST(test_list);

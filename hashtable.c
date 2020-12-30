@@ -68,8 +68,7 @@ u32 hash1(const char * data, size_t count){
 
 typedef enum {
 	      HT_FREE = 0,
-	      HT_OCCUPIED = 1,
-	      HT_FREED = 2
+	      HT_OCCUPIED = 1
 }ht_state;
 
 typedef struct _hash_table hash_table;
@@ -83,10 +82,11 @@ struct _hash_table{
   
   void * keys;
   void * elems;
-
   ht_state * occupied;
+
   size_t capacity;
   size_t count;
+  
   size_t key_size;
   size_t elem_size;
 };
@@ -122,13 +122,11 @@ hash_table * ht_create2(size_t capacity, size_t key_size, size_t elem_size){
 }
 
 hash_table * ht_create(size_t key_size, size_t elem_size){
-  
   return ht_create2(8, key_size, elem_size);
 }
 
 
 void ht_free(hash_table *ht){
-
   free(ht->keys);
   free(ht->elems);
   free(ht->occupied);
@@ -153,26 +151,19 @@ static void ht_grow(hash_table * ht){
   ht_free(ht2);
 }
 
-static i64 ht_find_free(const hash_table * ht, const void * key, i64 * freed){
+static i64 ht_find_free(const hash_table * ht, const void * key){
   let key_size = ht->key_size;
   let hash = ht->hash == NULL ? (i32)hash1(key, key_size) : ht->hash(key, ht->userdata);
-  let h2 = hash % ht->capacity;
   let capacity = ht->capacity;
   let compare = ht->compare;
 
   // find a free slot using linear probing.
-  for(size_t _i = 0, i = h2; _i < capacity; _i++, i++){
+  for(size_t _i = 0, i = hash % ht->capacity; _i < capacity; _i++, i++){
     if(i >= capacity) i = 0;
-
+    
     switch(ht->occupied[i]){
     case HT_FREE:
       return i;
-    case HT_FREED:
-      if(freed != NULL){
-	*freed = i;
-	freed = NULL;
-      }
-      continue;
     case HT_OCCUPIED:
       {
 	let thiskey = ht->keys + i * key_size;
@@ -188,63 +179,87 @@ static i64 ht_find_free(const hash_table * ht, const void * key, i64 * freed){
 }
 
 bool ht_set(hash_table * ht, const void * key, const void * nelem){
- 
   if(ht->count * 2 > ht->capacity)
     ht_grow(ht);
-  i64 freed = -1;
-  i64 index = ht_find_free(ht, key, &freed);
+  i64 index = ht_find_free(ht, key);
+  ASSERT(index >= 0);
   let elem_size = ht->elem_size;
   let key_size = ht->key_size;
-  
+  memmove(ht->elems + index * elem_size, nelem, elem_size);
   // an unoccupied index was found.
-  if(ht->occupied[index] == HT_FREE || freed != -1){
-    if(freed != -1)
-      index = freed; // reuse a freed bucket
-    else
-      ht->count += 1;
-    memmove(ht->elems + index * elem_size, nelem, elem_size);
+  if(ht->occupied[index] == HT_FREE){
+    ht->count += 1;
     memmove(ht->keys + index * key_size, key, key_size);
     ht->occupied[index] = HT_OCCUPIED;
     return true;
   }
-  ASSERT(ht->occupied[index] == HT_OCCUPIED);
-  memmove(ht->elems + index * elem_size, nelem, elem_size);
   return false;
 }
 
 bool ht_get(hash_table * ht, const void *key, void * out_elem){
-  i64 index = ht_find_free(ht, key, NULL);
+  i64 index = ht_find_free(ht, key);
+  if(ht->occupied[index] == HT_FREE || index == -1)
+    return false;
   let elem_size = ht->elem_size;
-  if(ht->occupied[index] == HT_OCCUPIED){
-    if(out_elem != NULL)
-      memcpy(out_elem, ht->elems + index * elem_size, elem_size);
-    return true;
+  if(out_elem != NULL)
+    memcpy(out_elem, ht->elems + index * elem_size, elem_size);
+  return true;
+}
+
+void _ht_remove_at(hash_table * ht, size_t index){
+  ht->count -= 1;
+  let key_size = ht->key_size;
+  let elem_size = ht->elem_size;
+  let capacity = ht->capacity;
+  
+ start:
+  ht->occupied[index] = HT_FREE;
+  for(size_t _i = 1, i = index + 1; _i < capacity; _i++, i++){
+    // probe to find an element that can be moved back.
+    if(i >= capacity) i = 0;
+    if(ht->occupied[i] == HT_FREE)
+      break;
+    
+    let thiskey = ht->keys + i * key_size;
+    let hash = ht->hash == NULL ? (i32)hash1(thiskey, key_size) : ht->hash(thiskey, ht->userdata);
+    let h2 = (size_t)(hash % capacity);
+    if(h2 <= index){
+      
+      ht->occupied[index] = ht->occupied[i];
+      memcpy(ht->keys + index * key_size, ht->keys + i * key_size, key_size);
+      memcpy(ht->elems + index * elem_size, ht->elems + i * elem_size, elem_size);
+
+      // set index to i and start another iteration.
+      index = i;
+      goto start;
+    } 
   }
-  return false;
+}
+
+
+i64 _ht_remove(hash_table * ht, const void * key){
+  i64 index = ht_find_free(ht, key);
+  if(ht->occupied[index] == HT_FREE)
+    return -1;
+  _ht_remove_at(ht, index);
+  return index;
 }
 
 bool ht_remove(hash_table * ht, const void * key){
-  i64 index = ht_find_free(ht, key, NULL);
-  if(ht->occupied[index] == HT_OCCUPIED){
-    ht->occupied[index] = HT_FREED;
-    return true;
-  }
-  return false;
+  i64 index =_ht_remove(ht, key);
+  return index != -1;
 }
 
 bool ht_remove2(hash_table * ht, const void * key, void * out_key, void * out_elem){
-  i64 index = ht_find_free(ht, key, NULL);
-  if(ht->occupied[index] == HT_OCCUPIED){
-    ht->occupied[index] = HT_FREED;
-    if(out_key)
-      memcpy(out_key, ht->keys + index * ht->key_size, ht->key_size); 
-    
-    if(out_elem)
-      memcpy(out_elem, ht->elems + index * ht->elem_size, ht->elem_size); 
-
-    return true;
-  }
-  return false;
+  i64 index = ht_find_free(ht, key);
+  if(index == -1) return false;
+  
+  if(out_key)
+    memcpy(out_key, ht->keys + index * ht->key_size, ht->key_size); 
+  if(out_elem)
+    memcpy(out_elem, ht->elems + index * ht->elem_size, ht->elem_size);
+  _ht_remove_at(ht, index);
+  return true;
 }
 
 void ht_clear(hash_table * ht){
@@ -323,7 +338,8 @@ bool ht2_test(){
   for(u32 i = 0; i < array_count(values); i+= 2){
     ASSERT(ht_set(ht2, &values[i], &i));
   }
-  ASSERT(count1 == ht2->count);
+  
+  ASSERT(count1 < ht2->count);
   ASSERT(ht2->count == array_count(values));
 
   ht_clear(ht2);
