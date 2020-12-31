@@ -299,14 +299,15 @@ hash_table * ht_create_strkey(size_t elem_size){
 bool ht2_string_test();
 
 bool ht2_test(){
-
-
   hash_table * ht2 = ht_create(4, 4);
-  int values[] = {1,2,3,1230,32,55,44,33,22,11,111,112,113,114};
+  int values[] = {1,2,3,1230,32,55,44,33,22,11,111,112,113,114, 120, 130, 140, 150, 1200, 1300, 1400, 1500, 12000, 13000, 14000, 15000, 16000, -1, -2, -3, -4, -5, -6, -10, -100, -1000, -10000, -100000};
   u32 i2 = 2;
   ASSERT(ht_set(ht2, &values[0], &i2));
   i2 = 0;
   ASSERT(ht_get(ht2, &values[0], &i2));
+  ASSERT(ht2->count == 1);
+  ASSERT(ht_remove(ht2, &values[0]));
+  ASSERT(ht2->count == 0);
   ASSERT(i2 == 2);
   
   for(u32 i = 0; i < array_count(values); i++){
@@ -322,26 +323,28 @@ bool ht2_test(){
     ASSERT(found);
     ASSERT(i2 == i);
   }
-
-  for(u32 i = 0; i < array_count(values); i+= 2){
-    ASSERT(ht_remove(ht2, &values[i]));
-  }
-  for(u32 i = 0; i < array_count(values); i++){
-    bool found = ht_get(ht2, &values[i], NULL);
-    if((i % 2) == 0){
-      ASSERT(!found);
-    }else{
-      ASSERT(found);
+  let count0 = ht2->count;
+  for(int j = 1; j < 7; j++){
+    for(u32 i = 0; i < array_count(values); i+= j){
+      ASSERT(ht_remove(ht2, &values[i]));
     }
-  }
-  let count1 = ht2->count;
-  for(u32 i = 0; i < array_count(values); i+= 2){
-    ASSERT(ht_set(ht2, &values[i], &i));
-  }
+    for(u32 i = 0; i < array_count(values); i++){
+      bool found = ht_get(ht2, &values[i], NULL);
+      if((i % j) == 0){
+	ASSERT(!found);
+      }else{
+	ASSERT(found);
+      }
+    }
+    let count1 = ht2->count;
+    for(u32 i = 0; i < array_count(values); i+= j){
+      ASSERT(ht_set(ht2, &values[i], &i));
+    }
   
-  ASSERT(count1 < ht2->count);
-  ASSERT(ht2->count == array_count(values));
-
+    ASSERT(count1 < ht2->count);
+    ASSERT(ht2->count == count0);
+    ASSERT(ht2->count == array_count(values));
+  }
   ht_clear(ht2);
   for(u32 i = 0; i < array_count(values); i++){
     bool found = ht_get(ht2, &values[i], NULL);
