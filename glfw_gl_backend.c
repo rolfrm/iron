@@ -250,14 +250,14 @@ void glfw_set_cursor_type(void * window, iron_cursor_type type){
     }
     //glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     cursor = custom_cursor;
-    printf("CROSSHAIR CURSOR %i\n", cursor);
+    printf("CROSSHAIR CURSOR %p\n", cursor);
     break;
   default:
     ERROR("INVALID CURSOR");
     return;
   }
   if(cursor != NULL){
-    printf("Set custom  CURSOR %i\n", cursor);
+    printf("Set custom  CURSOR %p\n", cursor);
     glfwSetCursor(win, cursor);
   }else{
     normal_cursor = glfwCreateStandardCursor(glfwCursor);
