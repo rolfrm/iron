@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/prctl.h>
 #include <sys/wait.h>
 
 #include <pthread.h>
@@ -18,6 +17,8 @@
 #include "process.h"
 #include "mem.h"
 
+#ifndef __APPLE__
+#include <sys/prctl.h>
 int iron_process_run(const char * program, const char ** args, iron_process * out_process){
   int pipe_in[2]; // in to this process, so out from execv
   //int pipe_out[2];
@@ -48,6 +49,7 @@ int iron_process_run(const char * program, const char ** args, iron_process * ou
   out_process->pid = pid;
   return 0;
 }
+#endif
 
  iron_process_status iron_process_wait(iron_process proc, u64 timeout_us){
   iron_process_status status = iron_process_get_status(proc);
@@ -91,13 +93,13 @@ iron_thread * iron_start_thread(void * (* fcn)(void * data), void * data){
     return NULL;
   return (iron_thread *) iron_clone(&tid, sizeof(tid));
 }
-
-iron_thread * iron_start_thread0(void (* fcn)()){
-  void * run(void * _f){
+static void * run(void * _f){
     void (* f)() = _f;
     f();
     return NULL;
   }
+iron_thread * iron_start_thread0(void (* fcn)()){
+  
   pthread_t tid;
   if(pthread_create( &tid, NULL, run, fcn) != 0)
     return NULL;

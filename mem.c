@@ -81,7 +81,7 @@ struct _block_chunk{
   size_t free_cnt;
   
 };
-
+/*
 void * block_take_free(size_t s, block_chunk * bc){
   while(bc != NULL){
     for(size_t i = 0; i < bc->free_cnt; i++)
@@ -98,7 +98,7 @@ void * block_take_free(size_t s, block_chunk * bc){
     bc = bc->last;
   }
   return NULL;
-}
+  }
 
 void * block_alloc(allocator * self, size_t size){
   block_chunk * balc = self->user_data;
@@ -242,7 +242,7 @@ void block_allocator_release(allocator * block_allocator){
     free(balc);
     balc = next;
   }
-}
+  }*/
 
 void * trace_alloc(allocator * self, size_t size){
   u64 current_size = (u64) self->user_data;
