@@ -23,16 +23,19 @@ u64 count(void * data, size_t num, size_t size, selector selector_fcn){
   return cnt;
 }
 
-void sort_indexed(i64 * ids, u64 count, u64 * out_indexes){
-  int comp (const void * elem1, const void * elem2) 
+__thread
+static i64 * comp_ids;
+int comp (const void * elem1, const void * elem2) 
   {
     u64 i1 = *((u64*)elem1);
     u64 i2 = *((u64*)elem2);
-    if (ids[i1] > ids[i2]) return  1;
-    if (ids[i1] < ids[i2]) return -1;
+    if (comp_ids[i1] > comp_ids[i2]) return  1;
+    if (comp_ids[i1] < comp_ids[i2]) return -1;
     return 0;
   }
-
+void sort_indexed(i64 * ids, u64 count, u64 * out_indexes){
+  
+  comp_ids = ids;
   for(u64 i = 0; i < count;i++){
     out_indexes[i] = i;
   }

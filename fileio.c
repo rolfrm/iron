@@ -11,6 +11,10 @@
 #include "mem.h"
 #include "types.h"
 #include "fileio.h"
+
+// for mac support.
+#define st_mtim st_mtimespec
+
 static __thread FILE * outfile = NULL;
 
 size_t stksize = 0;

@@ -94,16 +94,26 @@ static void send_activity(listener_data * next, const data_stream * stream){
   }
 }
 
-void data_stream_data(const data_stream * stream, const void * data, size_t length){
-  void send_msg(listener_data * next){
+__thread
+static const data_stream * send_msg_stream;
+__thread
+static const void * send_msg_data;
+__thread
+static size_t send_msg_length;
+
+void send_msg(listener_data * next){
     while(next != NULL){
       var a = next->listener;
       if(a != NULL && a->process != NULL)
-	a->process(stream, data, length, a->userdata);
-      
+	a->process(send_msg_stream, send_msg_data, send_msg_length, a->userdata);      
       next = next->next;
     }
   }
+
+void data_stream_data(const data_stream * stream, const void * data, size_t length){
+  send_msg_data = data;
+  send_msg_stream = stream;
+  send_msg_length = length;
   send_activity(activity_listeners, stream);
   send_msg(stream->internal);
   send_msg(all_listeners);
