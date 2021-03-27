@@ -1101,7 +1101,7 @@ bool linmath_test(){
   
   
     if(false){ // this does not work!
-      vec4 tst = {.xyz = {.x = 1, .y = 2, .z = 3}, .w = 4};
+      vec4 tst = {.x = 1, .y = 2, .z = 3, .w = 4};
       for(int i = 0; i < 4; i++)
 	TEST_ASSERT(tst.data[i] == i + 1);
     }
