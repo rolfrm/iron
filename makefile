@@ -1,18 +1,24 @@
 OPT = -g3 -O0
 SOURCES = $(wildcard *.c)
-SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c gl.c gl_3d.c gl_text.c glfw_gl_backend.c x11_gl_backend.c , $(SOURCES))
+SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c gl.c gl_3d.c gl_text.c glfw_gl_backend.c x11_gl_backend.c  ,$(SOURCES))
 CC = gcc
 TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 
 LIBS= -ldl -lm -lpthread  
-CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -D_GNU_SOURCE -Werror -Wno-deprecated
+CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -D_GNU_SOURCE -Werror -Wno-deprecated -Wsign-compare
 CFLAGS = $(CFLAGS_BASIC) -fPIC
 
 all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
 	ar rcs libiron.a $(OBJECTS)
+
+cutils.o: cutils.c
+	$(CC) -c  $< -o $@ 
+
+libbf.o: libbf.c 
+	$(CC) -c  $< -o $@ 
 
 .c.o: $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@ -MMD -MF $@.depends

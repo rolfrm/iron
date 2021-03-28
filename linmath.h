@@ -36,6 +36,8 @@ typedef struct{
   };
 }vec4;
 
+
+
 #define LINMATH_H_OP(n,name, op)			\
   vec##n vec##n##_##name (vec##n a, vec##n const b);
 
@@ -54,6 +56,9 @@ typedef struct{
 LINMATH_H_DEFINE_VEC(2)
 LINMATH_H_DEFINE_VEC(3)
 LINMATH_H_DEFINE_VEC(4)
+
+
+
 
 vec2 vec2mk(float x, float y);
 vec3 vec3mk(float x, float y, float z);
