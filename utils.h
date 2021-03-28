@@ -12,6 +12,9 @@
 #define UNUSED5(x,y,z,w,v) UNUSED2(x,y);UNUSED2(z,w);UNUSED1(v);
 #define GET_MACRO(_1, _2, _3, _4, _5, NAME,...) NAME
 #define UNUSED(...) GET_MACRO(__VA_ARGS__, UNUSED5, UNUSED4, UNUSED3, UNUSED2, UNUSED1, ...)(__VA_ARGS__)
+#ifdef __APPLE__
+#undef USE_VALGRIND
+#endif
 
 #ifdef USE_VALGRIND
 #include <valgrind/memcheck.h>
