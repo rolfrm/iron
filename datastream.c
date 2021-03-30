@@ -94,12 +94,9 @@ static void send_activity(listener_data * next, const data_stream * stream){
   }
 }
 
-__thread
-static const data_stream * send_msg_stream;
-__thread
-static const void * send_msg_data;
-__thread
-static size_t send_msg_length;
+static __thread const data_stream * send_msg_stream;
+static __thread const void * send_msg_data;
+static __thread size_t send_msg_length;
 
 void send_msg(listener_data * next){
     while(next != NULL){

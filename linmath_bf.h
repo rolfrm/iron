@@ -15,7 +15,6 @@ void vec2bf_add(vec2bf * a, vec2bf * b);
 void vec2bf_sub(vec2bf * a, vec2bf * b);
 
 void vec2bf_set(vec2bf * v, f64 x, f64 y);
-vec2bf * _vec2bf_new(f64 x, f64 y);
 vec2bf * vec2bf_new(f64 x, f64 y);
 vec2bf * vec2bf_new2(vec2 x);
 vec2bf * vec2bf_new3(vec2bf * x);

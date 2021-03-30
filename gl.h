@@ -205,7 +205,7 @@ image image_from_bitmap(void * bitmap, int width, int height, int channels);
 image image_new(int width, int height, int channels);
 image image_new2(int width, int height, int channels, image_mode mode);
 void image_delete(image * image);
-
+void image_save(image * img, const char * path);
 // textures
 typedef struct _texture_handle texture_handle;
 typedef struct {

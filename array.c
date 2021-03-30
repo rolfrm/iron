@@ -23,8 +23,7 @@ u64 count(void * data, size_t num, size_t size, selector selector_fcn){
   return cnt;
 }
 
-__thread
-static i64 * comp_ids;
+static __thread i64 * comp_ids;
 int comp (const void * elem1, const void * elem2) 
   {
     u64 i1 = *((u64*)elem1);

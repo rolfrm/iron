@@ -13,7 +13,9 @@
 #include "fileio.h"
 
 // for mac support.
+#ifdef __APPLE__
 #define st_mtim st_mtimespec
+#endif
 
 static __thread FILE * outfile = NULL;
 
