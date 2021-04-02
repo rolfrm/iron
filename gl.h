@@ -206,6 +206,12 @@ image image_new(int width, int height, int channels);
 image image_new2(int width, int height, int channels, image_mode mode);
 void image_delete(image * image);
 void image_save(image * img, const char * path);
+
+void image_fill(image img, u32 color);
+
+u64 image_compare(image img, image img2);
+f64 image_comparef (image img, image img2);
+image image_diff (image img, image img2);
 // textures
 typedef struct _texture_handle texture_handle;
 typedef struct {

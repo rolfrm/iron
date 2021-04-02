@@ -250,6 +250,92 @@ void image_delete(image * img){
   img[0] = im2;
 }
 
+void image_fill(image img, u32 color){
+  int stride = img.channels;
+  int w = img.width, h = img.height;
+  void * data = image_data(&img);
+  for(int i = 0; i < h; i++){
+    for(int j = 0; j < w; j++){
+      u8 * p = (j + i * w) * stride + data;
+      memcpy(p, &color, stride);
+    }
+  }
+}
+
+static float _len(f32 a, f32 b){
+  return sqrtf(a * a + b * b);
+}
+
+u64 image_compare(image img, image img2){
+  int stride = img.channels;
+  int w = img.width, h = img.height;
+  if(img.height != img2.height || img.width != img2.width)
+    return (u64)_len((img.height - img2.height), (img.width - img2.width));
+  if(img.channels != img2.channels)
+    return 0xFFFFFFF;
+  u32 c = 0;
+  void * data = image_data(&img);
+  void * data2 = image_data(&img2);
+  for(int i = 0; i < h; i++){
+    for(int j = 0; j < w; j++){
+      u8 * p = (j + i * w) * stride + data;
+      u8 * p2 = (j + i * w) * stride + data2;
+      int diff = 0;
+      for(int k = 0; k < stride; k++){
+	u8 d = p[k] - p2[k];
+	if(d > 128)
+	  d = p2[k] - p[k];
+	if(d == 0){
+
+	}else if (d < 10){
+	  d = 1;
+	}else if (d < 100){
+	  d = 2;
+	}else {
+	  d = 3;
+	}
+
+	diff = MAX(diff, d);
+      }
+      if(diff != 0)
+	logd("%i %i:  %i\n", i, j, diff);
+      c += diff;   
+    }
+  }
+  return c;
+}
+
+f64 image_comparef (image img, image img2){
+  int w = img.width, h = img.height;
+  u64 c = w * h;
+  return image_compare(img, img2) / (f64)c;
+}
+
+
+image image_diff (image img, image img2){
+  int w = img.width, h = img.height;
+  u64 c = w * h * img.channels;
+  u8 * data = image_data(&img);
+  u8 * data2 = image_data(&img2);
+  image img3 = image_new(w, h, img.channels);
+  u8 * data3 = image_data(&img3);
+  for(u64 i = 0 ;i < c; i++){
+    for(int j = 0; j < 3; j++,i++){
+      u8 x = data[i];
+      u8 y = data2[i];
+      u8 z;
+      if(x > y)
+	z = y - x;
+      else
+	z = x - y;
+      data3[i] = z;
+    }
+    data3[i] = 255;
+  }
+  return img3;
+}
+
+
 struct _texture_handle {
   GLuint tex;
   int format;
