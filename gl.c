@@ -294,11 +294,8 @@ u64 image_compare(image img, image img2){
 	}else {
 	  d = 3;
 	}
-
 	diff = MAX(diff, d);
       }
-      if(diff != 0)
-	logd("%i %i:  %i\n", i, j, diff);
       c += diff;   
     }
   }
