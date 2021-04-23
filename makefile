@@ -5,7 +5,7 @@ CC = gcc
 TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 
-LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11
+LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11 -lopenal -lpng
 CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -D_GNU_SOURCE -Werror -Wno-deprecated -Wsign-compare
 CFLAGS = $(CFLAGS_BASIC) -fPIC
 

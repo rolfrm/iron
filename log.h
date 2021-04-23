@@ -23,7 +23,7 @@ typedef enum{
 }log_level;
 void log_print(log_level level, const char * fmt, ...);
 extern int logd_enable;
-#define log(...) ({log_print(LOG_INFO, __VA_ARGS__);})
+#define logi(...) ({log_print(LOG_INFO, __VA_ARGS__);})
 #define logd(...) ({log_print(LOG_DEBUG, __VA_ARGS__);})
 #define loge(...) ({log_print(LOG_ERROR, __VA_ARGS__);})
 #define ERROR_TRACE logd( "error: at '" __FILE__  "' line %i: \n",  __LINE__);

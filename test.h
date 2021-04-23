@@ -2,7 +2,7 @@
 // these macros are only to be used in testing methods
 // testing methods should take no arguments and return a bool (pass/fail)
 
-#define TEST(fcn) {log("%sTesting '" #fcn "'\n",""); if(fcn() == false){ERROR("%sError during '" #fcn "'\n",""); return false;}else{log("%sPass.\n","");}}
+#define TEST(fcn) {logi("%sTesting '" #fcn "'\n",""); if(fcn() == false){ERROR("%sError during '" #fcn "'\n",""); return false;}else{logi("%sPass.\n","");}}
 #define TEST_ASSERT(expr) if(false == (expr)){ERROR("Failed assertion :'" #expr ";"); return false;}
 #define TEST_ASSERT_EQUAL(expr1, expr2) if(expr1 != expr2){ERROR("Failed assertion :'" #expr1 " == " #expr2 "'\n"); return false;}
 #define TEST_ASSERT_NOT_EQUAL(expr1, expr2) if(expr1 == expr2){ERROR("Failed assertion :'" #expr1 " != " #expr2 "'\n"); return false;}
@@ -11,11 +11,11 @@
 #define TEST_FAIL (false)
 
 #define BENCH(fcn) {						\
-    log("Benchmarking '" #fcn "':");				\
+    logi("Benchmarking '" #fcn "':");				\
     u64 t1 = timestamp();					\
     fcn();							\
     u64 t2 = timestamp();					\
-    log("  %ius\n", t2 - t1);			\
+    logi("  %ius\n", t2 - t1);			\
   }								\
 
 
