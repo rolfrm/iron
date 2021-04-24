@@ -30,6 +30,7 @@ typedef struct {
   int gen_buffer_count;
   u32 id;
   bool free;
+  bool is_stream;
 }stream_info;
 
 static inline float ffmodf(float x, float y) {
@@ -308,9 +309,15 @@ audio_context * audio_initialize(int sample_rate){
   audio_context context = {
     .al_device = alcOpenDevice(NULL),
     .sample_rate = 44100,
-    .sources_count = 16
+    .sources_count = 16,
+    .broken = context.al_device == NULL,
+    .volume = 1.0,
+    .target_volume = 1.0,
+    .stream_identifier = 0,
+    .al_context = NULL,
+    
   };
-  context.broken = context.al_device == NULL;
+
   if(!context.broken) {
     context.al_context = alcCreateContext(context.al_device, NULL);
     context.sample_rate = sample_rate;//query_sample_rate_of_audiocontexts();
@@ -319,9 +326,9 @@ audio_context * audio_initialize(int sample_rate){
         
     for(size_t i = 0; i < context.sources_count; i++){
       alGenSources(1, &context.sources[i].source);
-      printf("Create source %i\n", context.sources[i].source);
       alSourcef(context.sources[i].source, AL_GAIN, 1.0);
       context.sources[i].free = true;
+      context.source_busy[i] = 0;
     }
   
     ALfloat listenerPos[] = {0.0, 0.0, 1.0};
@@ -387,9 +394,6 @@ audio_sample audio_load_samplef2(audio_context * ctx, int length, modulator * mo
   f32 * samples = alloc0(length * sizeof(samples[0]));
   for(int i = 0; i < length; i++){
     mod->f(samples + i, i, mod);
-  }
-  for(int i = 0; i < length; i++){
-    printf("%f\n", samples[i]);
   }
   audio_sample smp = audio_load_samplef(ctx, samples, length);
   dealloc(samples);
@@ -535,19 +539,19 @@ void audio_update_streams(audio_context * ctx){
     //printf("Processing... %i\n", buffers_processed);
 
     bool stopped = stream_info_stopped(info);
-    logd("stopped: %i\n", stopped);
     if(stopped){
       int buffers_queued = 0;
       alGetSourcei(info->source, AL_BUFFERS_QUEUED, &buffers_queued);
       u32 fb[buffers_queued];
       alSourceUnqueueBuffers(info->source, buffers_queued, fb);
-      logd("queued: %i\n", buffers_queued);
-      //
-      //alSourceUnqueueBuffers(info->source, 3, fb);
       clear_error();
       check_error();
-      stream_load(ctx, info);
-      continue;
+      if(info->is_stream){
+	stream_load(ctx, info);
+	continue;
+      }else{
+	info->free = true;
+      }
     }
 
     if(buffers_processed > 1){
