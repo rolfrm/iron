@@ -7,7 +7,7 @@ static void keycallback(GLFWwindow * win, int key, int scancode, int action, int
   UNUSED(mods); UNUSED(scancode);
   gl_window_event evt = {.key = {.key = key ,.scancode = scancode, .ischar = false}};
   evt.key.key = key;
-  logd("KEY: %i %i\n", key, scancode);
+  //logd("KEY: %i %i\n", key, scancode);
 
   int keytype;
   switch(action){
