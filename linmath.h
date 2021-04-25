@@ -73,6 +73,7 @@ vec2 vec2_abs(vec2);
 f32 vec2_dot(vec2 a, vec2 b);
 
 extern const vec2 vec2_infinity;
+extern const vec2 vec2_negative_infinity;
 extern const vec2 vec2_zero;
 extern const vec2 vec2_half;
 extern const vec2 vec2_one;
@@ -87,6 +88,7 @@ vec3 vec3_apply(vec3 a, float (*f)(float v));
 float vec3_min_element(vec3 a);
 float vec3_max_element(vec3 a);
 extern const vec3 vec3_infinity;
+extern const vec3 vec3_negative_infinity;
 extern const vec3 vec3_zero;
 extern const vec3 vec3_half;
 extern const vec3 vec3_one;

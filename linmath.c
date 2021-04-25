@@ -178,6 +178,7 @@ vec2 vec2_abs(vec2 a){
 }
 
 const vec2 vec2_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f};
+const vec2 vec2_negative_infinity = {.x = -1.0f / 0.0f, .y = -1.0f / 0.0f};
 const vec2 vec2_zero = {.x = 0.0f, .y = 0.0f};
 const vec2 vec2_half = {.x = 0.5f, .y = 0.5f};
 const vec2 vec2_one = {.x = 1.0f, .y = 1.0f};
@@ -208,6 +209,7 @@ float vec3_max_element(vec3 a){
 }
 
 const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f};
+const vec3 vec3_negative_infinity = {.x = -1.0f / 0.0f, .y = -1.0f / 0.0f, .z = -1.0f / 0.0f};
 const vec3 vec3_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
 const vec3 vec3_half = {.x = 0.5f, .y = 0.5f, .z = 0.5f};
 const vec3 vec3_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f};

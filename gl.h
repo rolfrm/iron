@@ -309,7 +309,7 @@ void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size
 void blit3d_polygon_destroy(blit3d_polygon ** polygon);
   
 void blit3d_polygon_configure(blit3d_polygon * polygon, int dimensions);
-
+f32 * blit3d_polygon_get_verts(blit3d_polygon * polygon, u32 * len);
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);
 
 

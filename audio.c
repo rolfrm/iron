@@ -386,8 +386,7 @@ void audio_context_make_current(audio_context * ctx){
       alSourcef(ctx->sources[i].source, AL_GAIN, ctx->volume);
     }
     ctx->target_volume = ctx->volume;
-  }
-  
+  } 
 }
 
 audio_sample audio_load_samplef2(audio_context * ctx, int length, modulator * mod){

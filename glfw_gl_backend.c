@@ -3,9 +3,11 @@
 #include "gl.h"
 #include <GLFW/glfw3.h>
 
-void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
+static void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
   gl_window_event evt = {.key = {.key = key ,.scancode = scancode, .ischar = false}};
+  evt.key.key = key;
+  logd("KEY: %i %i\n", key, scancode);
 
   int keytype;
   switch(action){
@@ -26,43 +28,43 @@ void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   register_evt(win, &evt, keytype);
 }
 
-void charcallback(GLFWwindow * win, u32 codept){
+static void charcallback(GLFWwindow * win, u32 codept){
   gl_window_event evt = {.key = {.codept = codept, .ischar = true}};
   register_evt(win, &evt, EVT_KEY_DOWN);
 }
 
-void cursorposcallback(GLFWwindow * win, double x, double y){
+static void cursorposcallback(GLFWwindow * win, double x, double y){
   gl_window_event evt = {.mouse_move = {.x = x, .y = y}};
   register_evt(win, &evt, EVT_MOUSE_MOVE);
 }
 
-void scrollcallback(GLFWwindow * win, double x, double y){
+static void scrollcallback(GLFWwindow * win, double x, double y){
   gl_window_event evt = {.mouse_scroll = {.x = x, .y = y}};
   register_evt(win, &evt, EVT_MOUSE_SCROLL);
 }
 
-void cursorentercallback(GLFWwindow * win, int enter){
+static void cursorentercallback(GLFWwindow * win, int enter){
   gl_window_event evt;
   register_evt(win, &evt, enter ? EVT_MOUSE_ENTER : EVT_MOUSE_LEAVE);
 }
 
-void mousebuttoncallback(GLFWwindow * win, int button, int action, int mods){
+static void mousebuttoncallback(GLFWwindow * win, int button, int action, int mods){
   UNUSED(mods);
   gl_window_event btn = {.mouse_btn = {.button = button}};
   register_evt(win, &btn, action ? EVT_MOUSE_BTN_DOWN : EVT_MOUSE_BTN_UP);
 }
 
-void windowclosecallback(GLFWwindow * win){
+static void windowclosecallback(GLFWwindow * win){
   gl_window_event evt;
   register_evt(win, &evt, EVT_WINDOW_CLOSE);
 }
 
-void windowsizecallback(GLFWwindow * win, int width, int height){
+static void windowsizecallback(GLFWwindow * win, int width, int height){
   gl_window_event evt = {.window_size_change = {.width = width, .height = height}};
   register_evt(win, &evt, EVT_WINDOW_RESIZE);
 }
 
-void window_pos_callback(GLFWwindow* win, int xpos, int ypos)
+static void window_pos_callback(GLFWwindow* win, int xpos, int ypos)
 {
   gl_window_event evt = {.window_position_change = {.x = xpos, .y = ypos}};
   register_evt(win, &evt, EVT_WINDOW_MOVE);
@@ -209,7 +211,10 @@ bool glfw_get_button_state(void * window, int btn){
 }
 
 bool glfw_get_key_state(void * window, int key){
-  return glfwGetKey((GLFWwindow *) window, key) == GLFW_PRESS;
+  int st = glfwGetKey((GLFWwindow *) window, key) ;
+  //logd("Key down? %i %i %i\n", key, st, GLFW_KEY_A);
+  return st;
+  
 }
 
 static GLFWcursor * normal_cursor = NULL;
