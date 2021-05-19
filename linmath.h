@@ -71,7 +71,7 @@ vec2 vec2_min(vec2 a, vec2 b);
 vec2 vec2_max(vec2 a, vec2 b);
 vec2 vec2_abs(vec2);
 f32 vec2_dot(vec2 a, vec2 b);
-
+bool vec2_eq(vec2 a, vec2 b);
 extern const vec2 vec2_infinity;
 extern const vec2 vec2_negative_infinity;
 extern const vec2 vec2_zero;

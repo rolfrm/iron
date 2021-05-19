@@ -2,7 +2,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-
 #include "types.h"
 #include "utils.h"
 #include "mem.h"
@@ -18,17 +17,19 @@ static void *iron_bf_realloc(void *opaque, void *ptr, size_t size)
   return ralloc(ptr, size);
 }
 
-fx * fx_one, * fx_zero, * fx_half, * fx_two, *fx_minus_one;
+const fx * fx_one, * fx_zero, * fx_half, * fx_two, *fx_minus_one;
 
 static void fx_init(void){
   static bool inited;
   if(inited) return;
+  logd("FX_INIT\n");
   inited = true;
   bf_context_init(&bf_ctx, iron_bf_realloc, NULL);
-  fx_one = fx_new1(1);
-  fx_zero = fx_new1(0);
-  fx_two = fx_new1(2);
-  fx_minus_one = fx_new1(-1);
+  *((fx **)&fx_one) = fx_new1(1);
+  *((fx **)&fx_zero) = fx_new1(0);
+  *((fx **)&fx_two) = fx_new1(2);
+  *((fx **)&fx_minus_one) = fx_new1(-1);
+  *((fx **)&fx_half) = fx_new1(0.5);
 }
 
 fx * fx_new(void){
@@ -72,7 +73,7 @@ void fx_deln(fx * v, u32 count){
   dealloc(v);
 }
 
-fx * fx_clone(fx * x){
+fx * fx_clone(const fx * x){
   fx * new = fx_new();
   fx_set2(new, x);
   return new;
@@ -110,27 +111,27 @@ bool fx_eq(const fx * a, const fx * b){
   return bf_cmp_eq(&a->v, &b->v);
 }
 
-bool fx_gt(fx * a, fx * b){
-  return bf_cmp_lt(&b->v, &a->v);
+bool fx_gt(const fx * a, const fx * b){
+  return bf_cmp_gt(&a->v, &b->v);
 }
-bool fx_lt(fx * a, fx * b){
-  return fx_gt(b, a);
+bool fx_lt(const fx * a, const fx * b){
+  return bf_cmp_lt(&a->v, &b->v);
 }
 
-f64 fx_to_f64(fx * a){
+f64 fx_to_f64(const fx * a){
   f64 x;
   bf_get_float64(&a->v, &x, BF_RNDN);
   return x;
 }
 
-void fx_print(fx * v){
+void fx_print(const fx * v){
   size_t s = 0;
   char * text = bf_ftoa(&s, &v->v, 10, 32, BF_FTOA_FORMAT_FREE);
   logd("%s", text);
   dealloc(text);
 }
 
-void * fx_to_binary(fx * _v, size_t * s) {
+void * fx_to_binary(const fx * _v, size_t * s) {
   bf_t v = _v->v;
   *s = 1 + sizeof(v.expn) + sizeof(v.len) + sizeof(v.tab[0]) * v.len;
   void * buffer = alloc(*s);
@@ -142,11 +143,14 @@ void * fx_to_binary(fx * _v, size_t * s) {
   return buffer;
 }
 
-char * fx_serialize_str(fx * v,size_t * s){
+char * fx_serialize_str(const fx * v,size_t * s){
+  static size_t _s = 0; 
+  if(s == NULL)
+    s = &_s;
   return bf_ftoa(s, &v->v, 16, 32, BF_FTOA_FORMAT_FREE_MIN);
 }
 
-fx * fx_deserialize_str(char * text, size_t s){
+fx * fx_deserialize_str(const char * text, size_t s){
   UNUSED(s);
   fx * v = fx_new();
   slimb_t exp =0;
@@ -154,7 +158,7 @@ fx * fx_deserialize_str(char * text, size_t s){
   return v;
 }
 
-fx * fx_from_binary(void * text, size_t s){
+fx * fx_from_binary(const void * text, size_t s){
   UNUSED(s);
   bf_t v = {0}; 
   v.ctx = &bf_ctx;
@@ -168,17 +172,20 @@ fx * fx_from_binary(void * text, size_t s){
   return iron_clone(&v2, sizeof(v2));
 }
 
-fx * fx_deserialize(void * text, size_t s){
+fx * fx_deserialize(const void * text, size_t s){
   return fx_deserialize_str(text, s);
 }
 
-void * fx_serialize(fx * v, size_t * s){
+void * fx_serialize(const fx * v, size_t * s){
   return fx_serialize_str(v, s);
 }
 
 
-int fx_isneg(fx * v){
-  return v->v.sign;
+bool fx_isneg(const fx * v){
+  return v->v.sign == 1;
+}
+bool fx_iszero(const fx * v){
+  return bf_is_zero(&v->v);
 }
 
 #define ASSERT_EQ_INT(exp, expr) if(__builtin_expect(!(exp == expr), 0)){ERROR("Assertion '" #expr "' Failed %i != %i", exp, expr);};
@@ -219,6 +226,22 @@ bool test_encode_decode(void){
 }
 
 
+bool test_vec2x(void){
+  vec2bf * a = vec2bf_new(1,1);
+  vec2 a2 = vec2bf_to_vec2(a);
+  vec2 b = vec2_new(1,1);
+  ASSERT(vec2_eq(a2, b));
+  for(int i = 0; i < 10; i++){
+    vec2bf_add(a, a);
+    b = vec2_add(b,b);
+    a2 = vec2bf_to_vec2(a);
+    ASSERT(vec2_eq(a2, b));
+    vec2_print(b);logd("\n");
+  }
+  
+  return true;
+}
+
 
 bool bf_test(void){ 
   var a = fx_new1(1);
@@ -238,6 +261,9 @@ bool bf_test(void){
   fx_del(c);
   fx_del(a);
   fx_del(b);
+  ASSERT(!fx_iszero(fx_one));
+  ASSERT(fx_iszero(fx_zero));
   TEST(test_encode_decode);
+  TEST(test_vec2x);
   return true;
 }

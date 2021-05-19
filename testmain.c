@@ -480,9 +480,10 @@ int main(){
   
   var mod = create_sine(440);
   var audio =  audio_initialize(44100);
-  audio_set_volume(audio, -20);
+  audio_set_volume(audio, -100);
   audio_sample s1 = audio_load_samplef2(audio, 20000, mod);
-  audio_play_sample(audio, s1);
+  UNUSED(s1);
+  //audio_play_sample(audio, s1);
   audio_update_streams(audio);
   gl_window_event events[10];
   for(int i = 0; i <30000 ;i++){
