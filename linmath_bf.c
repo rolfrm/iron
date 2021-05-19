@@ -122,7 +122,7 @@ vec2 vec2bf_to_vec2(vec2bf * v){
 }
 
 void vec2bf_print(vec2bf * v){
-  logd("(,");
+  logd("(");
   fx_print(v->x);
   logd(", ");
   fx_print(v->y);

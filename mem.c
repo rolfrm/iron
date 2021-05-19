@@ -387,3 +387,9 @@ void replace_inplace(char * out_buffer, const char * pattern, const char * inser
     out_buffer = find + insert_len;
   }
 }
+
+/*
+void * bufferize(size_t * s, ...){
+  
+}
+*/

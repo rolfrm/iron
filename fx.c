@@ -126,22 +126,56 @@ f64 fx_to_f64(fx * a){
 void fx_print(fx * v){
   size_t s = 0;
   char * text = bf_ftoa(&s, &v->v, 10, 32, BF_FTOA_FORMAT_FREE);
-  logd("%s,", text);
+  logd("%s", text);
   dealloc(text);
 }
 
-void * fx_serialize(fx * v, size_t * s){
-  void * text = bf_ftoa(s, &v->v, 16, 32, BF_FTOA_FORMAT_FREE_MIN);
-  return text;
+void * fx_to_binary(fx * _v, size_t * s) {
+  bf_t v = _v->v;
+  *s = 1 + sizeof(v.expn) + sizeof(v.len) + sizeof(v.tab[0]) * v.len;
+  void * buffer = alloc(*s);
+  memset(buffer, v.sign == 0 ? 0 : 1, 1); // sign
+  memcpy(buffer + 1, &v.expn, sizeof(v.expn));
+  memcpy(buffer + 1 + sizeof(v.expn), &v.len, sizeof(v.len));
+  memcpy(buffer + 1 + sizeof(v.expn) + sizeof(v.len), v.tab, sizeof(v.tab[0]) * v.len);
+
+  return buffer;
 }
 
-fx * fx_deserialize(void * text, size_t s){
+char * fx_serialize_str(fx * v,size_t * s){
+  return bf_ftoa(s, &v->v, 16, 32, BF_FTOA_FORMAT_FREE_MIN);
+}
+
+fx * fx_deserialize_str(char * text, size_t s){
   UNUSED(s);
   fx * v = fx_new();
   slimb_t exp =0;
   bf_atof2(&v->v, &exp, text, NULL, 16, BF_PREC_INF, 0);
   return v;
 }
+
+fx * fx_from_binary(void * text, size_t s){
+  UNUSED(s);
+  bf_t v = {0}; 
+  v.ctx = &bf_ctx;
+  v.sign = ((u8 *) text)[0] == 1 ? 1 : 0;
+  memcpy(&v.expn, text + 1, sizeof(v.expn));
+  memcpy(&v.len, text + 1 + sizeof(v.expn), sizeof(v.len));
+  v.tab = alloc(v.len * sizeof(sizeof(v.tab[0])));
+  memcpy(v.tab, text + 1 + sizeof(v.expn) + sizeof(v.len), v.len * sizeof(v.tab[0]));
+
+  fx v2 = {.v = v};
+  return iron_clone(&v2, sizeof(v2));
+}
+
+fx * fx_deserialize(void * text, size_t s){
+  return fx_deserialize_str(text, s);
+}
+
+void * fx_serialize(fx * v, size_t * s){
+  return fx_serialize_str(v, s);
+}
+
 
 int fx_isneg(fx * v){
   return v->v.sign;
@@ -159,9 +193,32 @@ bool fx_test_serialize(fx * a){
   ASSERT(memcmp(buf2, buf1, s) == 0);
   dealloc(buf1);
   dealloc(buf2);
+  fx_del(b);
   
   return true;
 }
+#include "linmath.h"
+#include "linmath_bf.h"
+
+bool test_encode_decode(void){
+  vec2bf * bf = vec2bf_new(1084321743901264, 1);
+  vec2bf * bf2 = vec2bf_new(0.01, 0.01);
+  vec2bf_mul(bf, bf);
+  vec2bf_mul(bf, bf2);
+  size_t s;
+  void * text = fx_serialize(bf->x, &s);
+  fx * fx2 = fx_deserialize(text, s);
+  fx_print(bf->x);logd("\n");
+  ASSERT(fx_eq(fx2, bf->x));
+  vec2bf_del(bf);
+  vec2bf_del(bf2);
+  fx_del(fx2);
+  dealloc(text);
+  //logd("%s %s\n", text, text2);
+  return true;
+}
+
+
 
 bool bf_test(void){ 
   var a = fx_new1(1);
@@ -181,5 +238,6 @@ bool bf_test(void){
   fx_del(c);
   fx_del(a);
   fx_del(b);
+  TEST(test_encode_decode);
   return true;
 }

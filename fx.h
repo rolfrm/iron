@@ -30,6 +30,10 @@ f64 fx_to_f64(fx * a);
 
 fx * fx_deserialize(void * text, size_t s);
 void * fx_serialize(fx * v, size_t * s);
+char * fx_serialize_str(fx * v,size_t * s);
+fx * fx_deserialize_str(char * text, size_t s);
+fx * fx_from_binary(void * text, size_t s);
+void * fx_to_binary(fx * _v, size_t * s);
 /*
 
   fx a = fx_new(5);
