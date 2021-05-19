@@ -296,9 +296,9 @@ hash_table * ht_create_strkey(size_t elem_size){
 }
 
 
-bool ht2_string_test();
+bool ht2_string_test(void);
 
-bool ht2_test(){
+bool ht2_test(void){
   hash_table * ht2 = ht_create(4, 4);
   int values[] = {1,2,3,1230,32,55,44,33,22,11,111,112,113,114, 120, 130, 140, 150, 1200, 1300, 1400, 1500, 12000, 13000, 14000, 15000, 16000, -1, -2, -3, -4, -5, -6, -10, -100, -1000, -10000, -100000};
   u32 i2 = 2;
@@ -442,7 +442,7 @@ bool ht2_string_test(){
   return true;
 }
 
-void hash_table_bench(){
+void hash_table_bench(void){
   size_t x = 0xFFFFFFFFFF0;
   hash_table * ht = ht_create(8, 8);
   

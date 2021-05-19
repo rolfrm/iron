@@ -168,7 +168,7 @@ int glfw_to_x11_key(u32 key){
 
 
 void * get_handle_x11_win(Window win);
-void x11_poll_events(){
+static void x11_poll_events(void){
   
   while(XPending(display)){
     XEvent event;
@@ -206,7 +206,7 @@ void x11_poll_events(){
 }
 
 
-void x11_init(){
+static void x11_init(void){
   XInitThreads();
   XrmInitialize();
   display = XOpenDisplay(NULL);
@@ -218,7 +218,7 @@ void x11_init(){
   swa.event_mask = ExposureMask | KeyPressMask;
 }
 
-void x11_deinit(){
+static void x11_deinit(void){
   //pass
 }
 

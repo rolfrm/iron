@@ -279,6 +279,11 @@ static inline int bf_cmp_lt(const bf_t *a, const bf_t *b)
     return bf_cmp(a, b) < 0;
 }
 
+static inline int bf_cmp_gt(const bf_t *a, const bf_t *b)
+{
+    return bf_cmp(a, b) > 0;
+}
+
 int bf_add(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec, bf_flags_t flags);
 int bf_sub(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec, bf_flags_t flags);
 int bf_add_si(bf_t *r, const bf_t *a, int64_t b1, limb_t prec, bf_flags_t flags);

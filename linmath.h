@@ -182,7 +182,7 @@ typedef struct{
   };
 }mat2;
 
-mat2 mat2_identity();
+mat2 mat2_identity(void);
 mat2 mat2_rotation(float angle);
 vec2 mat2_mul_vec2(mat2 m, vec2 v);
 mat2 mat2_mul(mat2 a, mat2 b);
@@ -199,7 +199,7 @@ typedef struct{
   };
 }mat3;
 
-mat3 mat3_identity();
+mat3 mat3_identity(void);
 vec3 mat3_col(mat3 m, int i);
 vec3 mat3_row(mat3 m, int i);
 mat3 mat3_transpose(mat3 m);
@@ -229,7 +229,7 @@ typedef struct{
   };
 }mat4;
 
-mat4 mat4_identity();
+mat4 mat4_identity(void);
 mat4 mat4_dup(mat4 N);
 vec4 mat4_row(mat4 M, int i);
 vec4 mat4_col(mat4 M, int i);
@@ -261,7 +261,7 @@ mat4 mat4_perspective(float y_fov, float aspect, float n, float f);
 mat4 mat4_look_at(vec3 eye, vec3 center, vec3 up);
 mat4 mat4_new(float * values);
 typedef vec4 quat;
-quat quat_identity();
+quat quat_identity(void);
 quat quat_from_axis(vec3 dir, float angle);
 quat quat_add(quat a, quat b);
 quat quat_sub(quat a, quat b);
@@ -286,5 +286,5 @@ void vec2_print(vec2 v);
 
 
 
-bool linmath_test();
+bool linmath_test(void);
 

@@ -5,8 +5,8 @@ CC = gcc
 TARGET = libiron.so
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 
-LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11
-CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -D_GNU_SOURCE -Werror -Wno-deprecated -Wsign-compare
+LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11 -lpng
+CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra -Werror -Wstrict-prototypes
 CFLAGS = $(CFLAGS_BASIC) -fPIC
 
 all: $(TARGET)
@@ -39,7 +39,7 @@ clean:
 -include $(OBJECTS:.o=.o.depends)
 
 test: $(OBJECTS) testmain.c
-	$(CC) testmain.c $(OBJECTS) -L/usr/lib/nvidia-384/ $(LIBS) $(OPT) -o $@
+	$(CC) testmain.c $(OBJECTS) -L/usr/lib/nvidia-384/ $(LIBS) $(OPT) -o $@ -Wall -Werror
 
 
 install: $(TARGET)

@@ -3,6 +3,7 @@
 // testing methods should take no arguments and return a bool (pass/fail)
 
 #define TEST(fcn) {log("%sTesting '" #fcn "'\n",""); if(fcn() == false){ERROR("%sError during '" #fcn "'\n",""); return false;}else{log("%sPass.\n","");}}
+#define TEST1(fcn,a) {log("%sTesting '" #fcn "(" #a ")" "'\n",""); if(fcn(a) == false){ERROR("%sError during '" #fcn "'\n",""); return false;}else{log("%sPass.\n","");}}
 #define TEST_ASSERT(expr) if(false == (expr)){ERROR("Failed assertion :'" #expr ";"); return false;}
 #define TEST_ASSERT_EQUAL(expr1, expr2) if(expr1 != expr2){ERROR("Failed assertion :'" #expr1 " == " #expr2 "'\n"); return false;}
 #define TEST_ASSERT_NOT_EQUAL(expr1, expr2) if(expr1 == expr2){ERROR("Failed assertion :'" #expr1 " != " #expr2 "'\n"); return false;}
@@ -23,4 +24,4 @@ const char * get_test_opt(const char * name);
 void set_test_opt(const char ** args, int arg_cnt);
 
 // test
-bool test_utils();
+bool test_utils(void);

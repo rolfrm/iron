@@ -32,14 +32,6 @@ blit3d_context * blit3d_context_new(){
   return ctx;
 }
 
-char * blit3d_fragment_shader(){
-  return (char *) texture_3d_shader_vs;
-}
-
-void blit3d_create_program(){
-  glCreateProgram();
-}
-
 void blit3d_context_initialize(blit3d_context * ctx){
   ctx->initialized = true;
   shader_3d shader;
@@ -129,7 +121,7 @@ void blit3d_polygon_update(blit3d_polygon * polygon){
 struct _texture_handle {
   GLuint tex;
 };
-texture * get_default_tex();
+texture * get_default_tex(void);
 
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   var tex = get_default_tex();

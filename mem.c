@@ -22,7 +22,7 @@ allocator * iron_get_allocator(){
   return _allocator;
 }
 
-void with_allocator(allocator * alc, void (* cb)()){
+void with_allocator(allocator * alc, void (* cb)(void)){
   allocator * old_alloc = _allocator;
   _allocator = alc;
   cb();

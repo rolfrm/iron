@@ -6,11 +6,11 @@
 #include "types.h"
 #include "linmath.h"
 #include "libbf.h"
+#include "bf.h"
 #include "linmath_bf.h"
 #include "utils.h"
 #include "mem.h"
 #include "log.h"
-static bf_context_t bf_ctx;
 
 vec2bf * vec2bf_zero;
 vec2bf * vec2bf_one;
@@ -20,22 +20,15 @@ vec2bf * vec2bf_one_y;
 vec2bf * vec2bf_two;
 
 
-static void *iron_bf_realloc(void *opaque, void *ptr, size_t size)
-{
-  UNUSED(opaque);
-  return ralloc(ptr, size);
-}
-
 void vec2bf_set(vec2bf * v, f64 x, f64 y){
-  bf_set_float64(&v->x, x);
-  bf_set_float64(&v->y, y);
+  fx_set(v->x, x);
+  fx_set(v->y, y);
 }
 
 vec2bf * _vec2bf_new(f64 x, f64 y){
  vec2bf * n = alloc0(sizeof(vec2bf));
- bf_init(&bf_ctx, &n->x);
- bf_init(&bf_ctx, &n->y);
- vec2bf_set(n, x, y);
+ n->x = fx_new1(x);
+ n->y = fx_new1(y);
  return n;
 }
 
@@ -56,49 +49,60 @@ vec2bf * vec2bf_new3(vec2bf * x){
   return y;
 }
 
+
 void vec2bf_del(vec2bf * v){
-  bf_delete(&v->x);
-  bf_delete(&v->y);
+  fx_del(v->x);
+  fx_del(v->y);
+}
+
+vec2bf * vec2bf_clone(vec2bf * x){
+  vec2bf * new = vec2bf_new(0, 0);
+  vec2bf_add(new, x);
+  return new;
+}
+
+void vec2bf_clear(vec2bf * a){
+  vec2bf_sub(a, a);
+}
+void vec2bf_set2(vec2bf * v, vec2bf * other){
+  vec2bf_clear(v);
+  vec2bf_add(v, other);
 }
 
 void vec2bf_add(vec2bf * a, vec2bf * b){
-  bf_add(&a->x, &a->x, &b->x, BF_PREC_INF, 0);
-  bf_add(&a->y, &a->y, &b->y, BF_PREC_INF, 0);
+  fx_add(a->x, b->x);
+  fx_add(a->y, b->y);
 }
 
-
 void vec2bf_sub(vec2bf * a, vec2bf * b){
-  bf_sub(&a->x, &a->x, &b->x, BF_PREC_INF, 0);
-  bf_sub(&a->y, &a->y, &b->y, BF_PREC_INF, 0);
+  fx_sub(a->x, b->x);
+  fx_sub(a->y, b->y);
 }
 
 
 void vec2bf_mul(vec2bf * a, vec2bf * b){
-  bf_mul(&a->x, &a->x, &b->x, BF_PREC_INF, 0);
-  bf_mul(&a->y, &a->y, &b->y, BF_PREC_INF, 0);
+  fx_mul(a->x, b->x);
+  fx_mul(a->y, b->y);
 }
 
-// this precision seems to be important for moving between bookmarks.
-// how iterating a bit it can be significantly lower than otherwise.
-#define div_prec 60
 
 void vec2bf_div2(vec2bf * c, vec2bf * a, vec2bf * b){
-  bf_div(&c->x, &a->x, &b->x, div_prec, 0);
-  bf_div(&c->y, &a->y, &b->y, div_prec, 0);
+  fx_div2(c->x, a->x, b->x);
+  fx_div2(c->y, b->x, b->y);
 }
 
 void vec2bf_div(vec2bf * a, vec2bf * b){
-  bf_div(&a->x, &a->x, &b->x, div_prec , 0);
-  bf_div(&a->y, &a->y, &b->y, div_prec, 0);
+  fx_div(a->x, b->x);
+  fx_div(a->y, b->y);
 }
 
 void vec2bf_inv(vec2bf * a){
-  bf_div(&a->x, &vec2bf_one->x, &a->x, div_prec, 0);
-  bf_div(&a->y, &vec2bf_one->x, &a->y, div_prec, 0);
+  fx_inv(a->x);
+  fx_inv(a->y);
 }
 
 bool vec2bf_cmp(vec2bf * a, vec2bf * b){
-  return bf_cmp_eq(&a->x, &b->x) && bf_cmp_eq(&a->y, &b->y);
+  return fx_eq(a->x, b->x) && fx_eq(a->y, b->y);
 }
 
 f64 vec2bf_len(vec2bf * a){
@@ -108,35 +112,28 @@ f64 vec2bf_len(vec2bf * a){
 }
 
 void vec2bf_to_xy(vec2bf * v, f64 * x ,f64 * y ){
-  bf_get_float64(&v->x, x, BF_RNDN);
-  bf_get_float64(&v->y, y, BF_RNDN);
+  *x = fx_to_f64(v->x);  
+  *y = fx_to_f64(v->y);  
 }
 
 
 vec2 vec2bf_to_vec2(vec2bf * v){
-  double x ,y;
-  bf_get_float64(&v->x, &x, BF_RNDN);
-  bf_get_float64(&v->y, &y, BF_RNDN);
-  return vec2_new((f32)x, (f32)y);
+  return vec2_new(fx_to_f64(v->x),fx_to_f64(v->y));
 }
 
 void vec2bf_print(vec2bf * v){
-  char * text = NULL;
-  size_t s = 0;
-  text = bf_ftoa(&s, &v->x, 10, 32, BF_FTOA_FORMAT_FREE);
-  logd("(%s,", text);
-  dealloc(text);
-  text = bf_ftoa(&s, &v->y, 10, 32, BF_FTOA_FORMAT_FREE);
-  logd(" %s)", text);
-  dealloc(text);
+  logd("(,");
+  fx_print(v->x);
+  logd(", ");
+  fx_print(v->y);
+  logd(")");
 }
 
 void ensure_vec2bf_inited(){
   static bool vec2bf_inited = false;
   if(!vec2bf_inited){
     vec2bf_inited = true;
-    bf_context_init(&bf_ctx, iron_bf_realloc, NULL);
-
+    
     vec2bf_two = vec2bf_new(2, 2);
     vec2bf_one = vec2bf_new(1,1);
     vec2bf_zero = vec2bf_new(0,0);

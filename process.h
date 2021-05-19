@@ -27,10 +27,10 @@ typedef struct{
 }iron_mutex;
 
 iron_thread * iron_start_thread(void * (* fcn)(void * data), void * data);
-iron_thread * iron_start_thread0(void (* fcn)());
+iron_thread * iron_start_thread0(void (* fcn)(void));
 void iron_thread_join(iron_thread * thread);
 
-iron_mutex iron_mutex_create();
+iron_mutex iron_mutex_create(void);
 void iron_mutex_lock(iron_mutex m);
 void iron_mutex_unlock(iron_mutex m);
 void iron_mutex_destroy(iron_mutex * m);

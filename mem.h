@@ -10,8 +10,8 @@ struct _allocator{
   void * user_data;
 };
 
-void with_allocator(allocator * alc, void (* cb)());
-allocator * iron_get_allocator();
+void with_allocator(allocator * alc, void (* cb)(void));
+allocator * iron_get_allocator(void);
 void iron_set_allocator(allocator * alc);
 
 void * alloc(size_t);
@@ -23,11 +23,11 @@ void * iron_clone(const void * src, size_t s);
 
 #define IRON_CLONE(object) ({auto data = object; iron_clone(&data, sizeof(data));})
 
-allocator * block_allocator_make();
+allocator * block_allocator_make(void);
 void block_allocator_release(allocator * block_allocator);
 
-allocator * trace_allocator_make();
-size_t trace_allocator_used_mem();
+allocator * trace_allocator_make(void);
+size_t trace_allocator_used_mem(void);
 size_t trace_allocator_allocated_pointers(allocator * trace_allocator);
 void trace_allocator_release(allocator * trace_allocator);
 

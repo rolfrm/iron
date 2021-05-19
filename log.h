@@ -35,6 +35,7 @@ void _error(const char * file, int line, const char * message, ...);
 
 //#ifdef 1
 #define ASSERT(expr) if(__builtin_expect(!(expr), 0)){ERROR("Assertion '" #expr "' Failed");}
+
 #define UNREACHABLE() {ERROR("Should not be reachable");}
 //#else
 //#define ASSERT(expr) if(expr){};
@@ -42,5 +43,5 @@ void _error(const char * file, int line, const char * message, ...);
 //#define UNREACHABLE();
 //#endif
 
-void iron_log_stacktrace();
+void iron_log_stacktrace(void);
 //extern void (* iron_log_printer)(const char * fnt, va_list lst);

@@ -1,8 +1,8 @@
-void * get_format_out();
+void * get_format_out(void);
 void format(const char * fmt, ...);
-void with_format_out(void * file, void (* fcn)());
+void with_format_out(void * file, void (* fcn)(void));
 void push_format_out(void * file);
-void pop_format_out();
+void pop_format_out(void);
 // writes a string to a file, replacing the content
 size_t write_string_to_file(const char * buffer, const char * filepath);
 // Appends a string to the end of a file. includes a 0 on the end.

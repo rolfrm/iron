@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -5,6 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdint.h>
+
 #include <sys/stat.h>
 #include <unistd.h> //fsync
 #include "log.h"
@@ -33,7 +35,7 @@ void pop_format_out(){
   else outfile = NULL;
 }
 
-void with_format_out(void * file, void (* fcn)()){
+void with_format_out(void * file, void (* fcn)(void)){
   FILE * old = outfile;
   outfile = file;
   fcn();
@@ -59,7 +61,7 @@ void write_buffer_to_file_(const void * buffer, size_t size, const char * filepa
   size_t written = write(fd, buffer,size);
   ASSERT(written == size);
   fsync(fd);
-  fdatasync(fd);
+  //fdatasync(fd);
 
   close(fd);
 }
@@ -74,7 +76,7 @@ size_t write_buffer_to_file(const void * buffer, size_t size, const char * filep
   return position;
 }
 
-void test_buffer_bug(){
+void test_buffer_bug(void){
 #define BUFFER_SIZE 1000
   for(char i = 1; i < 100; i++){
     logd("IT: %i\n", i);

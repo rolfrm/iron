@@ -1,13 +1,13 @@
 // Test Section
 //#include <unistd.h>
 #include "full.h"
+
 #include "gl.h"
 #include "stdio.h"
 #include <unistd.h>
 bool test_util_hash_table(){
   hash_table * ht = ht_create2(128,sizeof(u64),sizeof(u64));
   u64 cnt = 200;
-  bool ok = true;
   for(int j = 0; j < 5; j++){ // a wash
 
     for(u64 i = 0; i < cnt;i++){
@@ -215,6 +215,7 @@ bool do_allocator_test(){
   return TEST_SUCCESS;
 }
 
+/*
 bool block_allocator_test(){
   bool ok = TEST_SUCCESS;
   for(int j = 0; j < 10; j++){
@@ -226,7 +227,7 @@ bool block_allocator_test(){
   }
   
   return ok;
-}
+  }*/
 
 bool strtest(){
   { // split / join test
@@ -368,9 +369,9 @@ bool test_process(){
 // todo: Find bette way of testing
   //const char * args1[] = {"/usr/bin/xclip", "/proc/cpuinfo", 0};
   //const char * args1[] = {"/bin/cat", "/proc/cpuinfo", 0};
-  const char * args1[] = {"", NULL};
-  const char * args2[] = {"/usr/bin/xclip", "-se", "clipboard", "-target", "image/png", "-out", 0};
-  iron_process p;
+  //const char * args1[] = {"", NULL};
+  //const char * args2[] = {"/usr/bin/xclip", "-se", "clipboard", "-target", "image/png", "-out", 0};
+  //iron_process p;
   /*
   //iron_process_run("/usr/bin/xclip",args1 , &p)
   iron_process_run("./hello.sh",args1 , &p);
@@ -393,7 +394,7 @@ bool test_process(){
   iron_process_clean(&p);
     
 */
-  p = (iron_process){0};
+  /*  p = (iron_process){0};
   iron_process_run("/usr/bin/xclip",args2 , &p);
   while(true){
     iron_process_wait(p, 100000);
@@ -406,13 +407,14 @@ bool test_process(){
   }
   printf("stat: %i\n", iron_process_get_status(p));
   
-  return true;
+  return true;*/
 }
 extern texture * font_tex;
 #include "duck_img.png.c"
 bool ht2_test();
 bool ht2_string_test();
 void hash_table_bench();
+bool bf_test();
 void do_bench(){
   BENCH(hash_table_bench);
 }
@@ -436,6 +438,7 @@ int main(){
   TEST(test_datastream);
   TEST(test_process);
   TEST(linmath_test);
+  TEST(bf_test);
   //TEST(block_allocator_test);
   log("TEST SUCCESS\n");
 
@@ -480,7 +483,7 @@ int main(){
   //checkered_image.mode = GRAY_AS_ALPHA;
  
   var checkered_texture = texture_from_image2(&checkered_image, TEXTURE_INTERPOLATION_NEAREST);
-
+  UNUSED(checkered_texture);
   const char * fontfile_init = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"; //DejaVuSansMono
   var fnt0 =  blit_load_font_file(fontfile_init,  20);
   blit_set_current_font(fnt0);

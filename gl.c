@@ -9,8 +9,6 @@
 struct _gl_window{
   void * handle;
 };
-gl_backend * glfw_create_backend();
-gl_backend * x11_create_backend();
 static bool backend_initialized = false;
 gl_backend * current_backend = NULL;
 IRON_GL_BACKEND iron_gl_backend = IRON_GL_BACKEND_GLFW;
@@ -718,7 +716,7 @@ void blit_begin(BLIT_MODE _blit_mode){
   //glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-texture * get_default_tex(){
+texture * get_default_tex(void){
   static texture tex;
   if(tex.handle == NULL){
     var img = image_new(4,4,4);

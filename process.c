@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <signal.h>
 #include <stdint.h>
@@ -94,11 +95,11 @@ iron_thread * iron_start_thread(void * (* fcn)(void * data), void * data){
   return (iron_thread *) iron_clone(&tid, sizeof(tid));
 }
 static void * run(void * _f){
-    void (* f)() = _f;
+    void (* f)(void) = _f;
     f();
     return NULL;
   }
-iron_thread * iron_start_thread0(void (* fcn)()){
+iron_thread * iron_start_thread0(void (* fcn)(void)){
   
   pthread_t tid;
   if(pthread_create( &tid, NULL, run, fcn) != 0)

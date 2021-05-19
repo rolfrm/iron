@@ -69,17 +69,17 @@ void window_pos_callback(GLFWwindow* win, int xpos, int ypos)
 }
 
 
-void glfw_poll_events(){
+static void glfw_poll_events(void){
   glfwPollEvents();
 }
 
-void glfw_init(){
+static void glfw_init(void){
   glfwInit();
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
   //glfwSwapInterval(1);
 }
 
-void glfw_deinit(){
+static void glfw_deinit(void){
   glfwTerminate();
 }
 
@@ -290,7 +290,7 @@ static void glfw_set_window_title(void * window, const char * new_title){
   glfwSetWindowTitle((GLFWwindow *) window, new_title);
 }
 
-gl_backend * glfw_create_backend(){
+gl_backend * glfw_create_backend(void){
   gl_backend * backend = alloc0(sizeof(gl_backend));
   backend->poll_events = glfw_poll_events;
   backend->init = glfw_init;

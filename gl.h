@@ -14,9 +14,9 @@ typedef enum{
 extern IRON_GL_BACKEND iron_gl_backend;
 extern bool iron_gl_debug;
 typedef struct{
-  void (* poll_events)();
-  void (* init)();
-  void (* deinit)();
+  void (* poll_events)(void);
+  void (* init)(void);
+  void (* deinit)(void);
   void * (* create_window)(int width, int height, const char * title);
   void (* destroy_window)(void * window);
   void (* make_current)(void * window);
@@ -46,12 +46,12 @@ void gl_window_set_position(gl_window * win, int x, int y);
 void gl_window_get_position(gl_window * win, int *x, int * y);
 void gl_window_make_current(gl_window * win);
 void gl_window_destroy(gl_window **);
-void gl_window_poll_events();
+void gl_window_poll_events(void);
 bool gl_window_get_btn_state(gl_window * win, int btn);
 bool gl_window_get_key_state(gl_window * win, int key);
 const char * gl_window_get_clipboard(gl_window * win);
 void gl_window_set_title(gl_window * win, const char * title);
-void gl_terminate();
+void gl_terminate(void);
 typedef enum{
   EVT_MOUSE_MOVE,
   EVT_MOUSE_LEAVE,
@@ -256,10 +256,10 @@ typedef enum{
   BLIT_MODE_PIXEL_SCREEN = 1|BLIT_MODE_SCREEN_BIT,
 }BLIT_MODE;
 
-BLIT_MODE blit_mode_get();
-void blit_clear();
+BLIT_MODE blit_mode_get(void);
+void blit_clear(void);
 void blit_begin(BLIT_MODE blit_mode);
-void blit_end();
+void blit_end(void);
 void blit_translate(float x, float y);
 void blit_scale(float x, float y);
 void blit(float x, float y, texture * texture);
@@ -269,12 +269,12 @@ void blit_rectangle2(float r, float g, float b, float a);
 void blit_text(const char * text);
 
 void blit_uv_matrix(mat3 uv);
-void blit_push();
-void blit_pop();
+void blit_push(void);
+void blit_pop(void);
 void blit_bind_texture(texture * tex);
-void blit_quad();
+void blit_quad(void);
 void blit_color(f32 r, f32 g, f32 b ,f32 a);
-mat3 blit_get_view_transform();
+mat3 blit_get_view_transform(void);
 vec2 blit_translate_point(vec2 p);
 typedef struct{
   u32 id;
@@ -294,7 +294,7 @@ void blit_delete_framebuffer(blit_framebuffer * buf);
 texture blit_framebuffer_as_texture(blit_framebuffer * buf);
 
 typedef struct _blit3d_context blit3d_context;
-blit3d_context * blit3d_context_new();
+blit3d_context * blit3d_context_new(void);
 void blit3d_context_load(blit3d_context * ctx);
 
 typedef enum{
@@ -304,7 +304,7 @@ typedef enum{
 
 typedef struct _blit3d_polygon blit3d_polygon;
 typedef blit3d_polygon vertex_buffer;
-blit3d_polygon * blit3d_polygon_new();
+blit3d_polygon * blit3d_polygon_new(void);
 void blit3d_polygon_load_data(blit3d_polygon * polygon, void * data, size_t size);
 void blit3d_polygon_destroy(blit3d_polygon ** polygon);
   
@@ -317,3 +317,6 @@ void blit3d_color(blit3d_context * ctx, vec4 color);
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex);
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count);
+
+gl_backend * glfw_create_backend(void);
+gl_backend * x11_create_backend(void);
