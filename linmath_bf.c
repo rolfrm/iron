@@ -6,7 +6,7 @@
 #include "types.h"
 #include "linmath.h"
 #include "libbf.h"
-#include "bf.h"
+#include "fx.h"
 #include "linmath_bf.h"
 #include "utils.h"
 #include "mem.h"

@@ -78,6 +78,13 @@ blit3d_polygon * blit3d_polygon_new(){
   return pol;
 }
 
+f32 * blit3d_polygon_get_verts(blit3d_polygon * polygon, u32 * len){
+  if(polygon->dimensions != 3 || polygon->type != VERTEX_BUFFER_ARRAY || polygon->data == NULL)
+    return NULL;
+  *len = polygon->length/ 3;
+  return polygon->data;
+}
+
 void blit3d_polygon_destroy(blit3d_polygon ** polygon){
   var p = *polygon;
   if(p->data != NULL)

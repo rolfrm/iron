@@ -3,6 +3,7 @@
 #include "full.h"
 
 #include "gl.h"
+#include "audio.h"
 #include "stdio.h"
 #include <unistd.h>
 bool test_util_hash_table(){
@@ -215,19 +216,6 @@ bool do_allocator_test(){
   return TEST_SUCCESS;
 }
 
-/*
-bool block_allocator_test(){
-  bool ok = TEST_SUCCESS;
-  for(int j = 0; j < 10; j++){
-    allocator * balloc = block_allocator_make();
-    with_allocator(balloc,lambda(void, (){
-	  ok &= do_allocator_test();
-	}));
-    block_allocator_release(balloc);
-  }
-  
-  return ok;
-  }*/
 
 bool strtest(){
   { // split / join test
@@ -440,7 +428,7 @@ int main(){
   TEST(linmath_test);
   TEST(bf_test);
   //TEST(block_allocator_test);
-  log("TEST SUCCESS\n");
+  logi("TEST SUCCESS\n");
 
   gl_window * w = gl_window_open(200,196);
   gl_window_make_current(w);
@@ -489,6 +477,13 @@ int main(){
   blit_set_current_font(fnt0);
   const char * fontfile = "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"; //DejaVuSansMono
   var fnt = blit_load_font_file(fontfile, 32);
+  
+  var mod = create_sine(440);
+  var audio =  audio_initialize(44100);
+  audio_set_volume(audio, -20);
+  audio_sample s1 = audio_load_samplef2(audio, 20000, mod);
+  audio_play_sample(audio, s1);
+  audio_update_streams(audio);
   gl_window_event events[10];
   for(int i = 0; i <30000 ;i++){
     gl_window_make_current(w);
@@ -501,6 +496,7 @@ int main(){
 	break;
       }
     }
+    audio_update_streams(audio);
 
     blit_begin(BLIT_MODE_UNIT);
     blit_rectangle(-1,-1,2,2, 1,1,1,1);
@@ -534,6 +530,7 @@ int main(){
     if(a){
       lines = lines2;
     }
+
 
 
     float offsety = 0;
