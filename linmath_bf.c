@@ -12,12 +12,13 @@
 #include "mem.h"
 #include "log.h"
 
-vec2bf * vec2bf_zero;
-vec2bf * vec2bf_one;
-vec2bf * vec2bf_half;
-vec2bf * vec2bf_one_x;
-vec2bf * vec2bf_one_y;
-vec2bf * vec2bf_two;
+const vec2bf * vec2bf_zero;
+const vec2bf * vec2bf_one;
+const vec2bf * vec2bf_minus_one;
+const vec2bf * vec2bf_half;
+const vec2bf * vec2bf_one_x;
+const vec2bf * vec2bf_one_y;
+const vec2bf * vec2bf_two;
 
 
 void vec2bf_set(vec2bf * v, f64 x, f64 y){
@@ -146,16 +147,21 @@ void vec2bf_print(const vec2bf * v){
   logd(")");
 }
 
+static void set_vec2bf(const vec2bf **  v, vec2bf * o){
+  ((vec2bf **) v)[0] = o;
+}
+
 void ensure_vec2bf_inited(){
   static bool vec2bf_inited = false;
   if(vec2bf_inited) return;
   vec2bf_inited = true;
-    
-  vec2bf_two = vec2bf_new(2, 2);
-  vec2bf_one = vec2bf_new(1,1);
-  vec2bf_zero = vec2bf_new(0,0);
-  vec2bf_half = vec2bf_new(1, 1);
-  vec2bf_div2(vec2bf_half, vec2bf_one, vec2bf_two);
-  vec2bf_one_x = vec2bf_new(1, 0);
-  vec2bf_one_y =_vec2bf_new(0, 1);
+  
+  set_vec2bf(&vec2bf_two, vec2bf_new(2, 2));
+  set_vec2bf(&vec2bf_one, vec2bf_new(1,1));
+  set_vec2bf(&vec2bf_minus_one, vec2bf_new(-1,-1));
+  set_vec2bf(&vec2bf_zero, vec2bf_new(0,0));
+  set_vec2bf(&vec2bf_half, vec2bf_new(1, 1));
+  set_vec2bf(&vec2bf_half, vec2bf_new(0.5, 0.5));
+  set_vec2bf(&vec2bf_one_x, vec2bf_new(1, 0));
+  set_vec2bf(&vec2bf_one_y, vec2bf_new(0, 1));
 }

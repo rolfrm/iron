@@ -26,6 +26,8 @@ void fx_inv(fx * a);
 bool fx_eq(const fx * a, const fx * b);
 bool fx_gt(const fx * a, const fx * b);
 bool fx_lt(const fx * a, const fx * b);
+bool fx_le(const fx * a, const fx * b);
+bool fx_ge(const fx * a, const fx * b);
 
 void fx_print(const fx * a);
 f64 fx_to_f64(const fx * a);

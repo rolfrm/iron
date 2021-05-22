@@ -5,12 +5,13 @@ typedef struct {
 
 extern bf_context_t bf_ctx;
 void ensure_vec2bf_inited(void);
-extern vec2bf * vec2bf_zero;
-extern vec2bf * vec2bf_one;
-extern vec2bf * vec2bf_half;
-extern vec2bf * vec2bf_one_x;
-extern vec2bf * vec2bf_one_y;
-extern vec2bf * vec2bf_two;
+extern const vec2bf * vec2bf_zero;
+extern const vec2bf * vec2bf_one;
+extern const vec2bf * vec2bf_minus_one;
+extern const vec2bf * vec2bf_half;
+extern const vec2bf * vec2bf_one_x;
+extern const vec2bf * vec2bf_one_y;
+extern const vec2bf * vec2bf_two;
 
 void vec2bf_set(vec2bf * v, f64 x, f64 y);
 void vec2bf_set2(vec2bf * v, const vec2bf * other);

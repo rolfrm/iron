@@ -427,6 +427,7 @@ int main(){
   TEST(test_process);
   TEST(linmath_test);
   TEST(bf_test);
+  
   //TEST(block_allocator_test);
   logi("TEST SUCCESS\n");
 

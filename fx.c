@@ -118,6 +118,14 @@ bool fx_lt(const fx * a, const fx * b){
   return bf_cmp_lt(&a->v, &b->v);
 }
 
+bool fx_ge(const fx * a, const fx * b){
+  return !fx_lt(a, b);
+}
+
+bool fx_le(const fx * a, const fx * b){
+  return bf_cmp_le(&a->v, &b->v);
+}
+
 f64 fx_to_f64(const fx * a){
   f64 x;
   bf_get_float64(&a->v, &x, BF_RNDN);
@@ -241,7 +249,22 @@ bool test_vec2x(void){
   
   return true;
 }
-
+bool test_fxeq(void){
+  ASSERT(fx_isneg(fx_minus_one));
+  ASSERT(!fx_isneg(fx_one));
+  ASSERT(fx_lt(fx_minus_one,fx_one));
+  ASSERT(fx_lt(fx_zero, fx_one));
+  ASSERT(fx_gt(fx_one, fx_zero));
+  ASSERT(!fx_gt(fx_zero, fx_one));
+  ASSERT(fx_ge(fx_one, fx_zero));
+  ASSERT(fx_ge(fx_one, fx_one));
+  ASSERT(fx_le(fx_zero, fx_one));
+  ASSERT(fx_le(fx_one, fx_one));
+  ASSERT(fx_eq(fx_one, fx_one));
+  ASSERT(!fx_eq(fx_one, fx_minus_one));
+  
+  return true;
+}
 
 bool bf_test(void){ 
   var a = fx_new1(1);
@@ -265,5 +288,6 @@ bool bf_test(void){
   ASSERT(fx_iszero(fx_zero));
   TEST(test_encode_decode);
   TEST(test_vec2x);
+  TEST(test_fxeq);
   return true;
 }
