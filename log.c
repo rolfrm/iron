@@ -1,3 +1,4 @@
+#ifndef _EMCC_
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -69,3 +70,4 @@ void iron_log_stacktrace(void)
 
 
 
+#endif

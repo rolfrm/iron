@@ -1,3 +1,4 @@
+#ifndef _EMCC_
 #include <png.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -60,3 +61,4 @@ void image_save(image * img, const char * path){
 
   write_png_file(path, img->width, img->height, buf, img->channels, 8);
 }
+#endif

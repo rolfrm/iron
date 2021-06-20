@@ -1,3 +1,4 @@
+#ifndef _EMCC_
 #include "full.h"
 #include "gl.h"
 #include <X11/Xresource.h>
@@ -332,3 +333,4 @@ gl_backend * x11_create_backend(){
   backend->get_key_state = x11_get_key_state;
   return backend;
 }
+#endif
