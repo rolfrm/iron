@@ -1,7 +1,7 @@
 OPT = -g3 -O0
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
-CC = gcc
+CC = clang-12
 TARGET = libiron.a
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 
@@ -9,13 +9,14 @@ LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11 -lopenal -lpng
 CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra  -Werror -Wno-deprecated -Wsign-compare -Wstrict-prototypes
 CFLAGS = $(CFLAGS_BASIC) -fPIC
 
-all: $(TARGET) libiron.so
-$(TARGET): $(OBJECTS)
+all: $(TARGET) libiron.so libiron.a
+libiron.so: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
 
-libiron.so: libiron.a
-	ar rcs libiron.a $(OBJECTS)
-
+libiron.a: $(OBJECTS)
+	ar rcs libiron.a $(OBJECTS) 
+libiron.bc: $(OBJECTS)
+	emcc $(OBJECTS) -r -s WASM=1 -s USE_GLFW=3 -o libiron.bc
 cutils.o: cutils.c
 	$(CC) -fPIC -c  $< -o $@ 
 
@@ -39,10 +40,11 @@ wasm: CFLAGS = -std=c11 -c $(OPT) -Wall -Wextra -Werror=implicit-function-declar
 wasm: LDFLAGS= -r -s WASM=1 -s USE_GLFW=3
 wasm: LIBS =  -ldl -lm -lpthread -lglfw -lGL -lopenal
 wasm: libiron.a
+wasm: libiron.bc
 
 depend: h-depend
 clean:
-	rm $(OBJECTS) $(TARGET) *.o.depends test libiron.a
+	rm $(OBJECTS) $(TARGET) *.o.depends *.bc *.bc.depends test libiron.a
 
 -include $(OBJECTS:.o=.o.depends)
 
