@@ -52,12 +52,6 @@ static inline float saw(float rads, float shape)
 	return (1 - 2 * t) / (1 - a);
 }
 
-static inline float square(float rads){
-  rads = ffmodf((float)rads, (float)PI * 2);
-  if(rads > PI)
-    return 1;
-  else return -1;
-}
 
 int samplerate = 44100;
 void sinefilter(float * out, int sample, modulator * thing){

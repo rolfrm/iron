@@ -383,7 +383,6 @@ static int to_f32_enum(int enum_in){
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
   int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
-  int int_format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   
   u8 * data = image_data(image);
   bool delete_data = false;
@@ -749,8 +748,6 @@ void blit2(texture * tex){
   blit_quad();
 }
 
-
-
 void blit(float x,float y, texture * tex){
 
   blit_translate(x,y);
@@ -785,8 +782,6 @@ void blit_rectangle(float x, float y, float w, float h, float r, float g, float 
   blit_transform = t;
 }
 
-
-
 void blit_translate(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_translation(x, y) );
   
@@ -801,7 +796,6 @@ static blit_framebuffer * current_frame_buffer = {0};
 void blit_create_framebuffer(blit_framebuffer * buf){
   if(buf->channels == 0) buf->channels = 3;
 
-  
   blit_bind_texture(NULL);
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
