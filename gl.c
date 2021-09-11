@@ -383,9 +383,11 @@ static int to_f32_enum(int enum_in){
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
   int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  int int_format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   
   u8 * data = image_data(image);
   bool delete_data = false;
+  
   if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
     chn[0] = GL_LUMINANCE_ALPHA;
     int_format[0] = GL_LUMINANCE_ALPHA;
@@ -637,9 +639,7 @@ void blit_bind_texture(texture * tex){
     glUniform1i(shader.textured_loc, 0);
   }else{
     gl_texture_bind(*tex);
-    //glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
     glUniform1i(shader.textured_loc, 1);
-    
   }  
 }
 void blit_begin(BLIT_MODE _blit_mode){
