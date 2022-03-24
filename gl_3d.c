@@ -139,12 +139,17 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
   var shader = ctx->shader;
   var c = ctx->color;
+
   glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
   
   glVertexAttribPointer(shader.pos_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
   
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
   glDrawArrays(GL_TRIANGLE_STRIP,0, polygon->length / (polygon->dimensions * 4));
+
+  int err =  glGetError();
+  if(err != 0)
+    printf("eRR2: %i\n", err);
 }
 
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
@@ -152,7 +157,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     return;
 
   var tex = ctx->current_texture != NULL ? ctx->current_texture : get_default_tex();
-  glUniform1i(ctx->shader.textured_loc, 1);
+  //glUniform1i(ctx->shader.textured_loc, 1);
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
   int elements_index = -1;
   for(u32 i = 0; i < count; i++){
@@ -188,7 +193,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   }
   int err =  glGetError();
   if(err != 0)
-    printf("eRR2: %i\n", err);
+    printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);
 }
 
 

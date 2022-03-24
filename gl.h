@@ -92,7 +92,7 @@ typedef struct _gl_window_event{
     struct{
       bool ischar;
       int key;
-      char codept;
+      u32 codept;
       int scancode;
     }key;
 

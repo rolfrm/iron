@@ -1,7 +1,7 @@
 OPT = -g3 -O0
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
-CC = clang-12
+CC = gcc
 TARGET = libiron.a
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 

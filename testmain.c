@@ -45,10 +45,10 @@ bool test_math_utils(){
 }
 
 bool test_local_expressions(){
-  int result =  ({int x(){return 10;}x();});
-  int z = ({int d = 4; d + 9;});
-  TEST_ASSERT(13 == z);
-  TEST_ASSERT(10 == result);
+  //int result =  ({int x(){return 10;}x();});
+  //int z = ({int d = 4; d + 9;});
+  //TEST_ASSERT(13 == z);
+  //TEST_ASSERT(10 == result);
   return TEST_SUCCESS;
 }
 
@@ -444,7 +444,7 @@ int main(){
   blit_framebuffer fbuf = {.width = 64, .height = 64}; 
   var blit3d = blit3d_context_new();
   var poly1 = blit3d_polygon_new();
-  float vertexes[] = {0,0, 0, 1,0,0, 0,1,0};
+  float vertexes[] = {0,0, 0, 1,0,0, 0,1,0, 1,1,0};
   blit3d_polygon_load_data(poly1, vertexes, sizeof(vertexes));
   blit3d_polygon_configure(poly1, 3);
 
@@ -480,11 +480,12 @@ int main(){
   var fnt = blit_load_font_file(fontfile, 32);
   
   var mod = create_sine(440);
+  var asdr = create_adsr(0.5, 0.5 ,0.5 ,0.5);
   var audio =  audio_initialize(44100);
+  
   audio_set_volume(audio, -100);
   audio_sample s1 = audio_load_samplef2(audio, 20000, mod);
   UNUSED(s1);
-  //audio_play_sample(audio, s1);
   audio_update_streams(audio);
   gl_window_event events[10];
   for(int i = 0; i <30000 ;i++){
@@ -533,15 +534,13 @@ int main(){
       lines = lines2;
     }
 
-
-
     float offsety = 0;
     blit_set_current_font(NULL);
     blit_set_current_font(fnt);
     for(int i = 0; i < 100; i++){
       if(lines[i] == 0) break;
       if(i > 2){
-	blit_color(0.0,0.0,0.0,1.0);
+		  blit_color(0.0,0.0,0.0,1.0);
       }
       blit_push();
       blit_translate(0, offsety);

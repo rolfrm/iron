@@ -24,6 +24,7 @@ void blit_text(const char * text){
     ERROR("NO FONT LOADED");
     return;
   }
+  
   var font_tex = &current_font->font_tex;
   var cdata = current_font->cdata;
   float x = 0;
@@ -39,6 +40,7 @@ void blit_text(const char * text){
   }else{
     fliph = mat3_mul(mat3_mul(translate, fliph), negtranslate);
   }
+  glEnable(GL_BLEND);
   for(u64 i = 0; true ;){
 
     if(text[i] == 0) break;
@@ -48,7 +50,7 @@ void blit_text(const char * text){
       
       stbtt_aligned_quad q;
       stbtt_GetBakedQuad(cdata, font_tex->width, font_tex->height, codepoint-32, &x,&y,&q,1);
-    
+		
       vec2 size = vec2_new(q.x1 - q.x0, q.y1 - q.y0);
       mat3 m = mat3_2d_scale(q.s1 - q.s0, q.t1 - q.t0);
       m.data[2][0] = q.s0;
@@ -56,11 +58,11 @@ void blit_text(const char * text){
       blit_push();
 
       if(screen_blit) {
-	blit_uv_matrix(m);
-	blit_translate(q.x0, current_font->font_size + q.y0);
+		  blit_uv_matrix(m);
+		  blit_translate(q.x0, current_font->font_size + q.y0);
       } else {
-	blit_uv_matrix(mat3_mul(m, fliph));
-	blit_translate(q.x0,-q.y1);
+		  blit_uv_matrix(mat3_mul(m, fliph));
+		  blit_translate(q.x0,-q.y1);
       }
       blit_scale(size.x, size.y);
       blit_quad();

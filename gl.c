@@ -505,7 +505,9 @@ u32 compile_shader(int shader_type, const char * code){
     glGetShaderInfoLog(ss, loglen, &loglen, buffer);
     buffer[loglen] = 0;
     printf("%i: '%s'\n", loglen, buffer);
+	 printf("**** code ****\n: %s\n", code);
     dealloc(buffer);
+	 ASSERT(false);
   } else{
     logd("Compiled shader with success\n");
   }
@@ -576,7 +578,7 @@ MessageCallback( GLenum source,
 }
 
 typedef struct _textured_shader{
-  int vertex_transform_loc, uv_transform_loc, texture_loc, textured_loc, color_loc;
+  int vertex_transform_loc, uv_transform_loc, texture_loc, color_loc;
   int pos_attr, tex_coord_attr;
   int blit_shader;
   
@@ -635,12 +637,8 @@ void blit_bind_texture(texture * tex){
   blit_current_texture = tex;
   if(tex == NULL){
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUniform1i(shader.textured_loc, 0);
   }else{
-    gl_texture_bind(*tex);
-    //glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
-    glUniform1i(shader.textured_loc, 1);
-    
+    gl_texture_bind(*tex);    
   }  
 }
 void blit_begin(BLIT_MODE _blit_mode){
@@ -681,15 +679,14 @@ void blit_begin(BLIT_MODE _blit_mode){
     shader.uv_transform_loc = glGetUniformLocation(shader.blit_shader, "uv_transform");
     shader.texture_loc = glGetUniformLocation(shader.blit_shader, "_texture");
     shader.color_loc = glGetUniformLocation(shader.blit_shader, "color");
-    shader.textured_loc = glGetUniformLocation(shader.blit_shader, "textured");
-    glUseProgram(shader.blit_shader);
+
   }
   glUseProgram(shader.blit_shader);
   glBindBuffer(GL_ARRAY_BUFFER, quadbuffer);
   glVertexAttribPointer(shader.pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
   glVertexAttribPointer(shader.tex_coord_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glUniform1i(shader.textured_loc, 1);
+
   mat3 identity = mat3_identity();
   blit_transform = identity;
   blit_bind_texture(NULL);
@@ -705,6 +702,7 @@ void blit_begin(BLIT_MODE _blit_mode){
       blit_scale(2,2);
     }
   }
+  blit_uv_matrix(mat3_identity());
   
   glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &identity.m00);
   glUniform1i(shader.texture_loc, 0);
@@ -739,7 +737,12 @@ void blit_color(f32 r, f32 g, f32 b ,f32 a){
 }
 
 void blit_quad(){
+  if(blit_current_texture == NULL){
+	 var tex = get_default_tex();
+	 blit_bind_texture(tex);
+  }
   glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
+  glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &blit_uv_transform.m00);
   glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 }
 
@@ -766,13 +769,10 @@ void blit(float x,float y, texture * tex){
 }
 
 void blit_rectangle2(float r, float g, float b, float a){
-  var tex = get_default_tex();
-  blit_bind_texture(tex);
-
-  glUniformMatrix3fv(shader.vertex_transform_loc, 1, false, &blit_transform.m00);
+ 
   glUniform4f(shader.color_loc, r, g, b, a);
 
-  glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+  blit_quad();
 }
 
 
@@ -784,8 +784,6 @@ void blit_rectangle(float x, float y, float w, float h, float r, float g, float 
   blit_rectangle2(r,g,b,a);
   blit_transform = t;
 }
-
-
 
 void blit_translate(float x, float y){
   blit_transform = mat3_mul(blit_transform, mat3_2d_translation(x, y) );
