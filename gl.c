@@ -752,8 +752,6 @@ void blit2(texture * tex){
   blit_quad();
 }
 
-
-
 void blit(float x,float y, texture * tex){
 
   blit_translate(x,y);
@@ -799,7 +797,6 @@ static blit_framebuffer * current_frame_buffer = {0};
 void blit_create_framebuffer(blit_framebuffer * buf){
   if(buf->channels == 0) buf->channels = 3;
 
-  
   blit_bind_texture(NULL);
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);

@@ -1,17 +1,12 @@
 // Based on linmath.h
 // https://github.com/datenwolf/linmath.h
 
-typedef float v4sf __attribute__ ((vector_size (16)));
-typedef float v2sf __attribute__ ((vector_size (8)));
-typedef float v3sf __attribute__ ((vector_size (16)));
-
 typedef struct{
   union {
     struct{
       float x,y;
     };
     float data[2];
-    v2sf sse;
   };
 }vec2;
 
@@ -32,7 +27,6 @@ typedef struct{
     };
     float data[4];
     vec3 xyz;
-    v4sf sse;
   };
 }vec4;
 
@@ -70,6 +64,7 @@ vec2 vec2_min(vec2 a, vec2 b);
 // element-wise max
 vec2 vec2_max(vec2 a, vec2 b);
 vec2 vec2_abs(vec2);
+vec2 vec2_random(void);
 f32 vec2_dot(vec2 a, vec2 b);
 bool vec2_eq(vec2 a, vec2 b);
 extern const vec2 vec2_infinity;

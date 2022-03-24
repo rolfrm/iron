@@ -103,6 +103,10 @@ bool vec2_eq(vec2 a, vec2 b){
   return a.x == b.x && a.y == b.y;
 }
 
+vec2 vec2_random(void){
+  return vec2_new(randf32(), randf32());
+}
+
 vec3 vec3_normalize(vec3 v){
   return vec3_scale(v, 1.0f / vec3_len(v));
   //__m128 norm = _mm_sqrt_ps(_mm_dp_ps(v.sse, v.sse, 0x7F));
