@@ -849,3 +849,7 @@ void blit_blit_framebuffer(blit_framebuffer * buf){
 void blit_clear(){
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
+
+void blit_delete_framebuffer(blit_framebuffer * buf){
+  glDeleteFramebuffers(1, &buf->id);
+}

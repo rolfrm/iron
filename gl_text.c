@@ -55,6 +55,7 @@ void blit_text(const char * text){
       mat3 m = mat3_2d_scale(q.s1 - q.s0, q.t1 - q.t0);
       m.data[2][0] = q.s0;
       m.data[2][1] = q.t0;
+
       blit_push();
 
       if(screen_blit) {
@@ -75,6 +76,62 @@ void blit_text(const char * text){
   blit_pop();
   blit_uv_matrix(mat3_identity());
   blit_bind_texture(NULL);
+}
+
+
+void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text){
+  if(current_font == NULL){
+    ERROR("NO FONT LOADED");
+    return;
+  }
+  
+  var font_tex = &current_font->font_tex;
+  var cdata = current_font->cdata;
+  float x = 0;
+  float y = 0;
+  blit3d_bind_texture(ctx, font_tex);
+  //mat4 translate = mat4_translate(0, 0.5, 0);
+  //mat4 negtranslate = mat4_translate(0, -0.5, 0);
+  //mat4 fliph = mat4_scaled(1.0, -1.0, 1.0);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  for(u64 i = 0; true ;){
+    
+    if(text[i] == 0) break;
+    if(text[i] == '\n'){
+      y += current_font->font_size;
+      x = 0;
+      i += 1;
+      continue;
+    }
+    size_t l = 0;
+    int codepoint = utf8_to_codepoint(text + i, &l);
+    if(codepoint >= 32 && codepoint < (int)(32 + current_font->cdata_count)){
+      
+      stbtt_aligned_quad q;
+      stbtt_GetBakedQuad(cdata, font_tex->width, font_tex->height, codepoint-32, &x,&y,&q,1);
+		
+      vec3 size = vec3_new(q.x1 - q.x0, q.y1 - q.y0, 0);
+
+      mat3 m = mat3_2d_scale(q.s1 - q.s0, q.t1 - q.t0);
+      m.data[2][0] = q.s0;
+      m.data[2][1] = q.t0;
+
+      blit3d_uv_matrix(ctx, m);
+      mat4 t = mat4_translate((float)q.x0 ,(float) (current_font->font_size + q.y0) , 0);
+      
+      mat4 s = mat4_scaled(size.x, size.y, 1.0);
+      var t2 = mat4_mul(view, mat4_mul(model, mat4_mul(t, s)));
+      
+      blit3d_view(ctx, t2);
+      blit3d_blit_quad(ctx);
+    }
+    i += MAX((u32)l, (u32)1);
+    
+  }
+  
+  blit3d_uv_matrix(ctx, mat3_identity());
+  blit3d_bind_texture(ctx, NULL);
 }
 
 

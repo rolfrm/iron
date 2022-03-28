@@ -21,9 +21,11 @@ typedef struct _shader_3d{
 struct _blit3d_context{
   shader_3d shader;
   bool initialized;
-  mat4 matrix;  
+  mat4 matrix;
+  mat3 uv_matrix;
   vec4 color;
   texture * current_texture;
+  blit3d_polygon * quad_polygon;
 };
 
 blit3d_context * blit3d_context_new(){
@@ -56,6 +58,8 @@ void blit3d_context_load(blit3d_context * ctx)
 
   glUseProgram(ctx->shader.blit_shader);
   glEnableVertexAttribArray(0);
+  glDisable(GL_BLEND);
+  ctx->uv_matrix = mat3_identity();
 }
 
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix){
@@ -184,6 +188,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   var c = ctx->color;
   glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
+  glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &ctx->uv_matrix.m00);
   if(elements_index != -1){
     glDrawElements(GL_TRIANGLE_STRIP, polygons[elements_index]->length / (polygons[elements_index]->dimensions * 4), GL_UNSIGNED_BYTE, 0);
 
@@ -196,11 +201,28 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);
 }
 
-
 void blit3d_color(blit3d_context * ctx, vec4 color){
   ctx->color = color;
 }
 
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex){
   ctx->current_texture = tex;
+}
+
+void blit3d_blit_quad(blit3d_context * ctx){
+  if(ctx->quad_polygon == NULL){
+    f32 d[] = {0 , 0, 1, 0, 0, 1, 1, 1 };
+    ctx->quad_polygon = blit3d_polygon_new();
+    blit3d_polygon_load_data(ctx->quad_polygon, d, sizeof(d));
+    blit3d_polygon_configure(ctx->quad_polygon, 2);
+  }
+  
+  vertex_buffer * vb[2];
+  vb[0] = ctx->quad_polygon;
+  vb[1] = ctx->quad_polygon;
+  blit3d_polygon_blit2(ctx, vb, 2);
+}
+
+void blit3d_uv_matrix(blit3d_context * ctx, mat3 uv){
+  ctx->uv_matrix = uv;
 }

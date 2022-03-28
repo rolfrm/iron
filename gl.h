@@ -317,6 +317,9 @@ void blit3d_color(blit3d_context * ctx, vec4 color);
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex);
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count);
+void blit3d_blit_quad(blit3d_context * ctx);
+void blit3d_uv_matrix(blit3d_context * ctx, mat3 uv);
+void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text);
 
 gl_backend * glfw_create_backend(void);
 gl_backend * x11_create_backend(void);
