@@ -12,18 +12,18 @@
 #define UNUSED5(x,y,z,w,v) UNUSED2(x,y);UNUSED2(z,w);UNUSED1(v);
 #define GET_MACRO(_1, _2, _3, _4, _5, NAME,...) NAME
 #define UNUSED(...) GET_MACRO(__VA_ARGS__, UNUSED5, UNUSED4, UNUSED3, UNUSED2, UNUSED1, ...)(__VA_ARGS__)
-#ifdef __APPLE__
-#undef USE_VALGRIND
-#endif
+//#ifdef __APPLE__
+//#undef USE_VALGRIND
+//#endif
 
-#ifdef USE_VALGRIND
-#include <valgrind/memcheck.h>
-#define MAKE_UNDEFINED(x) VALGRIND_MAKE_MEM_UNDEFINED(&(x),sizeof(x));
-#define MAKE_NOACCESS(x) VALGRIND_MAKE_MEM_NOACCESS(&(x),sizeof(x));
-#else
-#define MAKE_UNDEFINED(x) UNUSED(x);
-#define MAKE_NOACCESS(x) UNUSED(x);
-#endif
+//#ifdef USE_VALGRIND
+//#include <valgrind/memcheck.h>
+//#define MAKE_UNDEFINED(x) VALGRIND_MAKE_MEM_UNDEFINED(&(x),sizeof(x));
+//#define MAKE_NOACCESS(x) VALGRIND_MAKE_MEM_NOACCESS(&(x),sizeof(x));
+//#else
+//#define MAKE_UNDEFINED(x) UNUSED(x);
+//#define MAKE_NOACCESS(x) UNUSED(x);
+//#endif
 
 #define auto __auto_type
 #define var __auto_type
@@ -78,3 +78,5 @@ void iron_register_deinitializer(void (* f)(void * data), void * data);
 void iron_deinitialize(void);
 void __test_utils(void);
 void print_raw(void * data, size_t size);
+
+int str_index_of_last(const char * str, char symbol);

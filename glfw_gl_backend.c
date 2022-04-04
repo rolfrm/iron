@@ -145,7 +145,7 @@ static void errorcallback(int errid, const char * err){
 
 void * glfw_create_window(int width, int height, const char * title){
   static GLFWwindow * main_context = NULL;
-  glfwWindowHint(GLFW_DEPTH_BITS, 16);
+  glfwWindowHint(GLFW_DEPTH_BITS, 24);
   
   GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, main_context);
   if(main_context == NULL)

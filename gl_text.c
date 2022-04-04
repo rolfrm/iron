@@ -122,6 +122,7 @@ void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text)
       
       mat4 s = mat4_scaled(size.x, size.y, 1.0);
       var t2 = mat4_mul(view, mat4_mul(model, mat4_mul(t, s)));
+      //mat4_print(model);vec3_print(size);logd("%f %f\n", q.x0, q.y0);
       
       blit3d_view(ctx, t2);
       blit3d_blit_quad(ctx);
@@ -132,6 +133,8 @@ void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text)
   
   blit3d_uv_matrix(ctx, mat3_identity());
   blit3d_bind_texture(ctx, NULL);
+  glDisable(GL_BLEND);
+  
 }
 
 

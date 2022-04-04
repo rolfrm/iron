@@ -46,8 +46,8 @@ void blit3d_context_initialize(blit3d_context * ctx){
   shader.color_loc = glGetUniformLocation(shader.blit_shader, "color");
   shader.textured_loc = glGetUniformLocation(shader.blit_shader, "textured");
   glUseProgram(shader.blit_shader);
-  glEnableVertexAttribArray(shader.pos_attr);
-  glEnableVertexAttribArray(shader.tex_coord_attr);
+  //glEnableVertexAttribArray(shader.pos_attr);
+  //glEnableVertexAttribArray(shader.tex_coord_attr);
   ctx->shader = shader;  
 }
 
@@ -58,7 +58,8 @@ void blit3d_context_load(blit3d_context * ctx)
 
   glUseProgram(ctx->shader.blit_shader);
   glEnableVertexAttribArray(0);
-  glDisable(GL_BLEND);
+  //glDisable(GL_BLEND);
+  //glDisable(GL_DEPTH_TEST);
   ctx->uv_matrix = mat3_identity();
 }
 
@@ -178,7 +179,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   for(u32 i = 0; i < count; i++){
     if((int)i == elements_index)
       continue;
-
+    glEnableVertexAttribArray(j);
     glBindBuffer(GL_ARRAY_BUFFER, polygons[j]->buffer);
     glVertexAttribPointer(j, polygons[j]->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
     j += 1;    
@@ -195,6 +196,11 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     // draw elements here
   }else{
     glDrawArrays(GL_TRIANGLE_STRIP,0, polygons[0]->length / (polygons[0]->dimensions * 4));
+  }
+  for(u32 i = 0; i < count; i++){
+    if((int)i == elements_index)
+      continue;
+    glDisableVertexAttribArray(j);
   }
   int err =  glGetError();
   if(err != 0)

@@ -70,4 +70,13 @@ void iron_log_stacktrace(void)
 
 
 
+#else
+#include <stdio.h>
+void iron_log_stacktrace(){
+
+}
+
+void log_print(int log_level, const char * fmt, ...){
+  printf("%i %s", log_level, fmt);
+}
 #endif

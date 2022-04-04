@@ -413,6 +413,7 @@ void texture_load_image(texture * texture, image * image){
     glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
 		 image->width, image->height, 0, chn[image->channels - 1], type, NULL);
   }else{
+    
     glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
 		 image->width, image->height, 0, chn[image->channels - 1], type, data);
   }
@@ -821,6 +822,7 @@ void blit_use_framebuffer(blit_framebuffer * buf){
   glBindFramebuffer(GL_FRAMEBUFFER, buf->id);
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   glViewport(0, 0, buf->width, buf->height);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glClearColor(0,0,0,0);
   glClear(GL_COLOR_BUFFER_BIT);
 
