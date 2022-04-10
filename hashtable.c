@@ -5,21 +5,10 @@
 #include <string.h>
 #include <signal.h>
 #include "utils.h"
-
+#include "types.h"
+#include "hashtable.h"
 bool debug_set = false;
-typedef int8_t i8;
 
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef float f32;
-typedef double f64;
 
 void * (* ht_mem_malloc)(size_t s);
 void (* ht_mem_free)(void *);
@@ -101,41 +90,6 @@ u32 hash1(const char * data, size_t count){
   //return hyper_hash(data, count);
 }
 
-typedef enum {
-	      HT_FREE = 0,
-	      HT_OCCUPIED = 1
-}ht_state;
-
-typedef bool (* compare_t ) (const void * k1, const void * k2, void * userdata);
-
-typedef struct _hash_table hash_table;
-struct _hash_table{
-  // this is allowed to be null
-  i32 (* hash )(const void * key_data, void * userdata);
-  // this is allowed to be null
-  void * userdata;
-  // this is allowed to be null
-  compare_t compare;
-
-  void * (* alloc_keys)(size_t size);
-  void * (* alloc_values)(size_t size);
-  void * (* alloc_state)(size_t size);
-  void (* free_keys)(void * ptr);
-  void (* free_values)(void * ptr);
-  void (* free_state)(void * ptr);
-  
-  
-  void * keys;
-  void * elems;
-  ht_state * occupied;
-
-  size_t capacity;
-  size_t count;
-  
-  size_t key_size;
-  size_t elem_size;
-  bool string_table;
-};
 
 size_t ht_count(hash_table * ht){
   return ht->count;
@@ -228,8 +182,6 @@ void ht_free(hash_table *ht){
   dealloc(ht);
 }
 
-bool ht_set(hash_table * ht, const void * key, const void * nelem);
-
 void ht_set_capacity(hash_table * ht, size_t buckets){
   var ht2 = ht_create2(buckets, ht->key_size, ht->elem_size);
   ht2->free_keys = ht->free_keys;
@@ -255,12 +207,36 @@ static void ht_grow(hash_table * ht){
   ht_set_capacity(ht, ht->capacity * 2);
 }
 
+void * memfind0(void * ptr, void * end, size_t size){
+  static size_t zeros[32] = {0};
+  while(ptr < end){
+    if(memcmp(ptr, zeros, size) == 0)
+      return ptr;
+  }
+  return end;
+}
 
 static i64 ht_find_free_pre_hashed(const hash_table * ht, size_t hash, const void * key){
   size_t key_size = ht->key_size;
   size_t capacity = ht->capacity;
   compare_t compare = ht->compare;
+  if(ht->occupied == NULL){
 
+    size_t i1 = hash % capacity;
+    void * start = ht->keys + i1 * key_size;
+    void * end = ht->keys + capacity * key_size;
+    void * unoccupied = memfind0(start, end, key_size);
+    if(unoccupied == end){
+      // search from beginning
+      start = ht->keys;
+      end = ht->keys + i1 * key_size;
+      unoccupied = memfind0(start, end, key_size);
+    }
+    if(unoccupied != end)
+      return (unoccupied - ht->keys) / key_size;
+    return -1;
+  }
+  
   // find a free slot using linear probing.
   for(size_t _i = 0, i = hash % ht->capacity; _i < capacity; _i++, i++){
     if(i >= capacity) i = 0;
@@ -290,20 +266,32 @@ static i64 ht_find_free(const hash_table * ht, const void * key){
   return ht_find_free_pre_hashed(ht, hash, key);
 }
 
-
 bool ht_set(hash_table * ht, const void * key, const void * nelem){
+  size_t key_size = ht->key_size;
+  i32 hash = ht->hash == NULL ? (i32)hash1(key, key_size) : ht->hash(key, ht->userdata);
+  return ht_set_precalc(ht, key, nelem, hash);
+}
+
+bool ht_set_precalc(hash_table * ht, const void * key, const void * nelem, size_t hash){
   ht_init(ht);
 
   if(ht->count * 2 >= ht->capacity){
     ht_grow(ht);
   }
-  i64 index = ht_find_free(ht, key);
+  i64 index = ht_find_free_pre_hashed(ht, hash, key);
   size_t elem_size = ht->elem_size;
   size_t key_size = ht->key_size;
   
   if(elem_size > 0)
     memmove(ht->elems + index * elem_size, nelem, elem_size);
   
+  if(ht->occupied == NULL){
+    if(memcmp(ht->keys + index * key_size, key, key_size) == 0)
+      return false;
+    
+    memmove(ht->keys + index * key_size, key, key_size);
+    return true;
+  }
   // an unoccupied index was found.
   if(ht->occupied[index] == HT_FREE){
     ht->count += 1;
@@ -317,19 +305,31 @@ bool ht_set(hash_table * ht, const void * key, const void * nelem){
 bool ht_get(hash_table * ht, const void *key, void * out_elem){
   if(ht->keys == NULL) return false;
   var index = ht_find_free(ht, key);
-  if(index == -1 || ht->occupied[index] == HT_FREE)
+  
+  if(index == -1)
     return false;
+  
+  if(ht->occupied != NULL && ht->occupied[index] == HT_FREE)
+    return false;
+  if(ht->occupied == NULL && memcmp(ht->keys + index * ht->key_size, key, ht->key_size) == 0)
+    return false;
+  
   var elem_size = ht->elem_size;
   if(out_elem != NULL && elem_size > 0)
     memcpy(out_elem, ht->elems + index * elem_size, elem_size);
   return true;
 }
 
-bool ht_get_precalc(hash_table * ht, int hashed_key, const void *key, void * out_elem){
+bool ht_get_precalc(hash_table * ht, size_t hashed_key, const void *key, void * out_elem){
   if(ht->keys == NULL) return false;
   i64 index = ht_find_free_pre_hashed(ht, hashed_key, key);
-  if(ht->occupied[index] == HT_FREE || index == -1)
+  if(index == -1)
     return false;
+  if(ht->occupied != NULL && ht->occupied[index] == HT_FREE )
+    return false;
+  if(ht->occupied == NULL && memcmp(ht->keys + index * ht->key_size, key, ht->key_size) == 0)
+    return false;
+  
   size_t elem_size = ht->elem_size;
   if(out_elem != NULL && elem_size > 0)
     memcpy(out_elem, ht->elems + index * elem_size, elem_size);
@@ -414,6 +414,7 @@ void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * use
 
 static i32 string_hash(const char ** key, void * userdata){
   UNUSED(userdata);
+  if(*key == NULL) return 0;
   u32 h = hash1(*key, strlen(*key));
   return (i32)h;
 }
