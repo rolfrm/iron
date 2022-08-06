@@ -1,4 +1,4 @@
-OPT = -g3 -O2
+OPT = -g0 -O3
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
 CC = gcc

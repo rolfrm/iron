@@ -4,7 +4,7 @@ static const char ** args = NULL;
 int cnt = 0;
 
 const char * get_test_opt(const char * name){
-  struct option option;
+  struct option option = {0};
   int idx2;
   int idx = getopt_long(cnt, (char * const *)args, name, &option, &idx2);
   if(idx == -1)

@@ -38,7 +38,6 @@ struct _hash_table{
   bool string_table;
 };
 
-
 // Creats a new hash table.
 // This table grows when more than half the slots are filled.
 hash_table * ht_create2(size_t init_capacity, size_t key_size, size_t elem_size);
@@ -76,3 +75,4 @@ void ht_set_compare(hash_table * ht, bool (* compare)(const void * k1, const voi
 
 // iterate hash table
 void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * user_data), void * userdata);
+

@@ -33,25 +33,6 @@ typedef struct {
   bool is_stream;
 }stream_info;
 
-static inline float ffmodf(float x, float y) {
-	return (x - y * (int)(x / y));
-}
-static inline float saw(float rads, float shape)
-{
-    rads = ffmodf((float)rads, (float)PI * 2);
-
-    float t = rads / (float)(PI * 2);
-    float a = (shape + 1.0f) / 2.0f;
-
-    if (t < a / 2)
-		return 2 * t / a;
-
-    if (t > (1 - (a / 2)))
-		return (2 * t - 2) / a;
-
-	return (1 - 2 * t) / (1 - a);
-}
-
 
 int samplerate = 44100;
 void sinefilter(float * out, int sample, modulator * thing){

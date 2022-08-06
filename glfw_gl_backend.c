@@ -2,6 +2,35 @@
 #define GL_GLEXT_PROTOTYPES
 #include "gl.h"
 #include <GLFW/glfw3.h>
+#ifdef _EMCC_
+
+#include <emscripten/html5.h>
+
+
+
+static EM_BOOL wasm_mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userData)
+{
+  GLFWwindow * win = userData;
+  
+  if (e->screenX != 0 && e->screenY != 0 && e->clientX != 0 && e->clientY != 0 && e->targetX != 0 && e->targetY != 0)
+  {
+    var mouse_down = eventType == EMSCRIPTEN_EVENT_MOUSEDOWN;
+    var mouse_up = eventType == EMSCRIPTEN_EVENT_MOUSEUP;
+    
+    gl_window_event btn = {.mouse_btn = {.button = e->button}};
+    if(mouse_down || mouse_up)
+      register_evt(win, &btn, mouse_down ? EVT_MOUSE_BTN_DOWN : EVT_MOUSE_BTN_UP);
+  }
+
+  if (eventType == EMSCRIPTEN_EVENT_CLICK && e->screenX == -500000)
+  {
+    printf("ERROR! Received an event to a callback that should have been unregistered!\n");
+  }
+  
+  return 0;
+}
+
+#endif
 
 static void keycallback(GLFWwindow * win, int key, int scancode, int action, int mods){
   UNUSED(mods); UNUSED(scancode);
@@ -161,9 +190,12 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetWindowSizeCallback(handle, windowsizecallback);
   glfwSetWindowPosCallback(handle, window_pos_callback);
   
-
+  //glfwSwapInterval( 0 );
   glfwMakeContextCurrent(handle);
 
+#ifdef _EMCC_
+  emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, handle, true, wasm_mouse_callback);
+#endif
   if(iron_gl_debug){
     logd("GL DEBUG: Enable OPENGL Debug context\n");
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);

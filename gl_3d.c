@@ -202,9 +202,9 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
       continue;
     glDisableVertexAttribArray(j);
   }
-  int err =  glGetError();
+  /*int err =  glGetError();
   if(err != 0)
-    printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);
+  printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);*/
 }
 
 void blit3d_color(blit3d_context * ctx, vec4 color){
