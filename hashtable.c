@@ -139,7 +139,7 @@ void ht_create3(hash_table *ht, size_t capacity, size_t key_size, size_t elem_si
   ht->capacity = capacity;
   ht->key_size = key_size;
   ht->elem_size = elem_size;
-  ht->userdata = ht;
+  //ht->userdata = ht;
   ht_set_alloc(ht, alloc0, free); 
 }
 
@@ -413,6 +413,26 @@ void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * use
     }
   }
 }
+
+
+void ht_iterate2(hash_table * ht, ht_op (* it)(void * key, void * elem, void * user_data), void * userdata){
+  if(ht->keys == NULL) return;
+  size_t key_size = ht->key_size;
+  size_t elem_size = ht->elem_size;
+  for(size_t i = 0; i < ht->capacity; i++){
+  again:
+    
+    if(ht->occupied[i] == HT_OCCUPIED){
+      var op = it(ht->keys + i * key_size, ht->elems + i * elem_size, userdata);
+      if(op == HT_REMOVE){
+        _ht_remove_at(ht, i); 
+        
+        goto again; // elements might have been moved back.
+      }
+    }
+  }
+}
+
 
 static i32 string_hash(const char ** key, void * userdata){
   UNUSED(userdata);

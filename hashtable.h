@@ -8,6 +8,11 @@ typedef enum {
 	      HT_OCCUPIED = 1
 }ht_state;
 
+typedef enum {
+  HT_NOP = 0,
+  HT_REMOVE = 1,
+}ht_op;
+  
 typedef struct _hash_table hash_table;
 struct _hash_table{
   // this is allowed to be null
@@ -80,4 +85,8 @@ void ht_set_compare(hash_table * ht, bool (* compare)(const void * k1, const voi
 
 // iterate hash table
 void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * user_data), void * userdata);
+
+// iterate hash table
+void ht_iterate2(hash_table * ht, ht_op (* it)(void * key, void * elem, void * user_data), void * userdata);
+
 
