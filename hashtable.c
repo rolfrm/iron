@@ -9,22 +9,18 @@
 #include "hashtable.h"
 bool debug_set = false;
 
+void ht_set_alloc(hash_table * ht, void * (* alloc)(size_t c), void (* free)(void * ptr)){
+  
+  ht->alloc_keys = alloc;
+  ht->alloc_values = alloc;
+  ht->alloc_state = alloc;
 
-void * (* ht_mem_malloc)(size_t s);
-void (* ht_mem_free)(void *);
-static void * alloc(size_t s){
-  void * d;
-  if(ht_mem_malloc != NULL)
-    d = ht_mem_malloc(s);
-  else
-    d = malloc(s);
+  ht->free_keys = free;
+  ht->free_values = free;
+  ht->free_state = free;
+  ht->alloc = alloc;
+  ht->free = free;
 
-  memset(d, 0, s);
-  return d;
-}
-static void dealloc(void * d){
-  if(ht_mem_free != NULL) ht_mem_free(d);
-  else free(d);
 }
 
 u32 djb2_hash(const char  * str, size_t count)
@@ -136,21 +132,20 @@ void ht_set_mem_keys(hash_table * ht, void * (* alloc)(size_t s), void (* free)(
   ht->free_keys = free;
 }
 
+void * alloc0(size_t s);
 
-hash_table * ht_create2(size_t capacity, size_t key_size, size_t elem_size){
-  hash_table * ht = alloc(sizeof(*ht));
-  //if(key_size == 8)
-  //  ht->hash = hash64;
+void ht_create3(hash_table *ht, size_t capacity, size_t key_size, size_t elem_size){
+  memset(ht, 0, sizeof(*ht));
   ht->capacity = capacity;
   ht->key_size = key_size;
   ht->elem_size = elem_size;
   ht->userdata = ht;
-  ht->alloc_keys = alloc;
-  ht->alloc_values = alloc;
-  ht->alloc_state = alloc;
-  ht->free_keys = dealloc;
-  ht->free_values = dealloc;
-  ht->free_state = dealloc;
+  ht_set_alloc(ht, alloc0, free); 
+}
+
+hash_table * ht_create2(size_t capacity, size_t key_size, size_t elem_size){
+  hash_table * ht = alloc0(sizeof(*ht));
+  ht_create3(ht, capacity, key_size, elem_size);
   return ht;
 }
 
@@ -161,12 +156,9 @@ hash_table * ht_create(size_t key_size, size_t elem_size){
 
 void ht_empty(hash_table *ht){
   if(ht->keys != NULL){
-	 if(ht->free_keys != dealloc)
-		ht->free_keys(ht->keys);
-	 if(ht->free_values != dealloc)
-		ht->free_values(ht->elems);
-	 if(ht->free_state != dealloc)
-		ht->free_state(ht->occupied);
+    ht->free_keys(ht->keys);
+    ht->free_values(ht->elems);
+    ht->free_state(ht->occupied);
 	 ht->keys = NULL;
 	 ht->elems = NULL;
 	 ht->occupied = NULL;
@@ -175,22 +167,32 @@ void ht_empty(hash_table *ht){
 
 
 void ht_free(hash_table *ht){
+  var f = ht->free;
   ht->free_keys(ht->keys);
   ht->free_values(ht->elems);
   ht->free_state(ht->occupied);
   memset(ht, 0, sizeof(ht[0]));
-  dealloc(ht);
+  f(ht);
 }
 
 void ht_set_capacity(hash_table * ht, size_t buckets){
-  var ht2 = ht_create2(buckets, ht->key_size, ht->elem_size);
+  if(ht->keys == NULL){
+    //just allocate and return.
+    ht->capacity = buckets;
+    ht_init(ht);
+    return;
+  }
+  
+  hash_table * ht2 = ht->alloc(sizeof(*ht));
+  ht_create3(ht2, buckets, ht->key_size, ht->elem_size);
   ht2->free_keys = ht->free_keys;
   ht2->free_values = ht->free_values;
   ht2->free_state = ht->free_state;
   ht2->alloc_keys = ht->alloc_keys;
   ht2->alloc_values = ht->alloc_values;
   ht2->alloc_state = ht->alloc_state;
-  
+  ht2->alloc = ht->alloc;
+  ht2->free = ht->free;
   ht2->hash = ht->hash;
   ht2->compare = ht->compare;
   ht2->userdata = ht->userdata;
@@ -200,7 +202,7 @@ void ht_set_capacity(hash_table * ht, size_t buckets){
     }
   }
   SWAP(*ht2, *ht);
-  ht_free(ht2);
+  ht->free(ht2);
 }
 
 static void ht_grow(hash_table * ht){

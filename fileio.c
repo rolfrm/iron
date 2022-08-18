@@ -152,7 +152,9 @@ void * read_file_to_buffer(const char * filepath, size_t * size){
 char * read_file_to_string(const char * filepath){
   size_t size = 0;
   char * d = read_file_to_buffer(filepath, &size);
-  ASSERT(size > 0);
+  if(size == 0)
+    return NULL;
+  //ASSERT(size > 0);
   if(d[size - 1] != 0){
     // make sure there is a 0 in the end.
     char * str = alloc0(size + 1);

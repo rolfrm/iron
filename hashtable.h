@@ -17,6 +17,9 @@ struct _hash_table{
   // this is allowed to be null
   compare_t compare;
 
+  void * (* alloc)(size_t size);
+  void (*free)(void * ptr);
+  
   void * (* alloc_keys)(size_t size);
   void * (* alloc_values)(size_t size);
   void * (* alloc_state)(size_t size);
@@ -40,9 +43,11 @@ struct _hash_table{
 
 // Creats a new hash table.
 // This table grows when more than half the slots are filled.
+void ht_create3(hash_table *ht, size_t capacity, size_t key_size, size_t elem_size);
 hash_table * ht_create2(size_t init_capacity, size_t key_size, size_t elem_size);
 hash_table * ht_create(size_t key_size, size_t elem_size);
 hash_table * ht_create_strkey(size_t elem_size);
+void ht_set_alloc(hash_table * ht, void * (* alloc)(size_t c), void (* free)(void * ptr));
 // Returns a pointer to an element if the key can be found in the table otherwise NULL.
 bool ht_get(hash_table * ht, const void * key, void * out_value);
 size_t ht_calc_hash(hash_table * ht, void * key);
