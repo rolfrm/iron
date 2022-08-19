@@ -401,6 +401,7 @@ void ht_clear(hash_table * ht){
   if(ht->keys == NULL) return;
   for(u32 i = 0; i < ht->capacity; i++)
     ht->occupied[i] = HT_FREE;
+  ht->count = 0;
 }
 
 void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * user_data), void * userdata){
@@ -408,9 +409,8 @@ void ht_iterate(hash_table * ht, void (* it)(void * key, void * elem, void * use
   size_t key_size = ht->key_size;
   size_t elem_size = ht->elem_size;
   for(size_t i = 0; i < ht->capacity; i++){
-    if(ht->occupied[i] == HT_OCCUPIED){
-      it(ht->keys + i * key_size, ht->elems + i * elem_size, userdata);
-    }
+    if(ht->occupied[i] != HT_OCCUPIED) continue;
+    it(ht->keys + i * key_size, ht->elems + i * elem_size, userdata);
   }
 }
 
@@ -420,15 +420,11 @@ void ht_iterate2(hash_table * ht, ht_op (* it)(void * key, void * elem, void * u
   size_t key_size = ht->key_size;
   size_t elem_size = ht->elem_size;
   for(size_t i = 0; i < ht->capacity; i++){
-  again:
-    
-    if(ht->occupied[i] == HT_OCCUPIED){
-      var op = it(ht->keys + i * key_size, ht->elems + i * elem_size, userdata);
-      if(op == HT_REMOVE){
-        _ht_remove_at(ht, i); 
-        
-        goto again; // elements might have been moved back.
-      }
+    if(ht->occupied[i] != HT_OCCUPIED) continue;    
+    var op = it(ht->keys + i * key_size, ht->elems + i * elem_size, userdata);
+    if(op == HT_REMOVE){
+      _ht_remove_at(ht, i); 
+      i--; // elements might have been moved back.     
     }
   }
 }
