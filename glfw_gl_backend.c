@@ -175,7 +175,8 @@ static void errorcallback(int errid, const char * err){
 void * glfw_create_window(int width, int height, const char * title){
   static GLFWwindow * main_context = NULL;
   glfwWindowHint(GLFW_DEPTH_BITS, 24);
-  
+  glfwWindowHint(GLFW_SAMPLES, 4 );
+    
   GLFWwindow * handle = glfwCreateWindow(width, height, title, NULL, main_context);
   if(main_context == NULL)
     main_context = handle;
@@ -189,10 +190,9 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetErrorCallback(errorcallback);
   glfwSetWindowSizeCallback(handle, windowsizecallback);
   glfwSetWindowPosCallback(handle, window_pos_callback);
-  
   //glfwSwapInterval( 0 );
   glfwMakeContextCurrent(handle);
-
+  
 #ifdef _EMCC_
   emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, handle, true, wasm_mouse_callback);
 #endif
