@@ -74,6 +74,7 @@ typedef enum{
 
 void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type);
 void gl_window_show_cursor(gl_window * win, bool);
+void gl_canvas_get_size(int * w, int * h);
 typedef struct _gl_window_event{
   u64 timestamp;
   u64 type;
@@ -302,6 +303,15 @@ typedef enum{
   VERTEX_BUFFER_ELEMENTS = 2
 }vertex_buffer_type;
 
+typedef enum{
+  BLIT3D_TRIANGLE_STRIP = 0,
+  BLIT3D_POINTS,
+  BLIT3D_TRIANGLES,
+  BLIT3D_TRIANGLES_COLOR,
+  BLIT3D_TRIANGLE_STRIP_COLOR,
+
+}blit3d_mode;
+
 typedef struct _blit3d_polygon blit3d_polygon;
 typedef blit3d_polygon vertex_buffer;
 blit3d_polygon * blit3d_polygon_new(void);
@@ -313,6 +323,7 @@ f32 * blit3d_polygon_get_verts(blit3d_polygon * polygon, u32 * len);
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);
 
 
+void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode);
 void blit3d_color(blit3d_context * ctx, vec4 color);
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex);
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);

@@ -27,9 +27,11 @@ libbf.o: libbf.c
 	$(CC) $(CFLAGS) $< -o $@ -MMD -MF $@.depends
 gl.o: texture.shader.c
 test: duck_img.png.c
-texture.shader.c: texture.shader.fs texture.shader.vs texture.3d.shader.vs
+
+texture.shader.c: texture.shader.fs texture.shader.vs texture.3d.shader.vs texture.3d.color.shader.vs
 	xxd -i texture.shader.vs > texture.shader.c
 	xxd -i texture.3d.shader.vs >> texture.shader.c
+	xxd -i texture.3d.color.shader.vs >> texture.shader.c
 	xxd -i texture.shader.fs >> texture.shader.c
 
 duck_img.png.c: duck.png

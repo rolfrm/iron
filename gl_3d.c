@@ -8,24 +8,31 @@
 extern unsigned char texture_3d_shader_vs[];
 extern unsigned int texture_3d_shader_vs_len;
 
+extern unsigned char texture_3d_color_shader_vs[];
+extern unsigned int texture_3d_color_shader_vs_len;
+
+
 extern unsigned char texture_shader_fs[];
 extern unsigned int texture_shader_fs_len;
 
 typedef struct _shader_3d{
   int vertex_transform_loc, uv_transform_loc, texture_loc, textured_loc, color_loc;
-  int pos_attr, tex_coord_attr;
+  int pos_attr, tex_coord_attr,color_attr;
   int blit_shader;
   
 }shader_3d;
 
 struct _blit3d_context{
   shader_3d shader;
+  shader_3d shader2;
   bool initialized;
   mat4 matrix;
   mat3 uv_matrix;
   vec4 color;
   texture * current_texture;
   blit3d_polygon * quad_polygon;
+  blit3d_mode mode;
+  
 };
 
 blit3d_context * blit3d_context_new(){
@@ -48,7 +55,21 @@ void blit3d_context_initialize(blit3d_context * ctx){
   glUseProgram(shader.blit_shader);
   //glEnableVertexAttribArray(shader.pos_attr);
   //glEnableVertexAttribArray(shader.tex_coord_attr);
-  ctx->shader = shader;  
+  ctx->shader = shader;
+
+  shader_3d shader2;
+  shader2.blit_shader = gl_shader_compile2((char *)texture_3d_color_shader_vs,texture_3d_color_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
+  shader2.pos_attr = 0;
+  shader2.color_attr = 1;
+  shader2.vertex_transform_loc = glGetUniformLocation(shader2.blit_shader, "vertex_transform");
+  shader2.color_loc = glGetUniformLocation(shader2.blit_shader, "color");
+  glUseProgram(shader2.blit_shader);
+  //glEnableVertexAttribArray(shader.pos_attr);
+  //glEnableVertexAttribArray(shader.tex_coord_attr);
+  ctx->shader2 = shader2;  
+  glUseProgram(shader.blit_shader);
+  
+  
 }
 
 void blit3d_context_load(blit3d_context * ctx)
@@ -61,6 +82,19 @@ void blit3d_context_load(blit3d_context * ctx)
   //glDisable(GL_BLEND);
   //glDisable(GL_DEPTH_TEST);
   ctx->uv_matrix = mat3_identity();
+}
+
+
+void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode){
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
+    glUseProgram(ctx->shader.blit_shader);
+  }
+  ctx->mode = mode;
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
+    glUseProgram(ctx->shader2.blit_shader);
+  }
+ 
+  
 }
 
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix){
@@ -144,20 +178,29 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
   var shader = ctx->shader;
   var c = ctx->color;
-
+  
   glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
   
   glVertexAttribPointer(shader.pos_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
   
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
-  glDrawArrays(GL_TRIANGLE_STRIP,0, polygon->length / (polygon->dimensions * 4));
 
-  int err =  glGetError();
-  if(err != 0)
-    printf("eRR2: %i\n", err);
+
+  int mode = GL_TRIANGLE_STRIP;
+  if(ctx->mode == BLIT3D_POINTS)
+    mode = GL_POINTS;
+  if(ctx->mode == BLIT3D_TRIANGLES)
+    mode = GL_TRIANGLES;
+  
+  glDrawArrays(mode,0, polygon->length / (polygon->dimensions * 4));
+  
+  //int err =  glGetError();
+  //if(err != 0)
+  //  printf("eRR2: %i\n", err);
 }
 
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
+  
   if(count == 0)
     return;
 
@@ -186,25 +229,43 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   }
 
   var shader = ctx->shader;
+  
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR)
+    shader = ctx->shader2;
+  if(ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR)
+    shader = ctx->shader2;
+  
   var c = ctx->color;
   glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
-  glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &ctx->uv_matrix.m00);
+  if(ctx->mode != BLIT3D_TRIANGLES_COLOR && ctx->mode != BLIT3D_TRIANGLE_STRIP_COLOR)
+    glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &ctx->uv_matrix.m00);
+
+  int mode = GL_TRIANGLE_STRIP;
+  if(ctx->mode == BLIT3D_POINTS)
+    mode = GL_POINTS;
+  if(ctx->mode == BLIT3D_TRIANGLES)
+    mode = GL_TRIANGLES;
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR)
+    mode = GL_TRIANGLES;
+  
+  
   if(elements_index != -1){
-    glDrawElements(GL_TRIANGLE_STRIP, polygons[elements_index]->length / (polygons[elements_index]->dimensions * 4), GL_UNSIGNED_BYTE, 0);
+    glDrawElements(mode, polygons[elements_index]->length / (polygons[elements_index]->dimensions * 4), GL_UNSIGNED_BYTE, 0);
 
     // draw elements here
   }else{
-    glDrawArrays(GL_TRIANGLE_STRIP,0, polygons[0]->length / (polygons[0]->dimensions * 4));
+    glDrawArrays(mode,0, polygons[0]->length / (polygons[0]->dimensions * 4));
   }
   for(u32 i = 0; i < count; i++){
     if((int)i == elements_index)
       continue;
     glDisableVertexAttribArray(j);
   }
-  /*int err =  glGetError();
-  if(err != 0)
-  printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);*/
+  
+  //int err =  glGetError();
+  //if(err != 0)
+  //  printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);
 }
 
 void blit3d_color(blit3d_context * ctx, vec4 color){

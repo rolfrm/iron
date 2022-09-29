@@ -5,7 +5,30 @@
 #include <GL/glext.h>
 #include "stb_image.h"
 #include "texture.shader.c"
+#ifdef _EMCC_
+#include <emscripten.h>
 
+EM_JS(int, canvas_get_width, (), {
+  return emscripten_border.clientWidth;
+});
+
+EM_JS(int, canvas_get_height, (), {
+    return emscripten_border.clientHeight;
+  });
+
+void gl_canvas_get_size(int * w, int * h){
+
+  w[0] = canvas_get_width();
+  h[0] = canvas_get_height();
+}
+
+#else
+void gl_canvas_get_size(int * w, int * h){
+  UNUSED(w);
+  UNUSED(h);
+  // not implemented
+}
+#endif
 struct _gl_window{
   void * handle;
 };
