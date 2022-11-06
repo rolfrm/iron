@@ -246,8 +246,10 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     mode = GL_POINTS;
   if(ctx->mode == BLIT3D_TRIANGLES)
     mode = GL_TRIANGLES;
-  if(ctx->mode == BLIT3D_TRIANGLES_COLOR)
-    mode = GL_TRIANGLES;
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR){
+    //glPointSize(3.0);
+    mode = GL_TRIANGLES;//GL_LINE_LOOP;
+  }
   
   
   if(elements_index != -1){

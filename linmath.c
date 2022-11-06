@@ -216,6 +216,19 @@ float vec3_max_element(vec3 a){
   return MAX(a.x, MAX(a.y, a.z));
 }
 
+vec3 vec3_floor(vec3 a){
+  return vec3_new(floor(a.x), floor(a.y), floor(a.z));
+}
+
+vec3 vec3_round(vec3 a){
+  return vec3_new(round(a.x), round(a.y), round(a.z));
+}
+
+vec3 vec3_ceil(vec3 a){
+  return vec3_new(ceilf(a.x), ceilf(a.y), ceilf(a.z));
+}
+
+
 const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f};
 const vec3 vec3_negative_infinity = {.x = -1.0f / 0.0f, .y = -1.0f / 0.0f, .z = -1.0f / 0.0f};
 const vec3 vec3_zero = {.x = 0.0f, .y = 0.0f, .z = 0.0f};

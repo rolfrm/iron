@@ -401,6 +401,7 @@ void ht_clear(hash_table * ht){
   if(ht->keys == NULL) return;
   for(u32 i = 0; i < ht->capacity; i++)
     ht->occupied[i] = HT_FREE;
+  
   ht->count = 0;
 }
 
