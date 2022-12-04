@@ -5,6 +5,7 @@
 #include <GL/glext.h>
 #include "stb_image.h"
 #include "texture.shader.c"
+#include <signal.h>
 #ifdef _EMCC_
 #include <emscripten.h>
 
@@ -29,6 +30,24 @@ void gl_canvas_get_size(int * w, int * h){
   // not implemented
 }
 #endif
+
+static void GLAPIENTRY
+MessageCallback( GLenum source,
+                 GLenum type,
+                 GLuint id,
+                 GLenum severity,
+                 GLsizei length,
+                 const GLchar* message,
+                 const void* userParam )
+{
+  UNUSED(source, type, id, length, userParam);
+  //if(type == GL_DEBUG_TYPE_ERROR)
+  printf("GL ERROR: %i %i %s\n", severity, type, message);
+  raise(SIGINT);  
+}
+
+
+
 struct _gl_window{
   void * handle;
 };
@@ -82,6 +101,19 @@ gl_window * gl_window_open(i32 width, i32 height){
 #endif
     current_backend->init();
     backend_initialized = true;
+#ifndef __EMSCRIPTEN__
+	
+    glEnable( GL_DEBUG_OUTPUT );
+    glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
+                              GL_DONT_CARE,
+                              GL_DONT_CARE,
+                              0,
+                              NULL,
+                              GL_TRUE);
+    //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
+    glDebugMessageCallback( MessageCallback, 0 );
+    #endif
+    
   }
   gl_window * win = alloc0(sizeof(gl_window));
   win->handle = current_backend->create_window(width, height, "OpenGL Window");
@@ -406,43 +438,53 @@ static int to_f32_enum(int enum_in){
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
   int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
-  int int_format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
-  
+  int int_formats[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  int int_format = int_formats[image->channels - 1];
+  int format = chn[image->channels - 1];
+  int type = GL_UNSIGNED_BYTE;
   u8 * data = image_data(image);
   bool delete_data = false;
   if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
-    chn[0] = GL_LUMINANCE_ALPHA;
-    int_format[0] = GL_LUMINANCE_ALPHA;
+    format = GL_LUMINANCE_ALPHA;
+    int_format = GL_LUMINANCE_ALPHA;
     // cannot do swizzle as it is not supported in webgl.
     // instead provide a temporary LUMIANCE_ALPHA texture.
     if(data != NULL){
       int pixels = image->width * image->height;
       u8 * newdata = alloc0(2 * pixels);
       for(int i = 0; i < pixels; i++){
-	newdata[i * 2] = 0xFF;
-	newdata[i * 2 + 1] = data[i];
+		newdata[i * 2] = 0xFF;
+		newdata[i * 2 + 1] = data[i];
       }
       data = newdata;
       delete_data = true;
     }
   }
-  int type = GL_UNSIGNED_BYTE;
-  if(image->mode & IMAGE_MODE_F32){
-    int_format[image->channels - 1] = to_f32_enum(int_format[image->channels - 1]);
+  
+  if(image->mode == IMAGE_MODE_DEPTH16){
+	int_format = GL_DEPTH_COMPONENT32F;
+	format = GL_DEPTH_COMPONENT;
+	type = GL_FLOAT;
+	printf("LOAD DEPTH MODE IMAGE\n");
+  }
+  
+  if(image->mode == IMAGE_MODE_F32){
+    int_format = to_f32_enum(int_formats[image->channels - 1]);
     type = GL_FLOAT;
   }
   
   if(data == NULL){
-    glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
-		 image->width, image->height, 0, chn[image->channels - 1], type, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, int_format,
+				 image->width, image->height, 0, format, type, NULL);
   }else{
     
-    glTexImage2D(GL_TEXTURE_2D, 0, int_format[image->channels - 1],
-		 image->width, image->height, 0, chn[image->channels - 1], type, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, int_format,
+		 image->width, image->height, 0, format, type, data);
   }
+  
   texture->width = image->width;
   texture->height = image->height;
-  texture->handle->format = int_format[image->channels - 1];
+  texture->handle->format = int_format;
   if(delete_data)
     dealloc(data);
 }
@@ -533,7 +575,18 @@ u32 compile_shader(int shader_type, const char * code){
     dealloc(buffer);
 	 ASSERT(false);
   } else{
-    logd("Compiled shader with success\n");
+	int loglen = 0;
+    glGetShaderiv(ss, GL_INFO_LOG_LENGTH, &loglen);
+	if(loglen > 0){
+	  char * buffer = alloc0(loglen + 10);
+	  glGetShaderInfoLog(ss, loglen, &loglen, buffer);
+	  buffer[loglen] = 0;
+	  printf("%i: '%s'\n", loglen, buffer);
+	  printf("**** code ****\n: %s\n", code);
+	  dealloc(buffer);
+	}
+	logd("Compiled shader with success\n");
+
   }
   return ss;
 }
@@ -548,11 +601,24 @@ u32 compile_shader_from_file(u32 gl_prog_type, const char * filepath){
 u32 gl_shader_compile(const char * vsc, const char * fsc){
   u32 vs = compile_shader(GL_VERTEX_SHADER, vsc);
   u32 fs = compile_shader(GL_FRAGMENT_SHADER, fsc);
-  u32 prog = glCreateProgram();
-  glAttachShader(prog, vs);
-  glAttachShader(prog, fs);
-  glLinkProgram(prog);
-  return prog;
+  u32 program = glCreateProgram();
+  glAttachShader(program, vs);
+  glAttachShader(program, fs);
+  glLinkProgram(program);
+
+  // Check for errors
+  GLint linkStatus;
+  glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+  if (linkStatus == GL_FALSE) {
+    // An error occurred during linking, get the log message
+    GLint logLength;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+    GLchar logMessage[logLength];
+    glGetProgramInfoLog(program, logLength, NULL, logMessage);
+    printf("OpenGL error: %s\n", logMessage);
+  }
+  
+  return program;
 }
 
 u32 gl_shader_compile2(const char * vsc, int vlen, const char * fsc, int flen){
@@ -586,20 +652,6 @@ u32 create_shader_from_files(const char * vs_path, const char * fs_path){
   return prog;
 }
 
-static void GLAPIENTRY
-MessageCallback( GLenum source,
-                 GLenum type,
-                 GLuint id,
-                 GLenum severity,
-                 GLsizei length,
-                 const GLchar* message,
-                 const void* userParam )
-{
-  UNUSED(source, type, id, length, userParam);
-  if(type == GL_DEBUG_TYPE_ERROR)
-    ERROR("GL ERROR: %i %i %s\n", severity, type, message);
-  
-}
 
 typedef struct _textured_shader{
   int vertex_transform_loc, uv_transform_loc, texture_loc, color_loc;
@@ -684,17 +736,6 @@ void blit_begin(BLIT_MODE _blit_mode){
     glBindBuffer(GL_ARRAY_BUFFER, quadbuffer_uvs);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_uvs), quad_uvs, GL_STATIC_DRAW);
 
-    #ifndef __EMSCRIPTEN__
-    glEnable( GL_DEBUG_OUTPUT );
-    glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
-                              GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              0,
-                              NULL,
-                              GL_TRUE);
-    //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
-    glDebugMessageCallback( MessageCallback, 0 );
-    #endif
     shader.blit_shader = gl_shader_compile2((char *)texture_shader_vs,texture_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
 
     shader.pos_attr = 0;
@@ -825,14 +866,31 @@ void blit_create_framebuffer(blit_framebuffer * buf){
   ASSERT(buf->width > 0 && buf->height > 0);
   ASSERT(current_frame_buffer == NULL);
   image img = {.source = NULL, .width = buf->width, .height = buf->height, .channels = buf->channels, .mode = buf->mode};
+
+  image dimg = {.source = NULL, .width = buf->width, .height = buf->height, .channels = 1, .mode = buf->depth_mode};
+  
   texture tex = texture_from_image3(&img, TEXTURE_INTERPOLATION_LINEAR, TEXTURE_INTERPOLATION_NEAREST);
 
+
+  
   glGenFramebuffers(1, &buf->id);
-  glBindFramebuffer(GL_FRAMEBUFFER, buf->id); 
+  glBindFramebuffer(GL_FRAMEBUFFER, buf->id);
+
+  if(dimg.mode != IMAGE_MODE_NONE){
+	var dtex = texture_from_image3(&dimg, TEXTURE_INTERPOLATION_LINEAR, TEXTURE_INTERPOLATION_NEAREST);
+	gl_texture_bind(dtex);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dtex.handle->tex, 0);
+	buf->depth_texture = dtex.handle;
+
+  }
+  
   gl_texture_bind(tex);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle->tex, 0);
-  //printf("ERROR: %i\n", glGetError());
   
+  
+  
+  //printf("ERROR: %i\n", glGetError());
+  printf("FRAMEBUFFER OK?? %i %i \n", glGetError(), glCheckFramebufferStatus(GL_FRAMEBUFFER));
   ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE); 
   buf->texture = tex.handle;
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -865,6 +923,12 @@ texture blit_framebuffer_as_texture(blit_framebuffer * buf){
   texture tex = {.width = buf->width, .height = buf->height, .handle = buf->texture};
   return tex;
 }
+
+texture blit_framebuffer_depth_as_texture(blit_framebuffer * buf){
+  texture tex = {.width = buf->width, .height = buf->height, .handle = buf->depth_texture};
+  return tex;
+}
+
 
 void blit_blit_framebuffer(blit_framebuffer * buf){
   var tex = blit_framebuffer_as_texture(buf);

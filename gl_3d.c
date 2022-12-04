@@ -15,6 +15,9 @@ extern unsigned int texture_3d_color_shader_vs_len;
 extern unsigned char texture_shader_fs[];
 extern unsigned int texture_shader_fs_len;
 
+extern unsigned char texture_depth_shader_fs[];
+extern unsigned int texture_depth_shader_fs_len;
+
 typedef struct _shader_3d{
   int vertex_transform_loc, uv_transform_loc, texture_loc, textured_loc, color_loc;
   int pos_attr, tex_coord_attr,color_attr;
@@ -25,11 +28,13 @@ typedef struct _shader_3d{
 struct _blit3d_context{
   shader_3d shader;
   shader_3d shader2;
+  shader_3d shader3;
   bool initialized;
   mat4 matrix;
   mat3 uv_matrix;
   vec4 color;
-  texture * current_texture;
+  texture * current_texture[5];
+  size_t texture_count;
   blit3d_polygon * quad_polygon;
   blit3d_mode mode;
   
@@ -38,6 +43,7 @@ struct _blit3d_context{
 blit3d_context * blit3d_context_new(){
   blit3d_context * ctx = alloc0(sizeof(ctx[0]));
   blit3d_view(ctx, mat4_identity());
+  ctx->texture_count = 1;
   return ctx;
 }
 
@@ -58,7 +64,11 @@ void blit3d_context_initialize(blit3d_context * ctx){
   ctx->shader = shader;
 
   shader_3d shader2;
-  shader2.blit_shader = gl_shader_compile2((char *)texture_3d_color_shader_vs,texture_3d_color_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
+  shader2.blit_shader = gl_shader_compile2(
+										   (char *)texture_3d_color_shader_vs,
+										   texture_3d_color_shader_vs_len,
+										   (char *)texture_shader_fs,
+										   texture_shader_fs_len);
   shader2.pos_attr = 0;
   shader2.color_attr = 1;
   shader2.vertex_transform_loc = glGetUniformLocation(shader2.blit_shader, "vertex_transform");
@@ -67,16 +77,35 @@ void blit3d_context_initialize(blit3d_context * ctx){
   //glEnableVertexAttribArray(shader.pos_attr);
   //glEnableVertexAttribArray(shader.tex_coord_attr);
   ctx->shader2 = shader2;  
+
+  shader_3d shader3;
+  shader3.blit_shader = gl_shader_compile2((char *)
+										   texture_3d_shader_vs,
+										   texture_3d_shader_vs_len, (char *)
+										   texture_depth_shader_fs,
+										   texture_depth_shader_fs_len);
+  
+  glUseProgram(shader3.blit_shader);
+  shader3.pos_attr = 0;
+  shader3.color_attr = 1;
+  shader3.vertex_transform_loc = glGetUniformLocation(shader3.blit_shader, "vertex_transform");
+  shader3.color_loc = glGetUniformLocation(shader3.blit_shader, "color");
+  shader3.uv_transform_loc = glGetUniformLocation(shader3.blit_shader, "uv_transform");
+  glUniform1i(glGetUniformLocation(shader3.blit_shader, "_texture"), 0);
+  glUniform1i(glGetUniformLocation(shader3.blit_shader, "_depthtexture"), 1);
+  //glEnableVertexAttribArray(shader.pos_attr);
+  //glEnableVertexAttribArray(shader.tex_coord_attr);
+  ctx->shader3 = shader3;  
+
   glUseProgram(shader.blit_shader);
-  
-  
+
 }
 
 void blit3d_context_load(blit3d_context * ctx)
 {
   if(false == ctx->initialized)
     blit3d_context_initialize(ctx);
-
+  
   glUseProgram(ctx->shader.blit_shader);
   glEnableVertexAttribArray(0);
   //glDisable(GL_BLEND);
@@ -86,15 +115,24 @@ void blit3d_context_load(blit3d_context * ctx)
 
 
 void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode){
-  if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
-    glUseProgram(ctx->shader.blit_shader);
-  }
+  int shader = -1;
   ctx->mode = mode;
-  if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
-    glUseProgram(ctx->shader2.blit_shader);
-  }
- 
   
+  if(ctx->mode == BLIT3D_TRIANGLE_STRIP ||
+	 ctx->mode == BLIT3D_POINTS ||
+	 ctx->mode == BLIT3D_TRIANGLES_COLOR ||
+	 ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
+	shader = ctx->shader.blit_shader;
+  }
+  if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
+	shader = ctx->shader2.blit_shader;
+  }
+  if(ctx->mode == BLIT3D_TRIANGLE_STRIP_TEXTURE_DEPTH)
+	shader = ctx->shader3.blit_shader;
+  
+  if(shader != -1)
+	glUseProgram(shader);
+  ASSERT(shader != -1);
 }
 
 void blit3d_view(blit3d_context * ctx, mat4 viewmatrix){
@@ -171,6 +209,8 @@ texture * get_default_tex(void);
 
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   var tex = get_default_tex();
+  glActiveTexture(GL_TEXTURE0);
+  
   glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
 
   blit3d_polygon_update(polygon);
@@ -204,9 +244,18 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   if(count == 0)
     return;
 
-  var tex = ctx->current_texture != NULL ? ctx->current_texture : get_default_tex();
   //glUniform1i(ctx->shader.textured_loc, 1);
-  glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+  for(size_t i = 0; i < ctx->texture_count; i++){
+	var tex = ctx->current_texture[i];
+	
+	if(tex == NULL && i == 0)
+	  tex = get_default_tex();
+	
+	if(tex != NULL){
+	  glActiveTexture(GL_TEXTURE0 + i);
+	  glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+	}
+  }
   int elements_index = -1;
   for(u32 i = 0; i < count; i++){
     blit3d_polygon_update(polygons[i]);
@@ -234,13 +283,15 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     shader = ctx->shader2;
   if(ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR)
     shader = ctx->shader2;
-  
+  if(ctx->mode == BLIT3D_TRIANGLE_STRIP_TEXTURE_DEPTH)
+    shader = ctx->shader3;
+
   var c = ctx->color;
   glUniform4f(shader.color_loc, c.x,c.y,c.z,c.w);
   glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
   if(ctx->mode != BLIT3D_TRIANGLES_COLOR && ctx->mode != BLIT3D_TRIANGLE_STRIP_COLOR)
     glUniformMatrix3fv(shader.uv_transform_loc, 1, false, &ctx->uv_matrix.m00);
-
+  
   int mode = GL_TRIANGLE_STRIP;
   if(ctx->mode == BLIT3D_POINTS)
     mode = GL_POINTS;
@@ -265,18 +316,24 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     glDisableVertexAttribArray(j);
   }
   
-  //int err =  glGetError();
-  //if(err != 0)
-  //  printf("eRR2: %i %i %i %i\n", err, shader.color_loc, shader.vertex_transform_loc, tex->handle->tex);
 }
 
 void blit3d_color(blit3d_context * ctx, vec4 color){
   ctx->color = color;
 }
 
-void blit3d_bind_texture(blit3d_context * ctx, texture * tex){
-  ctx->current_texture = tex;
+void blit3d_bind_textures(blit3d_context * ctx, texture ** tex, size_t cnt){
+  for(size_t i = 0; i < cnt; i++){
+	ctx->current_texture[i] = tex[i];
+  }
+  ctx->texture_count = cnt;
 }
+void blit3d_bind_texture(blit3d_context * ctx, texture * tex){
+  blit3d_bind_textures(ctx, &tex, 1);
+}
+
+
+
 
 void blit3d_blit_quad(blit3d_context * ctx){
   if(ctx->quad_polygon == NULL){

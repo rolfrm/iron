@@ -1,4 +1,4 @@
-OPT = -g0 -O3
+OPT = -g2 -Og
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
 CC = gcc
@@ -28,11 +28,12 @@ libbf.o: libbf.c
 gl.o: texture.shader.c
 test: duck_img.png.c
 
-texture.shader.c: texture.shader.fs texture.shader.vs texture.3d.shader.vs texture.3d.color.shader.vs
+texture.shader.c: texture.shader.fs texture.shader.vs texture.3d.shader.vs texture.3d.color.shader.vs texture.depth.shader.fs
 	xxd -i texture.shader.vs > texture.shader.c
 	xxd -i texture.3d.shader.vs >> texture.shader.c
 	xxd -i texture.3d.color.shader.vs >> texture.shader.c
 	xxd -i texture.shader.fs >> texture.shader.c
+	xxd -i texture.depth.shader.fs >> texture.shader.c
 
 duck_img.png.c: duck.png
 	xxd -i duck.png > duck_img.png.c

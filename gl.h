@@ -187,7 +187,8 @@ void register_evt(void * win, gl_window_event * _evt, gl_event_known_event_types
 typedef enum{
   IMAGE_MODE_NONE = 0,
   IMAGE_MODE_GRAY_AS_ALPHA = 1,
-  IMAGE_MODE_F32 = 2
+  IMAGE_MODE_F32 = 2,
+  IMAGE_MODE_DEPTH16
   
 }image_mode;
 
@@ -280,11 +281,13 @@ vec2 blit_translate_point(vec2 p);
 typedef struct{
   u32 id;
   image_mode mode;
+  image_mode depth_mode;
   u32 channels;
   int width, height;
-
+  
   // -- INTERNALS --
   texture_handle * texture;
+  texture_handle * depth_texture;
 }blit_framebuffer;
 
 void blit_create_framebuffer(blit_framebuffer * buf);
@@ -293,6 +296,7 @@ void blit_unuse_framebuffer(blit_framebuffer * buf);
 void blit_blit_framebuffer(blit_framebuffer * buf);
 void blit_delete_framebuffer(blit_framebuffer * buf);
 texture blit_framebuffer_as_texture(blit_framebuffer * buf);
+texture blit_framebuffer_depth_as_texture(blit_framebuffer * buf);
 
 typedef struct _blit3d_context blit3d_context;
 blit3d_context * blit3d_context_new(void);
@@ -309,6 +313,7 @@ typedef enum{
   BLIT3D_TRIANGLES,
   BLIT3D_TRIANGLES_COLOR,
   BLIT3D_TRIANGLE_STRIP_COLOR,
+  BLIT3D_TRIANGLE_STRIP_TEXTURE_DEPTH,
 
 }blit3d_mode;
 
@@ -326,6 +331,7 @@ void blit3d_view(blit3d_context * ctx, mat4 viewmatrix);
 void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode);
 void blit3d_color(blit3d_context * ctx, vec4 color);
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex);
+void blit3d_bind_textures(blit3d_context * ctx, texture ** tex, size_t count);
 void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon);
 void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count);
 void blit3d_blit_quad(blit3d_context * ctx);

@@ -41,6 +41,7 @@ int str_index_of_last(const char * str, char symbol){
 
 void iron_log_stacktrace(void)
 {
+  return;
   static const char start[] = "BACKTRACE ------------\n";
   static const char end[] = "----------------------\n";
   

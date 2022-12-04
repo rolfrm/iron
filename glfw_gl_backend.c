@@ -2,6 +2,8 @@
 #define GL_GLEXT_PROTOTYPES
 #include "gl.h"
 #include <GLFW/glfw3.h>
+#include <signal.h>
+
 #ifdef _EMCC_
 
 #include <emscripten/html5.h>
@@ -163,13 +165,14 @@ static void glfw_debug_print (GLenum _source,
 
     logd("GL DEBUG %s %s %s\n", severity, type, source);
     logd("%i: %s\n", id, message);
+	raise(SIGINT);
 }
 
 
 static void errorcallback(int errid, const char * err){
   
-  printf("GLFW %i: %s\n", errid, err);
-
+  ERROR("GLFW %i: %s\n", errid, err);
+  
 }
 
 void * glfw_create_window(int width, int height, const char * title){
@@ -196,7 +199,7 @@ void * glfw_create_window(int width, int height, const char * title){
 #ifdef _EMCC_
   emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, handle, true, wasm_mouse_callback);
 #endif
-  if(iron_gl_debug){
+  if(true ||iron_gl_debug){
     logd("GL DEBUG: Enable OPENGL Debug context\n");
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glEnable(GL_DEBUG_OUTPUT);

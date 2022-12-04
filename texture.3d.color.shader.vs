@@ -1,4 +1,4 @@
-#version 100
+#version 130
 uniform mat4 vertex_transform;
 attribute vec3 pos;
 attribute vec3 color;
