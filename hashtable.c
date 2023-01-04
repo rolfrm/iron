@@ -6,6 +6,7 @@
 #include <signal.h>
 #include "utils.h"
 #include "types.h"
+#include "log.h"
 #include "hashtable.h"
 bool debug_set = false;
 
@@ -114,12 +115,13 @@ bool default_compare(const void * key_a, const void * key_b, size_t size, void *
 }
 
 void ht_init(hash_table * ht){
-  if(ht->keys == NULL){
-    
-	 ht->keys = ht->alloc_keys(ht->capacity * ht->key_size);
-	 ht->elems = ht->alloc_values(ht->capacity * ht->elem_size);
-	 ht->occupied = ht->alloc_state(ht->capacity * sizeof(ht_state));
-  }
+  if(ht->keys != NULL)
+	return;
+  ht->keys = ht->alloc_keys(ht->capacity * ht->key_size);
+  ht->elems = ht->alloc_values(ht->capacity * ht->elem_size);
+  ht->occupied = ht->alloc_state(ht->capacity * sizeof(ht_state));
+  if(ht->keys == NULL)
+	ERROR("Hashtable keys not set!\n");
 }
 
 void ht_set_mem_values(hash_table * ht, void * (* alloc)(size_t s), void (* free)(void * ptr)){
@@ -136,7 +138,7 @@ void * alloc0(size_t s);
 
 void ht_create3(hash_table *ht, size_t capacity, size_t key_size, size_t elem_size){
   memset(ht, 0, sizeof(*ht));
-  ht->capacity = capacity;
+  ht->capacity = capacity == 0 ? 1 : capacity;;
   ht->key_size = key_size;
   ht->elem_size = elem_size;
   //ht->userdata = ht;
@@ -182,7 +184,9 @@ void ht_set_capacity(hash_table * ht, size_t buckets){
     ht_init(ht);
     return;
   }
-  
+
+  // Now we build a new hash table with the added capacity.
+  // and replace the original. 
   hash_table * ht2 = ht->alloc(sizeof(*ht));
   ht_create3(ht2, buckets, ht->key_size, ht->elem_size);
   ht2->free_keys = ht->free_keys;
@@ -196,16 +200,24 @@ void ht_set_capacity(hash_table * ht, size_t buckets){
   ht2->hash = ht->hash;
   ht2->compare = ht->compare;
   ht2->userdata = ht->userdata;
+  
+  // ht_init needs to be called, because
+  // tere is not necessarily set any ht->occupied[i].
+  ht_init(ht2);
+
+  // copy all existingly set values from the previous table to the new one.
   for(u32 i = 0; i < ht->capacity; i++){
     if(ht->occupied[i] == HT_OCCUPIED){
-      ht_set(ht2, ht->keys + i * ht->key_size, ht->elems + i * ht->elem_size);
+	  ht_set(ht2, ht->keys + i * ht->key_size, ht->elems + i * ht->elem_size);
     }
   }
+
+  // replace the old table with the new and free it.
   SWAP(*ht2, *ht);
   ht->free(ht2);
 }
 
-static void ht_grow(hash_table * ht){
+void ht_grow(hash_table * ht){
   ht_set_capacity(ht, ht->capacity * 2);
 }
 
@@ -219,6 +231,8 @@ void * memfind0(void * ptr, void * end, size_t size){
 }
 
 static i64 ht_find_free_pre_hashed(const hash_table * ht, size_t hash, const void * key){
+  if(ht->keys == NULL)
+	return -1;
   size_t key_size = ht->key_size;
   size_t capacity = ht->capacity;
   compare_t compare = ht->compare;

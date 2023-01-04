@@ -1,4 +1,4 @@
-#version 130
+#version 100
 uniform mat4 vertex_transform;
 uniform mat3 uv_transform;
 attribute vec3 pos;
@@ -14,3 +14,4 @@ void main()
 	 v_tex_coord = t.xy;
     v_vertex_color = vec3(1);
 }
+

@@ -1,4 +1,4 @@
-#version 130
+#version 100
 precision mediump float;
 varying vec2 v_tex_coord;
 uniform sampler2D _texture;
@@ -13,5 +13,5 @@ void main()
 	//if(depth <= gl_FragDepth)
 	//     discard;
 	 gl_FragColor =	texture2D( _texture, v_tex_coord ) * color * vec4(v_vertex_color, 1) ;
-	 gl_FragDepth = depth;
+	 //gl_FragDepth = depth;//(depth + gl_FragCoord.z )* 0.5;
 } 

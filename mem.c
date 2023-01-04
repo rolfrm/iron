@@ -36,6 +36,8 @@ void * _alloc(size_t size){
 
 void * alloc0(size_t size){
   void * ptr = _alloc(size);
+  if(ptr == NULL)
+	return NULL;
   memset(ptr,0, size);
   return ptr;
 }

@@ -1,4 +1,4 @@
-#version 130
+#version 100
 
 uniform mat3 vertex_transform;
 uniform mat3 uv_transform;

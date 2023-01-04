@@ -44,4 +44,5 @@ void _error(const char * file, int line, const char * message, ...);
 //#endif
 
 void iron_log_stacktrace(void);
+void iron_panic(void);
 //extern void (* iron_log_printer)(const char * fnt, va_list lst);

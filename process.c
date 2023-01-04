@@ -18,7 +18,7 @@
 #include "process.h"
 #include "mem.h"
 
-#ifndef __APPLE__
+#if defined (LINUX)
 #include <sys/prctl.h>
 int iron_process_run(const char * program, const char ** args, iron_process * out_process){
   int pipe_in[2]; // in to this process, so out from execv
