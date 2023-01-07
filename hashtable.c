@@ -120,8 +120,11 @@ void ht_init(hash_table * ht){
   ht->keys = ht->alloc_keys(ht->capacity * ht->key_size);
   ht->elems = ht->alloc_values(ht->capacity * ht->elem_size);
   ht->occupied = ht->alloc_state(ht->capacity * sizeof(ht_state));
-  if(ht->keys == NULL)
+
+  if(ht->keys == NULL){
+	printf("%i ", (int)(ht->capacity * ht->key_size));
 	ERROR("Hashtable keys not set!\n");
+  }
 }
 
 void ht_set_mem_values(hash_table * ht, void * (* alloc)(size_t s), void (* free)(void * ptr)){

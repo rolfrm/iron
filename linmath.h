@@ -79,6 +79,7 @@ vec3 vec3_new1(float v);
 vec3 vec3_min(vec3 a, vec3 b);
 vec3 vec3_max(vec3 a, vec3 b);
 vec3 vec3_abs(vec3 a);
+f32 vec3_dot(vec3 a, vec3 b);
 vec3 vec3_floor(vec3 a);
 vec3 vec3_round(vec3 a);
 vec3 vec3_ceil(vec3 a);

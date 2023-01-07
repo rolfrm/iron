@@ -302,16 +302,28 @@ void glfw_set_cursor_type(void * window, iron_cursor_type type){
   }else{
     normal_cursor = glfwCreateStandardCursor(glfwCursor);
     glfwSetCursor(win, normal_cursor);
-  }
-  
+  } 
 }
 
-static void glfw_show_cursor(void * window, bool show){
-  if(show){
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  }else{
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+static void glfw_show_cursor(void * window, iron_cursor_type mode){
+  int cursor_mode;
+  switch(mode){
+  case IRON_CURSOR_NORMAL:
+	cursor_mode = GLFW_CURSOR_NORMAL;
+	break;
+  case IRON_CURSOR_DISABLED:
+	cursor_mode = GLFW_CURSOR_DISABLED;
+	break;
+  case IRON_CURSOR_HIDDEN:
+	cursor_mode = GLFW_CURSOR_HIDDEN;
+	break;
+  default:
+	ERROR("Unsupported cursor mode");
+	return;
   }
+  glfwSetInputMode(window, GLFW_CURSOR, cursor_mode);
+  
 }
 
 static void glfw_set_window_position(void * window, int x, int y){

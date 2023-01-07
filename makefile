@@ -1,27 +1,27 @@
-OPT = -g2 -Og
+OPT = -g2 -O2
 SOURCES = $(wildcard *.c)
 SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
 CC = gcc
 TARGET = libiron.a
 OBJECTS =$(SOURCES:.c=.o)
-LDFLAGS=-ldl -L.   $(OPT) -Wextra -shared  -fPIC #setrlimit on linux 
-LIBS= -ldl -lm -lpthread -lglfw -lGL -lX11 -lopenal -lpng
+LDFLAGS= -L. $(OPT) -Wextra -shared # -fPIC #setrlimit on linux 
+LIBS=  -lm -lpthread -lglfw -lGL -lX11 -lopenal -lpng #-ldl
 CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra  -Werror -Wno-deprecated -Wsign-compare -Wstrict-prototypes
-CFLAGS = $(CFLAGS_BASIC) -fPIC
+CFLAGS = $(CFLAGS_BASIC) #-fPIC
 
-all: $(TARGET) libiron.so libiron.a
-libiron.so: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -ldl -o $@
+all: $(TARGET) libiron.a
+#libiron.so: $(OBJECTS)
+#	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 libiron.a: $(OBJECTS)
 	ar rcs libiron.a $(OBJECTS) 
 libiron.bc: $(OBJECTS)
 	emcc $(OBJECTS) -r -s WASM=1 -s USE_GLFW=3 -o libiron.bc
 cutils.o: cutils.c
-	$(CC) -fPIC -c  $< -o $@ 
+	$(CC) -c  $< -o $@ 
 
 libbf.o: libbf.c 
-	$(CC) -fPIC -c  $< -o $@ 
+	$(CC) -c  $< -o $@ 
 
 .c.o: $(HEADERS)
 	$(CC) $(CFLAGS) $< -o $@ -MMD -MF $@.depends

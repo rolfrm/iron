@@ -8,9 +8,12 @@ typedef enum{
 
 typedef enum{
   IRON_CURSOR_NORMAL,
-  IRON_CURSOR_CROSSHAIR
-
+  IRON_CURSOR_CROSSHAIR,
+  IRON_CURSOR_HIDDEN,
+  IRON_CURSOR_DISABLED
+  
 }iron_cursor_type;
+
 extern IRON_GL_BACKEND iron_gl_backend;
 extern bool iron_gl_debug;
 typedef struct{
@@ -29,7 +32,7 @@ typedef struct{
   bool (* get_button_state)(void * window, int button);
   bool (* get_key_state) (void * window, int key);
   void (* set_cursor_type)( void * window, iron_cursor_type ctype);
-  void (* show_cursor)( void * window, bool show);
+  void (* show_cursor)( void * window, iron_cursor_type show);
   const char * (* get_clipboard)(void * window);
   void (* set_window_title)(void * window, const char * new_title);
 }gl_backend;
@@ -73,7 +76,7 @@ typedef enum{
 }gl_event_known_event_types;
 
 void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type);
-void gl_window_show_cursor(gl_window * win, bool);
+void gl_window_show_cursor(gl_window * win, iron_cursor_type type);
 void gl_canvas_get_size(int * w, int * h);
 typedef struct _gl_window_event{
   u64 timestamp;

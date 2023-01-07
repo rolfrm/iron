@@ -78,3 +78,13 @@ void audio_set_volume(audio_context * ctx, float value);
 float note_to_frequency(int note);
 
 audio_sample audio_load_samplef2(audio_context * ctx, int length, modulator * mod);
+
+u32 audio_new_source(void);
+u32 audio_source_count(u32 sourceId);
+void audio_source_play(u32 sourceId);
+void audio_source_queue(u32 sourceId, u32 sample);
+
+
+int audio_update_source(u32 sourceId);
+u32 audio_new_source_buffer(int count);
+void audio_fill_bufferf(u32 buffer, f32 * data, size_t count);

@@ -206,10 +206,10 @@ void gl_window_set_cursor_type(gl_window * win, iron_cursor_type type){
   f(win->handle, type);
 }
 
-void gl_window_show_cursor(gl_window * win, bool show){
+void gl_window_show_cursor(gl_window * win, iron_cursor_type mode){
   var f = current_backend->show_cursor;
- if(f == NULL) return;
-  f(win->handle, show);
+  if(f == NULL) return;
+  f(win->handle, mode);
 }
 
 

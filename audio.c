@@ -349,10 +349,11 @@ void audio_dealloc_stream(audio_context * ctx, u32 stream){
   if(item != NULL)
     item->id = 0;
 }
-
+static audio_context * current_audio_context;
 void audio_context_make_current(audio_context * ctx){
   if(ctx->broken) return;
   alcMakeContextCurrent(ctx->al_context);
+  current_audio_context = ctx;
   if(ctx->volume != ctx->target_volume){
     printf("setting volume: %f\n", ctx->volume);
     for(size_t i = 0; i < ctx->sources_count; i++){
@@ -382,7 +383,7 @@ audio_sample audio_load_samplef(audio_context * ctx, float * samples, int count)
   ALenum format = AL_FORMAT_MONO16;
   short * data = malloc(count * sizeof(short));
   for(int i = 0; i < count; i++)
-    data[i] = samples[i] * 30000.0;
+    data[i] = (short)(samples[i] * 30000.0);
   alBufferData(buffers[0], format, data, count, ctx->sample_rate);
   free(data);
   check_error();
@@ -418,6 +419,7 @@ void audio_stream_fill_buffer(audio_context * ctx, stream_info * info, u32 buffe
   check_error();
   free(data);
 }
+
 void stream_load(audio_context * ctx, stream_info * info){
   check_error();
   audio_stream_fill_buffer(ctx, info, info->frontbuffer, 0);
@@ -557,4 +559,75 @@ void audio_update_streams(audio_context * ctx){
   }
   check_error();
   }
+}
+
+
+
+u32 audio_new_source(void){
+  u32 sourceid = 0;
+  alGenSources(1, &sourceid);
+  alSourcef(sourceid, AL_GAIN, 1.0);
+  return sourceid;
+}
+
+u32 audio_source_count(u32 sourceId){
+  int buffers_processed = 0;
+  alGetSourcei(sourceId, AL_BUFFERS_PROCESSED, &buffers_processed);
+  for(int i = 0; i < buffers_processed; i++){
+	u32 bufferID = 0;
+	alSourceUnqueueBuffers(sourceId, 1, &bufferID);	
+  }
+
+  ALint numBuffersQueued;
+  alGetSourcei(sourceId, AL_BUFFERS_QUEUED, &numBuffersQueued);
+  return (u32)numBuffersQueued;
+}
+
+void audio_source_play(u32 sourceId){
+  alSourcePlay(sourceId);
+}
+
+void audio_source_queue(u32 sourceId, u32 buffer){
+  alSourceQueueBuffers(sourceId, 1, &buffer);
+}
+
+
+u32 audio_new_source_buffer(int count){
+  u32 sourceid = 0;
+  alGenSources(1, &sourceid);
+  
+  ALuint buffers[count];
+  alGenBuffers(count, buffers);
+  short data[1024] = {0};
+  for(int i = 0; i < count; i++){
+	alBufferData(buffers[i], AL_FORMAT_MONO16, data, 1024, current_audio_context->sample_rate);
+  }
+  
+  alSourceQueueBuffers(sourceid, count, buffers);
+  return sourceid;
+}
+
+int audio_update_source(u32 sourceId){
+  int buffers_processed = 0;
+
+  alGetSourcei(sourceId, AL_BUFFERS_PROCESSED, &buffers_processed);
+  int buffers_queued = 0;
+
+  alGetSourcei(sourceId, AL_BUFFERS_QUEUED, &buffers_queued);
+  if(buffers_processed == 0) return -1;
+  u32 bufferID = 0;
+  alSourceUnqueueBuffers(sourceId, 1, &bufferID);	
+  return (int)bufferID;
+}
+
+void audio_fill_bufferf(u32 buffer, f32 * data, size_t count){
+  //UNUSED(data);
+  short * data2 = alloc0(count * sizeof(data2[0]));
+  ALenum format = AL_FORMAT_MONO16;
+  for(size_t i = 0; i < count; i++)
+    data2[i] = (short)(data[i] * 15000.0);
+  
+
+  alBufferData(buffer, format, data2, count * sizeof(short), current_audio_context->sample_rate);
+  free(data2);
 }
