@@ -120,9 +120,8 @@ void ht_init(hash_table * ht){
   ht->keys = ht->alloc_keys(ht->capacity * ht->key_size);
   ht->elems = ht->alloc_values(ht->capacity * ht->elem_size);
   ht->occupied = ht->alloc_state(ht->capacity * sizeof(ht_state));
-
+  memset(ht->occupied, 0, ht->capacity * sizeof(ht_state));
   if(ht->keys == NULL){
-	printf("%i ", (int)(ht->capacity * ht->key_size));
 	ERROR("Hashtable keys not set!\n");
   }
 }
@@ -164,9 +163,9 @@ void ht_empty(hash_table *ht){
     ht->free_keys(ht->keys);
     ht->free_values(ht->elems);
     ht->free_state(ht->occupied);
-	 ht->keys = NULL;
-	 ht->elems = NULL;
-	 ht->occupied = NULL;
+	ht->keys = NULL;
+	ht->elems = NULL;
+	ht->occupied = NULL;
   }
 }
 
@@ -207,7 +206,7 @@ void ht_set_capacity(hash_table * ht, size_t buckets){
   // ht_init needs to be called, because
   // tere is not necessarily set any ht->occupied[i].
   ht_init(ht2);
-
+ 
   // copy all existingly set values from the previous table to the new one.
   for(u32 i = 0; i < ht->capacity; i++){
     if(ht->occupied[i] == HT_OCCUPIED){
