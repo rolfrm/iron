@@ -31,6 +31,7 @@ void gl_canvas_get_size(int * w, int * h){
 }
 #endif
 
+/*
 static void GLAPIENTRY
 MessageCallback( GLenum source,
                  GLenum type,
@@ -42,9 +43,12 @@ MessageCallback( GLenum source,
 {
   UNUSED(source, type, id, length, userParam);
   //if(type == GL_DEBUG_TYPE_ERROR)
+
   printf("GL ERROR: %i %i %s\n", severity, type, message);
+  if(type == GL_DEBUG_TYPE_PERFORMANCE) return;
+  printf("Exiting due to gl error\n");
   raise(SIGINT);  
-}
+  }*/
 
 
 
@@ -103,15 +107,15 @@ gl_window * gl_window_open(i32 width, i32 height){
     backend_initialized = true;
 #ifndef __EMSCRIPTEN__
 	
-    glEnable( GL_DEBUG_OUTPUT );
-    glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
+    //glEnable( GL_DEBUG_OUTPUT );
+    /*glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION,
                               GL_DONT_CARE,
                               GL_DONT_CARE,
                               0,
                               NULL,
-                              GL_TRUE);
+                              GL_TRUE);*/
     //glDisable( GL_DEBUG_MESSAGE_CONTROL, GL_FALSE);
-    glDebugMessageCallback( MessageCallback, 0 );
+    //glDebugMessageCallback( MessageCallback, 0 );
     #endif
     
   }
@@ -561,7 +565,8 @@ u32 compile_shader(int shader_type, const char * code){
   i32 l = strlen(code);
   glShaderSource(ss, 1, (void *) &code, &l); 
   glCompileShader(ss);
-  int compileStatus = 0;	
+  int compileStatus = 0;
+  printf("Compiling shader: %s\n", code);
   glGetShaderiv(ss, GL_COMPILE_STATUS, &compileStatus);
   if(compileStatus == GL_FALSE){
     logd("Error during shader compilation:\n");
@@ -604,6 +609,7 @@ u32 gl_shader_compile(const char * vsc, const char * fsc){
   u32 program = glCreateProgram();
   glAttachShader(program, vs);
   glAttachShader(program, fs);
+  
   glLinkProgram(program);
 
   // Check for errors

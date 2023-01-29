@@ -144,15 +144,15 @@ static void glfw_debug_print (GLenum _source,
     const char * type = "_";
     switch (_type)
     {
-        case GL_DEBUG_TYPE_ERROR:               type ="Error"; break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type ="Deprecated Behaviour"; break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type ="Undefined Behaviour"; break; 
-        case GL_DEBUG_TYPE_PORTABILITY:         type ="Portability"; break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         type ="Performance"; break;
-        case GL_DEBUG_TYPE_MARKER:              type ="Marker"; break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          type ="Push Group"; break;
-        case GL_DEBUG_TYPE_POP_GROUP:           type ="Pop Group"; break;
-        case GL_DEBUG_TYPE_OTHER:               type ="Other"; break;
+        case GL_DEBUG_TYPE_ERROR:               type = "Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type = "Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type = "Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         type = "Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         type = "Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              type = "Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          type = "Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           type = "Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               type = "Other"; break;
     };
     const char * severity = "_";
     switch (_severity)
@@ -165,7 +165,9 @@ static void glfw_debug_print (GLenum _source,
 
     logd("GL DEBUG %s %s %s\n", severity, type, source);
     logd("%i: %s\n", id, message);
-	raise(SIGINT);
+
+    if(_type != GL_DEBUG_TYPE_PERFORMANCE)
+      raise(SIGINT);
 }
 
 
