@@ -340,6 +340,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
 void blit3d_blit_quad(blit3d_context * ctx);
 void blit3d_uv_matrix(blit3d_context * ctx, mat3 uv);
 void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text);
-
+void blit3d_text2(blit3d_context * ctx, mat4 view, mat4 model, const char * text, f32 max_width);
+  
 gl_backend * glfw_create_backend(void);
 gl_backend * x11_create_backend(void);

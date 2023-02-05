@@ -79,7 +79,7 @@ void blit_text(const char * text){
 }
 
 
-void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text){
+void blit3d_text2(blit3d_context * ctx, mat4 view, mat4 model, const char * text, f32 max_width){
   if(current_font == NULL){
     ERROR("NO FONT LOADED");
     return;
@@ -90,15 +90,12 @@ void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text)
   float x = 0;
   float y = 0;
   blit3d_bind_texture(ctx, font_tex);
-  //mat4 translate = mat4_translate(0, 0.5, 0);
-  //mat4 negtranslate = mat4_translate(0, -0.5, 0);
-  //mat4 fliph = mat4_scaled(1.0, -1.0, 1.0);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   for(u64 i = 0; true ;){
     
     if(text[i] == 0) break;
-    if(text[i] == '\n'){
+    if(text[i] == '\n' || x > max_width){
       y += current_font->font_size;
       x = 0;
       i += 1;
@@ -122,7 +119,6 @@ void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text)
       
       mat4 s = mat4_scaled(size.x, size.y, 1.0);
       var t2 = mat4_mul(view, mat4_mul(model, mat4_mul(t, s)));
-      //mat4_print(model);vec3_print(size);logd("%f %f\n", q.x0, q.y0);
       
       blit3d_view(ctx, t2);
       blit3d_blit_quad(ctx);
@@ -137,31 +133,49 @@ void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text)
   
 }
 
+void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text){
+  blit3d_text2(ctx, view, model, text, f32_infinity);
+}
 
-static vec2 measure_text(const char * text, size_t len){
-  float x = 0;
-  float y = 0;
+static vec2 measure_text(const char * text, size_t len, f32 max_width){
+
+  float x = 0.0f;
+  float x_max = 0.0f;
+  float y = 0.0f;
+  float y_max = 0;
   for(u64 i = 0; i < len; i++){
     if(text[i] == 0) break;
     size_t l = 0;
+	 if(text[i] == '\n' || x > max_width){
+		x = 0;
+		y += current_font->font_size;
+      y_max = MAX(y_max, y);
+		continue;
+	 }
     int codepoint = utf8_to_codepoint(text + i, &l);
+	 
     if(codepoint >= 32 && codepoint < (int)(32 + current_font->cdata_count)){
       stbtt_aligned_quad q;
       stbtt_GetBakedQuad(current_font->cdata, current_font->font_tex.width, current_font->font_tex.height, codepoint-32, &x,&y,&q,1);
+		x_max = MAX(x_max, x);
+		y_max = MAX(y_max, y);
+		i = i - 1 + l;
     }
   }
-  return vec2_new(x, current_font->font_size);
+  return vec2_new(x_max, y_max + current_font->font_size);
 }
+
 vec2 blit_measure_text(const char * text){
-  return measure_text(text, strlen(text));
+  return measure_text(text, strlen(text), f32_infinity);
 }
 
 font * blit_load_font_from_buffer(void * data, float font_size){
-  int char_data_count = 100;
-  var img = image_new(1024, 1024, 1);
+  int char_data_count = 500;
+  var img = image_new(512, 512, 1);
   img.mode = IMAGE_MODE_GRAY_AS_ALPHA;
   stbtt_bakedchar * cdata = alloc0(sizeof(cdata[0]) * char_data_count);
   stbtt_BakeFontBitmap(data, 0, font_size, image_data(&img), img.width,img.height, 32,char_data_count, cdata);
+  //image_save(&img, "fonttex.png");
   texture tex = texture_from_image2(&img, TEXTURE_INTERPOLATION_LINEAR);
   image_delete(&img);
   font fnt ={.font_tex = tex, .cdata = cdata, .cdata_count = char_data_count, .font_size = font_size};
