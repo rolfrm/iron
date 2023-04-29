@@ -86,6 +86,7 @@ vec3 vec3_ceil(vec3 a);
 vec3 vec3_apply(vec3 a, float (*f)(float v));
 float vec3_min_element(vec3 a);
 float vec3_max_element(vec3 a);
+vec3 vec3_interpolate(vec3 a, vec3 b, float t);
 extern const vec3 vec3_infinity;
 extern const vec3 vec3_negative_infinity;
 extern const vec3 vec3_zero;

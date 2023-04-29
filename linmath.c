@@ -228,6 +228,10 @@ vec3 vec3_ceil(vec3 a){
   return vec3_new(ceilf(a.x), ceilf(a.y), ceilf(a.z));
 }
 
+vec3 vec3_interpolate(vec3 a, vec3 b, float t){
+  return vec3_add(vec3_scale(a, (1 - t)), vec3_scale(b, t));
+}
+
 
 const vec3 vec3_infinity = {.x = 1.0f / 0.0f, .y = 1.0f / 0.0f, .z = 1.0f / 0.0f};
 const vec3 vec3_negative_infinity = {.x = -1.0f / 0.0f, .y = -1.0f / 0.0f, .z = -1.0f / 0.0f};

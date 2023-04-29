@@ -31,7 +31,7 @@ u8 hibit(u64 x ){
 }
 
 f64 randf64(){
-  return (double)rand() / (double)RAND_MAX;
+  return ((double)rand()) / RAND_MAX;
 }
 
 f32 randf32(){
