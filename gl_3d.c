@@ -119,9 +119,10 @@ void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode){
   ctx->mode = mode;
   
   if(ctx->mode == BLIT3D_TRIANGLE_STRIP ||
-	 ctx->mode == BLIT3D_POINTS ||
-	 ctx->mode == BLIT3D_TRIANGLES_COLOR ||
-	 ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
+	  ctx->mode == BLIT3D_POINTS ||
+	  ctx->mode == BLIT3D_TRIANGLES ||
+	  ctx->mode == BLIT3D_TRIANGLES_COLOR ||
+	  ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){
 	shader = ctx->shader.blit_shader;
   }
   if(ctx->mode == BLIT3D_TRIANGLES_COLOR || ctx->mode == BLIT3D_TRIANGLE_STRIP_COLOR){

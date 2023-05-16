@@ -656,6 +656,13 @@ vec3 mat4_mul_vec3( mat4 M, vec3 v)
   return vec3_add(r, M.columns[3].xyz);
 }
 
+vec3 mat4_mul_vec3h(mat4 m, vec3 v){
+  vec4 v4 = vec4_new(v.x, v.y, v.z, 1.0);
+
+  v4 = mat4_mul_vec4(m, v4); 
+  return vec3_new(v4.x / v4.w, v4.y / v4.w, v4.z / v4.w); 
+}
+
 mat4 mat4_translate(float x, float y, float z)
 {
   mat4 T = mat4_identity();

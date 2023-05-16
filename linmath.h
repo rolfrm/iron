@@ -249,6 +249,10 @@ vec4 mat4_mul_vec4( mat4 M, vec4 v);
 
 //Assumes that mat4 is an affine transform.
 vec3 mat4_mul_vec3( mat4 M, vec3 v);
+
+//Homogenous transform.
+vec3 mat4_mul_vec3h(mat4 m, vec3 v);
+  
 mat4 mat4_translate(float x, float y, float z);
 mat4 mat4_translate_in_place(mat4 M, float x, float y, float z);
 mat4 mat4_from_vec3_mul_outer(vec3 a, vec3 b);
