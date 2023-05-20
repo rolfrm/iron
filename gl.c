@@ -31,26 +31,6 @@ void gl_canvas_get_size(int * w, int * h){
 }
 #endif
 
-/*
-static void GLAPIENTRY
-MessageCallback( GLenum source,
-                 GLenum type,
-                 GLuint id,
-                 GLenum severity,
-                 GLsizei length,
-                 const GLchar* message,
-                 const void* userParam )
-{
-  UNUSED(source, type, id, length, userParam);
-  //if(type == GL_DEBUG_TYPE_ERROR)
-
-  printf("GL ERROR: %i %i %s\n", severity, type, message);
-  if(type == GL_DEBUG_TYPE_PERFORMANCE) return;
-  printf("Exiting due to gl error\n");
-  raise(SIGINT);  
-  }*/
-
-
 
 struct _gl_window{
   void * handle;
@@ -298,6 +278,21 @@ image image_new2(int width, int height, int channels, image_mode mode){
   return img;
 }
 
+image image_new3(int width, int height, int depth, int channels, image_mode mode){
+
+  image_source src;
+  src.kind = IMAGE_SOURCE_MEMORY;
+
+  size_t pixel_size = 1;
+  if(mode & IMAGE_MODE_F32)
+    pixel_size = 4;
+  
+  src.data = alloc0(width * height * depth * channels * pixel_size);
+
+  image img = {.width = width, .height = height, .depth = depth, .is_3d = true, .channels = channels, .source = IRON_CLONE(src), .mode = mode};
+  return img;
+}
+
 
 void image_delete(image * img){
   if(img->source->data != NULL)
@@ -407,21 +402,23 @@ static u32 gl_tex_interp(TEXTURE_INTERPOLATION interp, bool ismag){
   }
 
 }
-texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
+texture texture_new(TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp, bool is_3d){
 
   GLuint tex;
+  var type = is_3d ? GL_TEXTURE_3D : GL_TEXTURE_2D;
   glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);  
+  glBindTexture(type, tex);  
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp, false));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp, true));
+  glTexParameteri(type, GL_TEXTURE_MIN_FILTER, gl_tex_interp(sub_interp, false));
+  glTexParameteri(type, GL_TEXTURE_MAG_FILTER, gl_tex_interp(super_interp, true));
 
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(type, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  glTexParameteri(type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   texture_handle hndl = {.tex = tex};
-  texture texture = { .handle = IRON_CLONE(hndl), .width = 0, .height = 0};
+  texture texture = { .handle = IRON_CLONE(hndl), .width = 0, .height = 0, .depth = 0, .is_3d = is_3d};
   return texture;
 }
 
@@ -441,7 +438,7 @@ static int to_f32_enum(int enum_in){
 
 void texture_load_image(texture * texture, image * image){
   gl_texture_bind(*texture);
-  int chn[] = {GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  int chn[] = {GL_RED, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   int int_formats[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
   int int_format = int_formats[image->channels - 1];
   int format = chn[image->channels - 1];
@@ -454,7 +451,7 @@ void texture_load_image(texture * texture, image * image){
     // cannot do swizzle as it is not supported in webgl.
     // instead provide a temporary LUMIANCE_ALPHA texture.
     if(data != NULL){
-      int pixels = image->width * image->height;
+      int pixels = image->width * image->height * (image->is_3d ? image->depth : 1);
       u8 * newdata = alloc0(2 * pixels);
       for(int i = 0; i < pixels; i++){
 		newdata[i * 2] = 0xFF;
@@ -476,28 +473,37 @@ void texture_load_image(texture * texture, image * image){
     int_format = to_f32_enum(int_formats[image->channels - 1]);
     type = GL_FLOAT;
   }
-  
-  if(data == NULL){
-    glTexImage2D(GL_TEXTURE_2D, 0, int_format,
-				 image->width, image->height, 0, format, type, NULL);
+
+  if(image->is_3d){
+
+	 glTexImage3D(GL_TEXTURE_3D, 0, int_format,
+						 image->width, image->height, image->depth, 0, format, type, data);
   }else{
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, int_format,
-		 image->width, image->height, 0, format, type, data);
+	 
+	 glTexImage2D(GL_TEXTURE_2D, 0, int_format,
+					  image->width, image->height, 0, format, type, data);
+	 
   }
   
   texture->width = image->width;
   texture->height = image->height;
+  texture->depth = image->is_3d ? image->depth : 1 ;
+  texture->is_3d = image->is_3d;
   texture->handle->format = int_format;
   if(delete_data)
     dealloc(data);
 }
 
 texture texture_from_image3(image * image, TEXTURE_INTERPOLATION sub_interp, TEXTURE_INTERPOLATION super_interp){
-  var texture = texture_new(sub_interp, super_interp);
+  var texture = texture_new(sub_interp, super_interp, image->is_3d);
   texture_load_image(&texture, image);
-  if(sub_interp == TEXTURE_INTERPOLATION_BILINEAR || super_interp == TEXTURE_INTERPOLATION_BILINEAR)
-    glGenerateMipmap(GL_TEXTURE_2D);
+  if(sub_interp == TEXTURE_INTERPOLATION_BILINEAR || super_interp == TEXTURE_INTERPOLATION_BILINEAR){
+	 if (texture.is_3d){
+		glGenerateMipmap(GL_TEXTURE_3D);
+	 }else{
+		glGenerateMipmap(GL_TEXTURE_2D);
+	 }
+  }
   return texture;
 }
 
@@ -538,7 +544,7 @@ void texture_to_image(texture * tex, image * image){
 }
 
 void gl_texture_bind(texture tex){
-  glBindTexture(GL_TEXTURE_2D, tex.handle->tex);
+  glBindTexture(tex.is_3d ? GL_TEXTURE_3D : GL_TEXTURE_2D, tex.handle->tex);
 }
 
 void gl_texture_image_bind(texture tex, int channel, texture_bind_options options){

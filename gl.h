@@ -191,7 +191,8 @@ typedef enum{
   IMAGE_MODE_NONE = 0,
   IMAGE_MODE_GRAY_AS_ALPHA = 1,
   IMAGE_MODE_F32 = 2,
-  IMAGE_MODE_DEPTH16
+  IMAGE_MODE_DEPTH16 = 3,
+  IMAGE_MODE_3D = 8
   
 }image_mode;
 
@@ -200,9 +201,12 @@ typedef struct _image_source image_source;
 typedef struct{
   image_source * source;
   int width, height, channels;
+  int depth;
   image_mode mode;
+  bool is_3d;
 }image;
 
+image image_new3(int width, int height, int depth, int channels, image_mode mode);
 void * image_data(image * image);
 image image_from_file(const char * path);
 image image_from_data(void * data, int len);
@@ -221,7 +225,9 @@ image image_diff (image img, image img2);
 typedef struct _texture_handle texture_handle;
 typedef struct {
   texture_handle * handle;
-  int width, height;
+  int width, height, depth;
+  bool is_3d;
+  
 }texture;
 
 typedef enum{
@@ -317,7 +323,8 @@ typedef enum{
   BLIT3D_TRIANGLES_COLOR,
   BLIT3D_TRIANGLE_STRIP_COLOR,
   BLIT3D_TRIANGLE_STRIP_TEXTURE_DEPTH,
-
+  BLIT3D_VOXEL_DEPTH,
+  BLIT3D_VOXEL_DEPTH2
 }blit3d_mode;
 
 typedef struct _blit3d_polygon blit3d_polygon;
@@ -341,6 +348,11 @@ void blit3d_blit_quad(blit3d_context * ctx);
 void blit3d_uv_matrix(blit3d_context * ctx, mat3 uv);
 void blit3d_text(blit3d_context * ctx, mat4 view, mat4 model, const char * text);
 void blit3d_text2(blit3d_context * ctx, mat4 view, mat4 model, const char * text, f32 max_width);
-  
+
+// voxel configuration
+void blit3d_set_camera_position(blit3d_context * ctx, vec3 camera_position);
+void blit3d_set_voxel_transform(blit3d_context * ctx, vec3 offset, vec3 scale);
+
+
 gl_backend * glfw_create_backend(void);
 gl_backend * x11_create_backend(void);
