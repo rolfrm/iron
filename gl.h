@@ -352,7 +352,7 @@ void blit3d_text2(blit3d_context * ctx, mat4 view, mat4 model, const char * text
 // voxel configuration
 void blit3d_set_camera_position(blit3d_context * ctx, vec3 camera_position);
 void blit3d_set_voxel_transform(blit3d_context * ctx, vec3 offset, vec3 scale);
-
+void blit3d_set_voxel_space_size(blit3d_context * ctx, vec3 space_size);
 
 gl_backend * glfw_create_backend(void);
 gl_backend * x11_create_backend(void);

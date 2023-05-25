@@ -672,6 +672,10 @@ mat4 mat4_translate(float x, float y, float z)
   return T;
 }
 
+mat4 mat4_translate_vec3(vec3 v){
+  return mat4_translate(v.x, v.y, v.z);
+}
+
 mat4 mat4_translate_in_place(mat4 M, float x, float y, float z)
 {
   vec4 t= {.data = {x,y,z,0.0}};
@@ -727,6 +731,10 @@ mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle)
 
 mat4 mat4_scaled(float scale_x, float scale_y, float scale_z){
   return (mat4) {.m00 = scale_x, .m11 = scale_y, .m22 = scale_z, .m33 = 1};
+}
+
+mat4 mat4_scaled_vec3(vec3 s){
+  return mat4_scaled(s.x, s.y, s.z);
 }
 
 mat4 mat4_rotate_X(mat4 M, float angle)

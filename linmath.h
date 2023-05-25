@@ -242,6 +242,7 @@ mat4 mat4_add(mat4 a, mat4 b);
 mat4 mat4_sub(mat4 a, mat4 b);
 mat4 mat4_scale(mat4 a, float k);
 mat4 mat4_scaled(float scale_x, float scale_y, float scale_z);
+mat4 mat4_scaled_vec3(vec3 scale);
 mat4 mat4_scale_transform(float x, float y, float z);
 mat4 mat4_scale_aniso(mat4 a, float x, float y, float z);
 mat4 mat4_mul(mat4 a, mat4 b);
@@ -254,6 +255,7 @@ vec3 mat4_mul_vec3( mat4 M, vec3 v);
 vec3 mat4_mul_vec3h(mat4 m, vec3 v);
   
 mat4 mat4_translate(float x, float y, float z);
+mat4 mat4_translate_vec3(vec3 v);
 mat4 mat4_translate_in_place(mat4 M, float x, float y, float z);
 mat4 mat4_from_vec3_mul_outer(vec3 a, vec3 b);
 mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle);
