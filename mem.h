@@ -20,6 +20,8 @@ void * ralloc(void * ptr, size_t size);
 void * alloc0(size_t);
 
 void * iron_clone(const void * src, size_t s);
+#define ALLOCATED(ptr) ptr = alloc0(sizeof(ptr[0]))
+#define ALLOCATEN(ptr, N) ptr = alloc0(sizeof(ptr[0]) * (N))
 
 #define RALLOC(PTR,NEW_SIZE) PTR = ralloc(PTR, (NEW_SIZE) * sizeof(PTR[0]))
 

@@ -1135,6 +1135,18 @@ void vec2_print(vec2 v){
   printf("(%f %f)", v.x, v.y);
 }
 
+void vec4i_print(vec4i v){
+  printf("(%i %i %i %i)", v.x, v.y, v.z, v.w);
+}
+
+void vec3i_print(vec3i v){
+  printf("(%i %i %i)", v.x, v.y, v.z);
+}
+
+void vec2i_print(vec2i v){
+  printf("(%i %i)", v.x, v.y);
+}
+
 #include "test.h"
 #include "log.h"
 bool linmath_test(){

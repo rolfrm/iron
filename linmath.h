@@ -293,6 +293,10 @@ void vec4_print(vec4 v);
 void vec3_print(vec3 v);
 void vec2_print(vec2 v);
 
+void vec4i_print(vec4i v);
+void vec3i_print(vec3i v);
+void vec2i_print(vec2i v);
+
 
 
 
