@@ -305,7 +305,8 @@ const vec4 vec4_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f, .w = 1.0f};
   for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \
     return v;								\
   }									\
-prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)			\
+__attribute__((optimize("unroll-loops")))\
+prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)	\
   {									\
     float p = 0.0f;							\
     for(int i=0; i<n; i++)						\
@@ -316,7 +317,7 @@ prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)			\
   {									\
     return vec##n##i_mul_inner(v,v);					\
   }									\
-  									\
+  																					\
   prefix bool vec##n##i_compare(vec##n##i v1, vec##n##i v2){		\
     for(int i = 0; i < n; i++) if(v1.data[i] != v2 .data[i]) return false; \
     return true;							\
