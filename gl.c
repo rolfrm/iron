@@ -1,8 +1,16 @@
 #include "full.h"
 #define GL_GLEXT_PROTOTYPES
 #include "gl.h"
+#if defined(__APPLE__)
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+#define GL_LUMINANCE_ALPHA GL_RG
+#define GL_LUMINANCE GL_RED
+#define GL_COMPUTE_SHADER 1337 
+#else
 #include <GL/gl.h>
 #include <GL/glext.h>
+#endif
 #include "stb_image.h"
 #include "texture.shader.c"
 #include <signal.h>
@@ -81,7 +89,7 @@ gl_window * gl_window_open(i32 width, i32 height){
       current_backend = glfw_create_backend();
 #ifndef __EMSCRIPTEN__
     else if(iron_gl_backend == IRON_GL_BACKEND_X11)
-      current_backend = x11_create_backend();
+      ;//current_backend = x11_create_backend();
 #endif
     current_backend->init();
     backend_initialized = true;
@@ -144,6 +152,14 @@ void gl_window_get_size(gl_window * win, int *w, int *h){
 void gl_window_set_size(gl_window * win, int w, int h){
   ASSERT(current_backend->set_window_size != NULL);
   current_backend->set_window_size(win->handle, w, h);
+}
+
+void gl_window_get_buffer_size(gl_window * win, int *w, int *h){
+  if(current_backend->get_window_buffer_size == NULL){
+    gl_window_get_size(win, w, h);
+  }else{
+    current_backend->get_window_buffer_size(win->handle, w, h);
+  }
 }
 
 void gl_window_set_position(gl_window * win, int x, int y){
@@ -426,10 +442,8 @@ static int to_f32_enum(int enum_in){
   switch(enum_in){
   case GL_RGBA: return GL_RGBA32F;
   case GL_RGB: return GL_RGB32F;
-  case GL_LUMINANCE_ALPHA:
   case GL_RG: return GL_RG32F;
-  case GL_LUMINANCE:
-  case GL_R: return GL_R32F;
+  case GL_RED: return GL_R32F;
   default:
     ERROR("Unsupported format!");
     return 0;
@@ -526,11 +540,11 @@ void texture_to_image(texture * tex, image * image){
     return;
   }
   
-  int format[] ={GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA};
+  int format[] ={GL_RED, GL_RG, GL_RGB, GL_RGBA};
   
 
   if(image->mode & IMAGE_MODE_GRAY_AS_ALPHA && image->channels == 1){
-    format[0] = GL_LUMINANCE_ALPHA;
+    format[0] = GL_RG;
   }
   int typesize = 1;
   int type = GL_UNSIGNED_BYTE;
@@ -540,7 +554,8 @@ void texture_to_image(texture * tex, image * image){
     typesize = 4;
   }
   int buffer_size = image->height * image->width * image->channels * typesize;
-  glGetTextureImage(tex->handle->tex, 0,  format[image->channels - 1], type, buffer_size, data);
+  UNUSED(buffer_size);
+  //glGetTextureImage(tex->handle->tex, 0,  format[image->channels - 1], type, buffer_size, data);
 }
 
 void gl_texture_bind(texture tex){
@@ -557,8 +572,8 @@ void gl_texture_image_bind(texture tex, int channel, texture_bind_options option
   }else if(options == TEXTURE_BIND_WRITE){
     access = GL_WRITE_ONLY;
   }
-
-  glBindImageTexture(channel, tex.handle->tex, 0, GL_FALSE, 0, access, GL_RGBA8);
+  UNUSED(tex);UNUSED(channel);
+  //glBindImageTexture(channel, tex.handle->tex, 0, GL_FALSE, 0, access, GL_RGBA8);
 }
 
 u32 gl_texture_handle(texture tex){
@@ -609,10 +624,15 @@ u32 compile_shader_from_file(u32 gl_prog_type, const char * filepath){
   return vs;
 }
 
+void (* gl_program_loaded) (u32 program);
+
 u32 gl_shader_compile(const char * vsc, const char * fsc){
   u32 vs = compile_shader(GL_VERTEX_SHADER, vsc);
   u32 fs = compile_shader(GL_FRAGMENT_SHADER, fsc);
   u32 program = glCreateProgram();
+  if(gl_program_loaded){
+    gl_program_loaded(program);
+  }
   glAttachShader(program, vs);
   glAttachShader(program, fs);
   

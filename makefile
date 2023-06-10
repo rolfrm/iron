@@ -1,20 +1,24 @@
-OPT = -g3 -Og
+OPT = -g0 -O4
 SOURCES = $(wildcard *.c)
-SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c  ,$(SOURCES))
+SOURCES := $(filter-out duck_img.png.c texture.shader.c image.c testmain.c coroutines2.c audio.c image_save.c x11_gl_backend.c  ,$(SOURCES))
 CC = gcc
 TARGET = libiron.a
 OBJECTS =$(SOURCES:.c=.o)
 LDFLAGS= -L. $(OPT) -Wextra -shared # -fPIC #setrlimit on linux 
-LIBS=  -lm -lpthread -lglfw -lGL -lX11 -lopenal -lpng #-ldl
-CFLAGS_BASIC = -std=c11 -c $(OPT) -Wall -Wextra  -Werror -Wno-deprecated -Wsign-compare -Wstrict-prototypes
+LIBS=  -lm -lpthread -lGL -lX11 -lopenal -lpng #-ldl
+CFLAGS_BASIC = -Iglfw/include -std=c11 -c $(OPT) -Wall -Wextra -Wno-deprecated -Wsign-compare -Wstrict-prototypes 
 CFLAGS = $(CFLAGS_BASIC) #-fPIC
 
 all: $(TARGET) libiron.a
 #libiron.so: $(OBJECTS)
 #	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
-libiron.a: $(OBJECTS)
-	ar rcs libiron.a $(OBJECTS) 
+libiron.a: $(OBJECTS) libglfw3.a
+	ar rcs libiron.a $(OBJECTS) libglfw3_o/*.o
+
+libglfw3.a:
+	./libglfw3.sh
+	
 libiron.bc: $(OBJECTS)
 	emcc $(OBJECTS) -r -s WASM=1 -s USE_GLFW=3 -o libiron.bc
 cutils.o: cutils.c

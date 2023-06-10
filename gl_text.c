@@ -4,8 +4,16 @@
 //#include <iron/gl.h>
 #include "full.h"
 #include "gl.h"
+#if defined(__APPLE__)
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+#define GL_LUMINANCE_ALPHA GL_RG
+#define GL_LUMINANCE GL_RED
+#define GL_COMPUTE_SHADER 1337 
+#else
 #include <GL/gl.h>
 #include <GL/glext.h>
+#endif
 //#include "text.shader.c"
 #include "stb_truetype.h"
 #include "utf8.h"

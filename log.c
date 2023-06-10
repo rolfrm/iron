@@ -89,6 +89,7 @@ void log_print(int log_level, const char * fmt, ...){
   printf("%i %s", log_level, buffer);
 }
 #endif
+void raise(int);
 #include <sys/signal.h>
 
 void iron_panic(void){

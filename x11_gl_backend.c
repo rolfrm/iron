@@ -275,6 +275,10 @@ void x11_get_window_size(void * handle, int * w, int * _h){
   *_h = gwa.height;
 }
 
+void x11_get_frramebuffer_size(void * handle, int * w, int * h){
+  x11_get_window_size(handle, w, h);
+}
+
 void x11_set_window_size(void * handle, int w, int h){
   ERROR("Not supported");
   //TODO: This might is wrong

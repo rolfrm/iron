@@ -45,38 +45,6 @@ static inline u64 fnv1a_hash(const char * data, size_t count){
   return hash;
 }
 
-static inline u64 hash64(u64 * bytes, size_t _){
-  UNUSED(_);
-  //return fnv1a_hash(bytes, 8);
-  return *bytes * 0xD371285717693758L + 0x8186734152378301L;
-}
-
-static inline u64 hyper_hash(const void * data, size_t count){
-  u64 bias = 0xcbf29ce484222325UL;
-  u64 prime1 = 0x100000001b3;
-  u64 prime2 = 18446744073709551557UL;
-  u64 hash = bias;
-  u64 h = 0;
-  u64 * d = (u64 *) data;
-  u64 c = count / 8;
-  size_t rest = count - c * 8;
-  if(rest > 0){
-    memcpy(&h, data + c * 8, rest);
-  }
-  size_t i = 0;
-  for(; i < c; i++){
-    hash ^= d[i];
-    hash *= prime1;
-    hash *= prime2;
-  }
-  hash ^= rest;
-  hash *= prime1;
-  hash *= prime2;
-  
-  return hash;
-}
-
-
 static inline u32 fnv1a_hash2(const char * data, size_t count){
   return (u32)fnv1a_hash(data, count);
 }

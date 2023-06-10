@@ -1,11 +1,11 @@
-#version 100
+//texture.3d.shader.vs
+#version 330
 uniform mat4 vertex_transform;
 uniform mat3 uv_transform;
-attribute vec3 pos;
-attribute vec2 tex_coord;
-attribute float point_size;
-varying vec2 v_tex_coord;
-varying vec3 v_vertex_color;
+in vec3 pos;
+in vec2 tex_coord;
+out vec2 v_tex_coord;
+out vec3 v_vertex_color;
 
 void main() 
 {

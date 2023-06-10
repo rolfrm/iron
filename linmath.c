@@ -305,7 +305,7 @@ const vec4 vec4_one = {.x = 1.0f, .y = 1.0f, .z = 1.0f, .w = 1.0f};
   for(int i = 0; i < n; i++) v.data[i] = v.data[i] * s;                 \
     return v;								\
   }									\
-prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)			\
+prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)	\
   {									\
     float p = 0.0f;							\
     for(int i=0; i<n; i++)						\
@@ -316,7 +316,7 @@ prefix i32 vec##n##i_mul_inner(vec##n##i a, vec##n##i b)			\
   {									\
     return vec##n##i_mul_inner(v,v);					\
   }									\
-  									\
+  																					\
   prefix bool vec##n##i_compare(vec##n##i v1, vec##n##i v2){		\
     for(int i = 0; i < n; i++) if(v1.data[i] != v2 .data[i]) return false; \
     return true;							\
@@ -672,6 +672,10 @@ mat4 mat4_translate(float x, float y, float z)
   return T;
 }
 
+mat4 mat4_translate_vec3(vec3 v){
+  return mat4_translate(v.x, v.y, v.z);
+}
+
 mat4 mat4_translate_in_place(mat4 M, float x, float y, float z)
 {
   vec4 t= {.data = {x,y,z,0.0}};
@@ -727,6 +731,10 @@ mat4 mat4_rotate(mat4 M, float x, float y, float z, float angle)
 
 mat4 mat4_scaled(float scale_x, float scale_y, float scale_z){
   return (mat4) {.m00 = scale_x, .m11 = scale_y, .m22 = scale_z, .m33 = 1};
+}
+
+mat4 mat4_scaled_vec3(vec3 s){
+  return mat4_scaled(s.x, s.y, s.z);
 }
 
 mat4 mat4_rotate_X(mat4 M, float angle)
@@ -1125,6 +1133,18 @@ void vec3_print(vec3 v){
 
 void vec2_print(vec2 v){
   printf("(%f %f)", v.x, v.y);
+}
+
+void vec4i_print(vec4i v){
+  printf("(%i %i %i %i)", v.x, v.y, v.z, v.w);
+}
+
+void vec3i_print(vec3i v){
+  printf("(%i %i %i)", v.x, v.y, v.z);
+}
+
+void vec2i_print(vec2i v){
+  printf("(%i %i)", v.x, v.y);
 }
 
 #include "test.h"

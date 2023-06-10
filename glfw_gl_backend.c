@@ -108,7 +108,7 @@ static void glfw_poll_events(void){
 
 static void glfw_init(void){
   glfwInit();
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
+  //glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
   //glfwSwapInterval(1);
 }
 
@@ -116,7 +116,7 @@ static void glfw_deinit(void){
   glfwTerminate();
 }
 
-
+/*
 static void glfw_debug_print (GLenum _source, 
                             GLenum _type, 
                             GLuint id, 
@@ -168,7 +168,7 @@ static void glfw_debug_print (GLenum _source,
 
     if(_type != GL_DEBUG_TYPE_PERFORMANCE)
       raise(SIGINT);
-}
+}*/
 
 
 static void errorcallback(int errid, const char * err){
@@ -179,6 +179,9 @@ static void errorcallback(int errid, const char * err){
 
 void * glfw_create_window(int width, int height, const char * title){
   static GLFWwindow * main_context = NULL;
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_DEPTH_BITS, 24);
   glfwWindowHint(GLFW_SAMPLES, 4 );
     
@@ -195,8 +198,8 @@ void * glfw_create_window(int width, int height, const char * title){
   glfwSetErrorCallback(errorcallback);
   glfwSetWindowSizeCallback(handle, windowsizecallback);
   glfwSetWindowPosCallback(handle, window_pos_callback);
-  //glfwSwapInterval( 0 );
   glfwMakeContextCurrent(handle);
+  glfwSwapInterval( 1 );
   
 #ifdef _EMCC_
   emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, handle, true, wasm_mouse_callback);
@@ -204,11 +207,11 @@ void * glfw_create_window(int width, int height, const char * title){
   if(true ||iron_gl_debug){
     logd("GL DEBUG: Enable OPENGL Debug context\n");
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    //glEnable(GL_DEBUG_OUTPUT);
+    //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #ifndef __EMSCRIPTEN__
 
-    glDebugMessageCallback((void *)glfw_debug_print, NULL);
+    //glDebugMessageCallback((void *)glfw_debug_print, NULL);
     //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
   }
@@ -224,8 +227,12 @@ void glfw_swap_buffers(void * window){
   glfwSwapBuffers(window);
 }
 
+void glfw_get_window_framebuffer_size (void * window, int * w, int * h){
+  glfwGetFramebufferSize((GLFWwindow *) window, w, h);
+}
+
 void glfw_get_window_size (void * window, int * w, int * h){
-  glfwGetWindowSize((GLFWwindow *) window, w, h);
+  glfwGetWindowSize(window, w, h);
 }
 
 void glfw_set_window_size(void * window, int w, int h){
@@ -353,6 +360,7 @@ gl_backend * glfw_create_backend(void){
   backend->destroy_window = glfw_destroy_window;
   backend->make_current = glfw_make_current;
   backend->swap_buffers = glfw_swap_buffers;
+  backend->get_window_buffer_size = glfw_get_window_framebuffer_size;
   backend->get_window_size = glfw_get_window_size;
   backend->set_window_size = glfw_set_window_size;
   backend->get_window_position = glfw_get_window_position;

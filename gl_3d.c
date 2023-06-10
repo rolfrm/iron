@@ -1,8 +1,16 @@
 #include "full.h"
 #define GL_GLEXT_PROTOTYPES
 #include "gl.h"
+#if defined(__APPLE__)
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+#define GL_LUMINANCE_ALPHA GL_RG
+#define GL_LUMINANCE GL_RED
+#define GL_COMPUTE_SHADER 1337 
+#else
 #include <GL/gl.h>
 #include <GL/glext.h>
+#endif
 #include "stb_image.h"
 
 extern unsigned char texture_3d_shader_vs[];
@@ -36,7 +44,6 @@ typedef struct _shader_3d{
 
 typedef struct {
   u32 program;
-  u32 program2;
   int pos_attr;
   int vertex_transform_loc;
   int camera_position_loc;
@@ -44,11 +51,23 @@ typedef struct {
   int voxel_scale_loc;
 }voxel_depth_shader;
 
+typedef struct {
+  u32 program;
+  int pos_attr;
+  int vertex_transform_loc;
+  int camera_position_loc;
+  int voxel_offset_loc;
+  int voxel_scale_loc;
+  int space_size_loc;
+}voxel_depth2_shader;
+
+
 struct _blit3d_context{
   shader_3d shader;
   shader_3d shader2;
   shader_3d shader3;
   voxel_depth_shader voxel_depth_shader;
+  voxel_depth2_shader voxel_depth2_shader;
   bool initialized;
   mat4 matrix;
   mat3 uv_matrix;
@@ -62,6 +81,7 @@ struct _blit3d_context{
   vec3 camera_position;
   vec3 voxel_offset;
   vec3 voxel_scale;
+  vec3 voxel_space_size;
   
   
 };
@@ -73,9 +93,19 @@ blit3d_context * blit3d_context_new(){
   return ctx;
 }
 
+void blit3d_color_program_loaded(u32 program){
+   glBindAttribLocation(program, 0, "pos");
+   glBindAttribLocation(program, 1, "color");
+}
+void blit3d_texture_program_loaded(u32 program){
+   glBindAttribLocation(program, 0, "pos");
+   glBindAttribLocation(program, 1, "color");
+}
+
 void blit3d_context_initialize(blit3d_context * ctx){
   ctx->initialized = true;
   shader_3d shader;
+  gl_program_loaded = blit3d_texture_program_loaded;
   shader.blit_shader = gl_shader_compile2((char *)texture_3d_shader_vs,texture_3d_shader_vs_len, (char *)texture_shader_fs,texture_shader_fs_len);
   shader.pos_attr = 0;
   shader.tex_coord_attr = 1;
@@ -90,11 +120,14 @@ void blit3d_context_initialize(blit3d_context * ctx){
   ctx->shader = shader;
 
   shader_3d shader2;
+  gl_program_loaded = blit3d_color_program_loaded;
   shader2.blit_shader = gl_shader_compile2(
 										   (char *)texture_3d_color_shader_vs,
 										   texture_3d_color_shader_vs_len,
 										   (char *)texture_shader_fs,
 										   texture_shader_fs_len);
+  gl_program_loaded = NULL;
+                       
   shader2.pos_attr = 0;
   shader2.color_attr = 1;
   shader2.vertex_transform_loc = glGetUniformLocation(shader2.blit_shader, "vertex_transform");
@@ -123,37 +156,49 @@ void blit3d_context_initialize(blit3d_context * ctx){
   //glEnableVertexAttribArray(shader.tex_coord_attr);
   ctx->shader3 = shader3;  
   
-
-  voxel_depth_shader voxel_shader = {0};
-  voxel_shader.program = gl_shader_compile2((char *) voxel_depth_vs,
+  if(false){
+	 voxel_depth_shader voxel_shader = {0};
+	 voxel_shader .program = gl_shader_compile2((char *) voxel_depth_vs,
 														  voxel_depth_vs_len,
 														  (char *)voxel_depth_fs,
 														  voxel_depth_fs_len);
 
-  voxel_shader.program2 = gl_shader_compile2((char *) voxel_depth_vs,
-														  voxel_depth_vs_len,
-														  (char *)voxel_depth2_fs,
-														  voxel_depth2_fs_len);
-
-
-  glUseProgram(voxel_shader.program);
-  
-  voxel_shader.vertex_transform_loc = glGetUniformLocation(voxel_shader.program, "vertex_transform");
-  voxel_shader.camera_position_loc = glGetUniformLocation(voxel_shader.program, "camera_position");
-  voxel_shader.voxel_offset_loc = glGetUniformLocation(voxel_shader.program, "voxel_offset");
-  voxel_shader.voxel_scale_loc = glGetUniformLocation(voxel_shader.program, "voxel_scale");
-  voxel_shader.pos_attr = 0;
-  
-  
-  glUniform1i(glGetUniformLocation(voxel_shader.program, "voxel_depth"), 0);
-  glUniform1i(glGetUniformLocation(voxel_shader.program, "color"), 1);
-
-  glUseProgram(voxel_shader.program2);
-  glUniform1i(glGetUniformLocation(voxel_shader.program2, "voxel_depth"), 0);
-  glUniform1i(glGetUniformLocation(voxel_shader.program2, "color"), 1);
   
 
-  ctx->voxel_depth_shader = voxel_shader;
+	 glUseProgram(voxel_shader.program);
+	 
+	 voxel_shader.vertex_transform_loc = glGetUniformLocation(voxel_shader.program, "vertex_transform");
+	 voxel_shader.camera_position_loc = glGetUniformLocation(voxel_shader.program, "camera_position");
+	 voxel_shader.voxel_offset_loc = glGetUniformLocation(voxel_shader.program, "voxel_offset");
+	 voxel_shader.voxel_scale_loc = glGetUniformLocation(voxel_shader.program, "voxel_scale");
+	 voxel_shader.pos_attr = 0;
+  
+  
+	 glUniform1i(glGetUniformLocation(voxel_shader.program, "voxel_depth"), 0);
+	 glUniform1i(glGetUniformLocation(voxel_shader.program, "color"), 1);
+	 ctx->voxel_depth_shader = voxel_shader;
+  }
+  if(false){
+	 voxel_depth2_shader voxel_shader = {0};
+	 voxel_shader.program = gl_shader_compile2((char *) voxel_depth_vs,
+															 voxel_depth_vs_len,
+															 (char *)voxel_depth2_fs,
+															 voxel_depth2_fs_len);
+	 glUseProgram(voxel_shader.program);
+	 
+	 voxel_shader.vertex_transform_loc = glGetUniformLocation(voxel_shader.program, "vertex_transform");
+	 voxel_shader.camera_position_loc = glGetUniformLocation(voxel_shader.program, "camera_position");
+	 voxel_shader.voxel_offset_loc = glGetUniformLocation(voxel_shader.program, "voxel_offset");
+	 voxel_shader.voxel_scale_loc = glGetUniformLocation(voxel_shader.program, "voxel_scale");
+	 voxel_shader.space_size_loc = glGetUniformLocation(voxel_shader.program, "voxel_space");
+	 voxel_shader.pos_attr = 0;
+
+	 glUniform1i(glGetUniformLocation(voxel_shader.program, "voxel_depth"), 0);
+	 glUniform1i(glGetUniformLocation(voxel_shader.program, "color"), 1);
+	 ctx->voxel_depth2_shader = voxel_shader;
+  }
+  
+
   ctx->voxel_scale = vec3_new(1,1,1);
   glUseProgram(shader.blit_shader);
 
@@ -168,6 +213,10 @@ void blit3d_set_voxel_transform(blit3d_context * ctx, vec3 offset, vec3 scale){
   ctx->voxel_scale = scale;
 }
 
+void blit3d_set_voxel_space_size(blit3d_context * ctx, vec3 space_size){
+  ctx->voxel_space_size = space_size;
+}
+
 
 void blit3d_context_load(blit3d_context * ctx)
 {
@@ -175,7 +224,7 @@ void blit3d_context_load(blit3d_context * ctx)
     blit3d_context_initialize(ctx);
   
   glUseProgram(ctx->shader.blit_shader);
-  glEnableVertexAttribArray(0);
+  
   ctx->uv_matrix = mat3_identity();
 }
 
@@ -200,7 +249,7 @@ void blit3d_set_mode(blit3d_context * ctx, blit3d_mode mode){
 	 shader = ctx->voxel_depth_shader.program;
   }
   if(ctx->mode == BLIT3D_VOXEL_DEPTH2){
-	 shader = ctx->voxel_depth_shader.program2;
+	 shader = ctx->voxel_depth2_shader.program;
   }
   if(shader != -1)
 	glUseProgram(shader);
@@ -276,6 +325,7 @@ void blit3d_polygon_update(blit3d_polygon * polygon){
     }
     free(polygon->data);
     polygon->data = NULL;
+    ASSERT(glGetError() == 0);
   }
 }
 struct _texture_handle {
@@ -293,7 +343,7 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
 
   glBindBuffer(GL_ARRAY_BUFFER, polygon->buffer);
 
-  if(ctx->mode == BLIT3D_VOXEL_DEPTH || ctx->mode == BLIT3D_VOXEL_DEPTH2){
+  if(ctx->mode == BLIT3D_VOXEL_DEPTH){
 
 	 for(size_t i = 0; i < ctx->texture_count; i++){
 		var tex = ctx->current_texture[i];
@@ -312,7 +362,7 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
 	 }
 
 	 
-	 var shader = ctx->voxel_depth_shader;
+	 var shader = ctx->voxel_depth2_shader;
 
 	 glVertexAttribPointer(shader.pos_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
 	 glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
@@ -328,6 +378,44 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
 
 	 return;
   }
+  if(ctx->mode == BLIT3D_VOXEL_DEPTH2){
+
+	 for(size_t i = 0; i < ctx->texture_count; i++){
+		var tex = ctx->current_texture[i];
+		
+		if(tex == NULL && i == 0)
+		  tex = get_default_tex();
+		
+		if(tex != NULL){
+		  glActiveTexture(GL_TEXTURE0 + i);
+		  if(tex->is_3d)
+			 glBindTexture(GL_TEXTURE_3D, tex->handle->tex);
+		  else
+			 glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
+		 
+		}
+	 }
+
+	 
+	 var shader = ctx->voxel_depth2_shader;
+
+	 glVertexAttribPointer(shader.pos_attr, polygon->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
+	 glUniformMatrix4fv(shader.vertex_transform_loc, 1, false, &ctx->matrix.m00);
+	 
+	 var cam = ctx->camera_position;
+	 var vo = ctx->voxel_offset;
+	 var vs = ctx->voxel_scale;
+	 var vspace = ctx->voxel_space_size;
+	 glUniform3f(shader.camera_position_loc, cam.x,cam.y,cam.z);
+	 glUniform3f(shader.voxel_offset_loc, vo.x, vo.y, vo.z);
+	 glUniform3f(shader.voxel_scale_loc, vs.x, vs.y, vs.z);
+	 glUniform3f(shader.space_size_loc, vspace.x, vspace.y, vspace.z);
+	 glDrawArrays(GL_TRIANGLES, 0, polygon->length / (polygon->dimensions * 4));
+  
+
+	 return;
+  }
+
   
   var shader = ctx->shader;
   var c = ctx->color;
@@ -351,12 +439,19 @@ void blit3d_polygon_blit(blit3d_context * ctx, blit3d_polygon * polygon){
   //if(err != 0)
   //  printf("eRR2: %i\n", err);
 }
-
-void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
+GLuint vertex_array = 0;
+  void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 count){
   
   if(count == 0)
     return;
 
+  ASSERT(glGetError() == 0);
+  if(vertex_array == 0){
+    glGenVertexArrays(1, &vertex_array);
+  }
+  glBindVertexArray(vertex_array);
+
+  ASSERT(glGetError() == 0);
   //glUniform1i(ctx->shader.textured_loc, 1);
   for(size_t i = 0; i < ctx->texture_count; i++){
 	var tex = ctx->current_texture[i];
@@ -368,6 +463,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
 	  glActiveTexture(GL_TEXTURE0 + i);
 	  glBindTexture(GL_TEXTURE_2D, tex->handle->tex);
 	}
+  ASSERT(glGetError() == 0);
   }
   int elements_index = -1;
   for(u32 i = 0; i < count; i++){
@@ -380,16 +476,22 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
   if(elements_index != -1)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygons[elements_index]->buffer);
   
+  ASSERT(glGetError() == 0);
   u32 j = 0;
   for(u32 i = 0; i < count; i++){
     if((int)i == elements_index)
       continue;
-    glEnableVertexAttribArray(j);
+    ASSERT_EQ(glGetError(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, polygons[j]->buffer);
+    ASSERT_EQ(glGetError(), 0);
+    glEnableVertexAttribArray(j);
+    ASSERT_EQ(glGetError(), 0);
     glVertexAttribPointer(j, polygons[j]->dimensions, GL_FLOAT, GL_FALSE, 0, 0);
     j += 1;    
   }
+  ASSERT(glGetError() == 0);
 
+    
   var shader = ctx->shader;
   
   if(ctx->mode == BLIT3D_TRIANGLES_COLOR)
@@ -415,7 +517,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
     mode = GL_TRIANGLES;//GL_LINE_LOOP;
   }
   
-  
+  ASSERT(glGetError() == 0);
   if(elements_index != -1){
     glDrawElements(mode, polygons[elements_index]->length / (polygons[elements_index]->dimensions * 4), GL_UNSIGNED_BYTE, 0);
 
@@ -428,7 +530,7 @@ void blit3d_polygon_blit2(blit3d_context * ctx, vertex_buffer ** polygons, u32 c
       continue;
     glDisableVertexAttribArray(j);
   }
-  
+  ASSERT_EQ(glGetError(), 0);
 }
 
 void blit3d_color(blit3d_context * ctx, vec4 color){
@@ -444,8 +546,6 @@ void blit3d_bind_textures(blit3d_context * ctx, texture ** tex, size_t cnt){
 void blit3d_bind_texture(blit3d_context * ctx, texture * tex){
   blit3d_bind_textures(ctx, &tex, 1);
 }
-
-
 
 
 void blit3d_blit_quad(blit3d_context * ctx){

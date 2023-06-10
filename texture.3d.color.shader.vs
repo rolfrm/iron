@@ -1,9 +1,10 @@
-#version 100
+//texture.3d.color.shader.vs
+#version 330
 uniform mat4 vertex_transform;
-attribute vec3 pos;
-attribute vec3 color;
-varying vec2 v_tex_coord;
-varying vec3 v_vertex_color;
+in vec3 pos;
+in vec3 color;
+out vec2 v_tex_coord;
+out vec3 v_vertex_color;
 
 void main() 
 {

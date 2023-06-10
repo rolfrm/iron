@@ -26,6 +26,7 @@ typedef struct{
   void (* swap_buffers)(void * window);
   void (* get_window_size) (void * window, int * w, int *h);
   void (* set_window_size) (void * window, int w, int h);
+  void (* get_window_buffer_size)(void * window, int * w, int * h);
   void (* get_window_position)(void * window, int * x, int * y);
   void (* set_window_position)(void * window, int x, int y);
   void (* get_cursor_position)(void * window, int * x, int * y);
@@ -45,6 +46,7 @@ gl_window * gl_window_open(int width, int height);
 void gl_window_swap(gl_window *);
 void gl_window_get_size(gl_window * win, int * width, int *height);
 void gl_window_set_size(gl_window * win, int width, int height);
+void gl_window_get_buffer_size(gl_window * win, int * width, int *height);
 void gl_window_set_position(gl_window * win, int x, int y);
 void gl_window_get_position(gl_window * win, int *x, int * y);
 void gl_window_make_current(gl_window * win);
@@ -352,7 +354,9 @@ void blit3d_text2(blit3d_context * ctx, mat4 view, mat4 model, const char * text
 // voxel configuration
 void blit3d_set_camera_position(blit3d_context * ctx, vec3 camera_position);
 void blit3d_set_voxel_transform(blit3d_context * ctx, vec3 offset, vec3 scale);
-
+void blit3d_set_voxel_space_size(blit3d_context * ctx, vec3 space_size);
 
 gl_backend * glfw_create_backend(void);
 gl_backend * x11_create_backend(void);
+
+extern void (* gl_program_loaded) (u32 program);
